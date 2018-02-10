@@ -263,4 +263,16 @@ public class ESUNode {
         return true;
         
     }
+    
+    /** ***********************************************************************
+     * Get Children:
+     * A simple accessor for this ESUNode's children nodes.
+     * This accessor is designed to be used by the ESUTree's deep copy
+     * constructor to access the copyTree's root's children.
+     * 
+     * @return  - A LinkedList of this ESUNode's children Nodes.
+     ************************************************************************ */
+    LinkedList<ESUNode> getChildren(){
+        return children;
+    }
 }

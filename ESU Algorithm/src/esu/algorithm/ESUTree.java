@@ -62,8 +62,23 @@ public class ESUTree {
         root = new ESUNode(graph, this);
     }
     
+    /** *********************************************************************
+     * Copy Constructor:
+     * Performs a deep copy of the ESU Tree. The Graph referenced by the ESUTree
+     * is not deep copied, but all ESUNodes and data are.
+     * This function assumes that the ESUTree being copied is initialized and 
+     * has a valid root Node.
+     * 
+     * @param copy      - An ESUTree to perform a deep copy on.
+     ************************************************************************ */
     public ESUTree(ESUTree copy){
-        
+        graph = copy.graph;
+        maxHeight = copy.maxHeight;
+        leaves = new LinkedList<>();
+        root = new ESUNode(graph, this);
+        for(ESUNode child : copy.root.getChildren()){
+            root.getChildren().add(new ESUNode(root, child)); //copy ESUNodes
+        }
     }
     
     /** **********************************************************************
