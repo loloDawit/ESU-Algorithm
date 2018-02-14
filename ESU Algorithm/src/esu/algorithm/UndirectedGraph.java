@@ -1,7 +1,7 @@
 /*
  * UndirectedGraph class for ESU algorithm. Assumes zero based nodes.
  */
-package esu;
+package esu.algorithm;
 
 import java.io.File;
 import java.io.FileNotFoundException;

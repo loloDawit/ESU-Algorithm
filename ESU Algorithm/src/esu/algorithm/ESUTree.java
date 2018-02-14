@@ -24,12 +24,16 @@ import java.util.LinkedList;
  * @version 0.1
  * 
  * History - 
- *          2/9/18
- *          File Created.
- *          2/10/18
- *          Started constructor implementation.
- *          getSubGraphs() implemented.
- */
+ *          2/9/18 -
+ *              File Created.
+ *          2/10/18 - 
+ *              Started constructor implementation.
+ *              getSubGraphs() implemented.
+ *          2/13/18 - 
+ *              Implemented getNodesByLevel()
+ *              Tested class on a local TestUndirectedGraph
+ *                  - Test passed (Hooray!)
+ *************************************************************************** */
 public class ESUTree {
     
     //leaf list
@@ -49,8 +53,8 @@ public class ESUTree {
      * accepts a reference to an UndirectedGraph and a size for subgraphs to
      * find. 
      * 
-     * Initializes the root ESNode, and prepares this ESU Tree to start stepping
-     * through the algorithm.
+     * Initializes the root ESU Node, and prepares this ESU Tree to start 
+     * stepping through the algorithm.
      * 
      * @param ug            - a base undirected graph to search for subgraphs
      * @param subGraphSize  - The size of the subgraphs to search for.
@@ -103,6 +107,7 @@ public class ESUTree {
      *          of this ESU Tree's undirected Graph.
      ************************************************************************ */
     public LinkedList<LinkedList<Integer>> getSubGraphs(){
+        
         //output list
         LinkedList<LinkedList<Integer>> out = new LinkedList<>();
         
@@ -150,11 +155,15 @@ public class ESUTree {
         return lists;
     }
     
-    /**
-     * TESTING ENVIRONMENT
+    /** ***********************************************************************
+     * TESTING ENVIRONMENT.
+     * Do not include in final release.
      * 
-     * @param args 
-     */
+     * A simple test framework for running the ESUTree logic in a controlled
+     * Alpha-testing environment.
+     * 
+     * @param args - [Not Used]
+     *********************************************************************** */
     public static void main(String args[]){
         
         //set-up

@@ -35,13 +35,18 @@ import java.util.PriorityQueue;
  *          Main constructor tweeked
  *          Added support of "special root node" constructor
  *          Added dependency on ESUTree to update tree's leaf node list.
+ *      2/13/18 - 
+ *          Changed the checkParents() method to support the
+ *              correct "Node filtering" logic.
+ *          Implemented getLevels()
+ *          Updated documentation/comments
  ************************************************************************** */
 public class ESUNode {
 
     //lists
     private PriorityQueue<Integer> possibleSteps; //next possible steps
-    private LinkedList<ESUNode> children;//children nodes
-    private LinkedList<Integer> subgraphNeighbors;
+    private LinkedList<ESUNode> children;         //children nodes
+    private LinkedList<Integer> subgraphNeighbors;//Vald subgraph neighbors
 
     //Tree Reference
     private ESUTree tree;
@@ -56,10 +61,10 @@ public class ESUNode {
     private int level;
 
     //My "step" into a possible subgraph
-    private Integer myStep; //null if root
+    private Integer myStep; //<--- null if root
     
     //the first step in this tree's branch
-    private Integer firstStep; //null if root
+    private Integer firstStep; //<--- null if root
     
     
     
@@ -134,7 +139,7 @@ public class ESUNode {
     }
     
     /** ***********************************************************************
-     * General Constructor:
+     * General Purpose Private Constructor:
      * This constructor is to be used inside this class only. 
      * For creating a new set of Nodes:
      * @see ESUNode(UndirectedGraph, ESUTree)
@@ -189,7 +194,7 @@ public class ESUNode {
             //add my step's neighbors (if not included by parents)
             for (Integer neighbor : graph.getNeighbors(nextStep)) {
                 
-                if (checkParents(neighbor)) {
+                if (neighbor > firstStep && checkParents(neighbor)) {
                     possibleSteps.add(neighbor);
                     subgraphNeighbors.add(neighbor);
                 }
@@ -214,14 +219,13 @@ public class ESUNode {
     
     /** **********************************************************************
      * Check Parents:
-     * A depricated function for checking all parents' possibleStep Queue's
-     * for validating a next step to take. This function should not be used as
-     * it's logic does not agree with the ESU Algorithm. Was implemented with a
-     * misconception of how the algorithm worked.
+     * A function for checking all parents' subgraph neighbors
+     * for validating a next step to take. This function is responsible for
+     * validating the Integer i as a valid insertion into the calling ESUNode's
+     * subgraphNeighbors list and possibleSteps Queue.
      * 
      * @param i     - An integer to validate
      * @return      - True if the integer is invalid, false otherwise
-     * @depricated
      ********************************************************************** */
     private boolean checkParents(Integer i) {
         
@@ -231,7 +235,7 @@ public class ESUNode {
         }
         
         //check my subgraphNeighbors and myStep
-        if (subgraphNeighbors.contains(i) || i.equals(myStep) || i <= firstStep) {
+        if ( i.equals(myStep) || subgraphNeighbors.contains(i) ) {
             return false;
         }
         
@@ -245,14 +249,11 @@ public class ESUNode {
      * Integers into the list to represent a subgraph.
      * The parameter list is updated, and void is returned.
      * 
-     * For accurate results:
-     * THIS METHOD SHOULD ONLY BE CALLED ON LEAF NODES.
-     * 
      * @param list  - A list of integers that will represent the vertices in a 
      *              subgraph for this ESU Tree's graph object.
      *********************************************************************** */
     public void getSubGraph(LinkedList<Integer> list) {
-        if (myStep != null) {
+        if (myStep != null && list != null) {
             list.add(myStep);
             parent.getSubGraph(list);
         }
@@ -328,10 +329,12 @@ public class ESUNode {
      * @param lists - An array of linked lists where each index of the array 
      *                  has a list of nodes for that level.
      */
-    public void getLevels(LinkedList<ESUNode> lists[]){
-        lists[level].add(this);
-        for(ESUNode child : children){
-            child.getLevels(lists);
+    public void getLevels(LinkedList<ESUNode> lists[]) {
+        if (lists != null && lists[level] != null) {
+            lists[level].add(this);
+            for (ESUNode child : children) {
+                child.getLevels(lists);
+            }
         }
     }
     
