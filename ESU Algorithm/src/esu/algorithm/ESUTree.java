@@ -39,7 +39,7 @@ public class ESUTree {
     ESUNode root;
     
     //my graph to search for subgraphs
-    UndirectedGraph graph;
+    TestUndirectedGraph graph;
     
     //max height (sub graph size)
     protected int maxHeight;
@@ -55,7 +55,7 @@ public class ESUTree {
      * @param ug            - a base undirected graph to search for subgraphs
      * @param subGraphSize  - The size of the subgraphs to search for.
      *********************************************************************** */
-    public ESUTree(UndirectedGraph ug, int subGraphSize){
+    public ESUTree(TestUndirectedGraph ug, int subGraphSize){
         leaves = new LinkedList<>();
         maxHeight = subGraphSize;
         graph = ug;
@@ -114,5 +114,66 @@ public class ESUTree {
         }
         
         return out;
+    }
+    
+    /** ***********************************************************************
+     * Get Nodes By Level:
+     * This function populates an array of lists where the index of the array
+     * represents a level in the tree.
+     * 
+     * given an ESU Tree:
+     *                      [root]
+     *         
+     *          1(2,3,4)    2(3,5)              3(4)    4(5)    5(0)
+     *      ________|__       _|__________        |____   |____
+     *  1,2(3,4,5)  1,3(4)  2,3(4,5)    2,3,5(0)    3,4(5)  4,5(0)
+     * 
+     *  (...)
+     * 
+     * the array will be populated as:
+     * 
+     * [0]: [root]
+     * [1]: [1(2,3,4)], [2(3,4), [3(4)], [4(5)], [5(0)]
+     * [2]: [1,2(3,4,5)], [1,3(4)], [2,3(4,5)], [2,3,5(0)], [3,4(5)], [4,5(0)]
+     * [3]: (...)
+     * 
+     * @return An array of linked lists where each index of the array 
+     *             has a list of nodes for that level.
+     *********************************************************************** */
+    LinkedList<ESUNode>[] getNodesByLevel(){
+        LinkedList<ESUNode> lists[];
+        lists = new LinkedList[maxHeight];
+        for(int i = 0; i < lists.length; i++){
+            lists[i] = new LinkedList<>();
+        }
+        root.getLevels(lists);
+        return lists;
+    }
+    
+    /**
+     * TESTING ENVIRONMENT
+     * 
+     * @param args 
+     */
+    public static void main(String args[]){
+        
+        //set-up
+        TestUndirectedGraph graph = new TestUndirectedGraph();
+        ESUTree tree = new ESUTree(graph, 3);
+        
+        //step until done
+        while(tree.step()){/* Do Nothing */};
+        
+        //print each detected subgraph
+        for(ESUNode subgraph : tree.leaves){
+            LinkedList<Integer> vertices = new LinkedList<>();
+            subgraph.getSubGraph(vertices);
+            String output = "{";
+            for(Integer vertex : vertices){
+                output += " " + vertex + ",";
+            }
+            System.out.println(output.substring(0, output.length()-1) + " }");
+        }
+        
     }
 }

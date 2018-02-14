@@ -41,6 +41,7 @@ public class ESUNode {
     //lists
     private PriorityQueue<Integer> possibleSteps; //next possible steps
     private LinkedList<ESUNode> children;//children nodes
+    private LinkedList<Integer> subgraphNeighbors;
 
     //Tree Reference
     private ESUTree tree;
@@ -49,12 +50,12 @@ public class ESUNode {
     private ESUNode parent;
 
     //garph reference
-    private UndirectedGraph graph;
+    private TestUndirectedGraph graph;
 
     //current level in tree
     private int level;
 
-    //My "step"
+    //My "step" into a possible subgraph
     private Integer myStep; //null if root
     
     //the first step in this tree's branch
@@ -80,11 +81,12 @@ public class ESUNode {
      * @param ug - An undirected graph to build this tree based on.
      * @param esu - The ESU Tree that owns this set of ESU Nodes.
      *********************************************************************** */
-    public ESUNode(UndirectedGraph ug, ESUTree esu){
+    public ESUNode(TestUndirectedGraph ug, ESUTree esu){
         myStep = null;
         firstStep = null;
         level = 0;
         possibleSteps = new PriorityQueue<>();
+        subgraphNeighbors = null;
         for(Integer vertex : ug.getVertices()){
             possibleSteps.add(vertex);
         }
@@ -105,17 +107,27 @@ public class ESUNode {
      * @param copy      - An ESUNode to deep copy
      *********************************************************************** */
     public ESUNode(ESUNode parent, ESUNode copy){
+        
+        //shallow copy integers
         level = copy.level;
         myStep = copy.myStep;
         firstStep = copy.firstStep;
+        
+        //inherit parent's traits
         tree = parent.tree;
-        possibleSteps = new PriorityQueue<>();
-        children = new LinkedList<>();
-        graph = copy.graph;
+        graph = parent.graph;
+        
         this.parent = parent;
+        
+        //copy lists
+        subgraphNeighbors = (LinkedList<Integer>)copy.subgraphNeighbors.clone();
+        possibleSteps = new PriorityQueue<>();
         for(Integer i : copy.possibleSteps){
             possibleSteps.add(i);
         }
+        
+        //copy over copy's children
+        children = new LinkedList<>();
         for(ESUNode child : copy.children){
             children.add(new ESUNode(this, child));
         }
@@ -135,9 +147,11 @@ public class ESUNode {
      * @param nextStep  - This Node's "step" vertex from the Graph
      *********************************************************************** */
     private ESUNode(ESUNode parent, Integer nextStep) {
+        
         //initialize lists
         possibleSteps = new PriorityQueue<>();
         children = new LinkedList<>();
+        subgraphNeighbors = new LinkedList<>();
 
         //set my step
         myStep = nextStep;
@@ -147,15 +161,20 @@ public class ESUNode {
         
         //set parent
         this.parent = parent;
+        
+        this.graph = parent.graph;
 
         //set level
         level = parent.level + 1;
+        
+        //********** set first step... @depricated ? ***************
         if(level == 1){
             firstStep = myStep;
         }
         else{
             firstStep = parent.firstStep;
         }
+        //**********************************************************
         
         //If i'm not a leaf
         if(level < tree.maxHeight){
@@ -164,18 +183,21 @@ public class ESUNode {
             if(parent.myStep != null){
                 for (Integer ps : parent.possibleSteps) {
                     possibleSteps.add(ps);
+                    subgraphNeighbors.add(ps);
                 }
             }
             //add my step's neighbors (if not included by parents)
             for (Integer neighbor : graph.getNeighbors(nextStep)) {
-                /*
-                if (!checkParents(neighbor)) {
+                
+                if (checkParents(neighbor)) {
                     possibleSteps.add(neighbor);
+                    subgraphNeighbors.add(neighbor);
                 }
-                */
+                /*
                 if(neighbor > firstStep){
                     possibleSteps.add(neighbor);
                 }
+                */
             }
         }else{
             //im a leaf
@@ -202,12 +224,18 @@ public class ESUNode {
      * @depricated
      ********************************************************************** */
     private boolean checkParents(Integer i) {
-        if (possibleSteps.contains(i)) {
+        
+        //base case, tree root
+        if (myStep == null) {
             return true;
         }
-        if (parent == null) {
+        
+        //check my subgraphNeighbors and myStep
+        if (subgraphNeighbors.contains(i) || i.equals(myStep) || i <= firstStep) {
             return false;
         }
+        
+        //check next node up the tree
         return parent.checkParents(i);
     }
     
@@ -272,7 +300,39 @@ public class ESUNode {
      * 
      * @return  - A LinkedList of this ESUNode's children Nodes.
      ************************************************************************ */
-    LinkedList<ESUNode> getChildren(){
+    public LinkedList<ESUNode> getChildren(){
         return children;
     }
+    
+    /** ***********************************************************************
+     * Get Levels:
+     * This function populates an array of lists where the index of the array
+     * represents a level in the tree.
+     * 
+     * given an ESU Tree:
+     *                      [root]
+     *         
+     *          1(2,3,4)    2(3,5)              3(4)    4(5)    5(0)
+     *      ________|__       _|__________        |____   |____
+     *  1,2(3,4,5)  1,3(4)  2,3(4,5)    2,3,5(0)    3,4(5)  4,5(0)
+     * 
+     *  (...)
+     * 
+     * the array will be populated as:
+     * 
+     * [0]: [root]
+     * [1]: [1(2,3,4)], [2(3,4), [3(4)], [4(5)], [5(0)]
+     * [2]: [1,2(3,4,5)], [1,3(4)], [2,3(4,5)], [2,3,5(0)], [3,4(5)], [4,5(0)]
+     * [3]: (...)
+     * 
+     * @param lists - An array of linked lists where each index of the array 
+     *                  has a list of nodes for that level.
+     */
+    public void getLevels(LinkedList<ESUNode> lists[]){
+        lists[level].add(this);
+        for(ESUNode child : children){
+            child.getLevels(lists);
+        }
+    }
+    
 }
