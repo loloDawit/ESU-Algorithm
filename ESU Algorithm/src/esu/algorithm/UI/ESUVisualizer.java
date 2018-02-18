@@ -1,6 +1,8 @@
 /*
  * Class: ESUVisualizer.java
  * Purpose: A graphical user interface to dispaly the ESU graph. 
+ * This class is reposible to read the graph text input and display a step by 
+ * execution of the ESU algorithm.
  */
 package esu.algorithm.UI;
 
@@ -22,12 +24,14 @@ import javafx.stage.Stage;
  * @author BioHazard
  */
 public class ESUVisualizer extends Application {
+    // controls 
     Button zoomInButton = new Button("+");
     Button zoomOutButton = new Button("-");
     Button resetButton = new Button("Reset");
     Button openFileButton = new Button("open File");
     TextField textField = new TextField();
     
+    // Containers 
     Group root = new Group();
     VBox vBox = new VBox();
     HBox menu = new HBox();
@@ -35,7 +39,8 @@ public class ESUVisualizer extends Application {
     ScrollPane scrollPane = new ScrollPane();
     ToolBar toolBar = new ToolBar();
     /**
-     * 
+     * SetNodes
+     * A simple method that sets and executes all action listeners.  
      */
     public void setNodes(){
         textField.setPromptText("open file");
@@ -47,8 +52,13 @@ public class ESUVisualizer extends Application {
         
         
         zoomInButton.setOnAction((event) -> {
+            nodeContainer.setPrefSize(Math.max(nodeContainer.getBoundsInParent().
+                    getMaxX()*1.1, scrollPane.getViewportBounds().getWidth()),
+            Math.max(nodeContainer.getBoundsInParent().getMaxY()*1.1, scrollPane.
+                    getViewportBounds().getHeight())
+            );
             
-            
+            scrollPane.setContent(nodeContainer);
         });
         
         toolBar.getItems().addAll(menu);
@@ -80,6 +90,7 @@ public class ESUVisualizer extends Application {
     }
 
     /**
+     * start the application 
      * @param args the command line arguments
      */
     public static void main(String[] args) {
