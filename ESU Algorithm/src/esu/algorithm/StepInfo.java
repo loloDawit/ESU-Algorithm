@@ -21,15 +21,18 @@ package esu.algorithm;
  *          File created.
  *          Debating whether a stepCode will be useful. Included in case
  *              a use arises.
+ *      2/17/18 - 
+ *          Revised Code enum.
+ *          Filled in documentation
  ************************************************************************** */
 public class StepInfo {
     
     // ***** public because i'm lazy. dont change from outside!!! *****
-    public ESUNode caller;
-    public ESUNode target;
-    public String description;
-    public Integer check;
-    public Code stepCode;//...?
+    public ESUNode caller;      //the ESUNode calling the log entry
+    public ESUNode target;      //an optional target ESUNode for this log entry
+    public String description;  //a text description of this log entry
+    public Integer check;       //An optional Integer for this log entry
+    public Code stepCode;       //Log Code: see enum at bottom of file
     //*****************************************************************
     
     /** ***********************************************************************
@@ -61,10 +64,17 @@ public class StepInfo {
     
     
     // ********************  Step Code Enum  *************************** //
+    /** **********************************************************************
+     * Step Code:
+     * An enumerated type that represents a "type" of StepInfo log. The 
+     * Code type can be used to make assumptions about the data stored inside
+     * a StepInfo object. See the description of each Code type for 
+     * understanding of each Code.
+     *********************************************************************** */
     public enum Code{
         CreateRoot,                 //Create the root of the tree
         Start,                      //start the creating a node
-        InheritLists,
+        InheritLists,               //inherit lists from parent
         GetNeighbors,               //get the neighbors of the current vertex
         SelectNeighbor,             //select a neighbor 
         CheckSelectedNeighbor,      //check potential neighbor

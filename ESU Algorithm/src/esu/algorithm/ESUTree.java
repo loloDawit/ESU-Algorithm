@@ -15,13 +15,14 @@
 package esu.algorithm;
 
 //imports
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 /** **************************************************************************
  * Class: ESUTree
  * 
  * @author BioHazard
- * @version 0.1
+ * @version 0.2
  * 
  * History - 
  *          2/9/18 -
@@ -33,6 +34,14 @@ import java.util.LinkedList;
  *              Implemented getNodesByLevel()
  *              Tested class on a local TestUndirectedGraph
  *                  - Test passed (Hooray!)
+ *          2/14/18 - Happy Valentine's Day!
+ *              Started implementing a step log.
+ *          2/17/18 - 
+ *              Step log support added in full.
+ *              Driver updated to reflect new log functionality an tests.
+ *                  Tested: Failed - minor bug fixes in ESUNode.
+ *                  Tested: Passed!
+ *              Updated to version 0.2
  *************************************************************************** */
 public class ESUTree {
     
@@ -48,6 +57,9 @@ public class ESUTree {
     //max height (sub graph size)
     protected int maxHeight;
     
+    //step descriptions
+    ArrayList<StepInfo> log;
+    
     /** ***********************************************************************
      * Constructor:
      * accepts a reference to an UndirectedGraph and a size for subgraphs to
@@ -61,9 +73,15 @@ public class ESUTree {
      *********************************************************************** */
     public ESUTree(TestUndirectedGraph ug, int subGraphSize){
         leaves = new LinkedList<>();
+        log = new ArrayList<>();
         maxHeight = subGraphSize;
         graph = ug;
         root = new ESUNode(graph, this);
+        
+        //add Root creation to step log
+        String desc = "Create root Node";
+        log.add(new StepInfo(root, desc, 
+                StepInfo.Code.CreateRoot, null, null));
     }
     
     /** *********************************************************************
@@ -79,10 +97,20 @@ public class ESUTree {
         graph = copy.graph;
         maxHeight = copy.maxHeight;
         leaves = new LinkedList<>();
+        log = new ArrayList<>();
         root = new ESUNode(graph, this);
         for(ESUNode child : copy.root.getChildren()){
             root.getChildren().add(new ESUNode(root, child)); //copy ESUNodes
         }
+        
+        //copy step log
+        for(StepInfo info : copy.log){
+            log.add(info);
+        }
+        
+        //clear copy's step log
+        copy.log.clear();
+        //gets "copy"'s step log ready to record all events from this point on.
     }
     
     /** **********************************************************************
@@ -169,20 +197,70 @@ public class ESUTree {
         //set-up
         TestUndirectedGraph graph = new TestUndirectedGraph();
         ESUTree tree = new ESUTree(graph, 3);
-        
+        ArrayList<ESUTree> treeList= new ArrayList<>();
         //step until done
-        while(tree.step()){/* Do Nothing */};
-        
-        //print each detected subgraph
-        for(ESUNode subgraph : tree.leaves){
-            LinkedList<Integer> vertices = new LinkedList<>();
-            subgraph.getSubGraph(vertices);
-            String output = "{";
-            for(Integer vertex : vertices){
-                output += " " + vertex + ",";
-            }
-            System.out.println(output.substring(0, output.length()-1) + " }");
+        while(tree.step()){
+            ESUTree tempTree = new ESUTree(tree);
+            treeList.add(tempTree);
         }
         
+        for(int i = 0; i < treeList.size(); i++){
+            System.out.println("Tree[" + i + "] step log:");
+            ArrayList<StepInfo> log = treeList.get(i).log;
+            for(int entry = 0; entry < log.size(); entry++){
+                String caller = nodeToString(log.get(entry).caller);
+                String target = nodeToString(log.get(entry).target);
+                String description = log.get(entry).description;
+                description = description.replace("%t", target);
+                description = description.replace("%c", caller);
+                System.out.println(description);
+            }
+            /*
+            //display leaves for current tree
+            System.out.println("Leaves for tree[" + i + "]:");
+            //print each detected subgraph
+            for(ESUNode subgraph : treeList.get(i).leaves){
+                LinkedList<Integer> vertices = new LinkedList<>();
+                subgraph.getSubGraph(vertices);
+                String output = "{";
+                for(Integer vertex : vertices){
+                    output += " " + vertex + ",";
+                }
+                System.out.print(output.substring(0, output.length()-1) + " } ");
+            }
+            */
+            
+            System.out.println();
+        }
+        System.out.println("" + treeList.get(treeList.size()-1).leaves.size() + " subgraphs detected: ");
+        for(ESUNode leaf : treeList.get(treeList.size()-1).leaves){
+            System.out.print(nodeToString(leaf) + " ");
+        }
+    }
+    
+    /** **********************************************************************
+     * Node To String:
+     * A simple function for converting a node into a String as its current
+     * subgraph vertices.
+     * 
+     * @param node - an ESUNode to convert into a String.
+     * @return - A String representation of the parameter ESUNode
+     ********************************************************************** */
+    public static String nodeToString(ESUNode node){
+        if (node == null)
+            return "";
+        String out = "{";
+        LinkedList<Integer> list = new LinkedList<>();
+        node.getSubGraph(list);
+        if(list.isEmpty()){
+            //root
+            return "{root}";
+        }
+        for(Integer i : list){
+            out += " " + i + ",";
+        }
+        out = out.substring(0, out.length() - 1);
+        out += " }";
+        return out;
     }
 }

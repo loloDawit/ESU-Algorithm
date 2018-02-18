@@ -10,6 +10,7 @@ public class TestUndirectedGraph {
 
     public TestUndirectedGraph(){ /* Do Nothing */}
     
+    //get vertices of this graph
     public LinkedList<Integer> getVertices(){
         LinkedList<Integer> out = new LinkedList<>();
         out.add(1);
@@ -24,6 +25,7 @@ public class TestUndirectedGraph {
         return out;
     }
     
+    //get neighbors of the parameter vertex
     public LinkedList<Integer> getNeighbors(int v){
         LinkedList<Integer> out = new LinkedList<>();
         switch (v){

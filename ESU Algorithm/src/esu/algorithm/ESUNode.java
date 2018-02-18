@@ -23,7 +23,7 @@ import java.util.PriorityQueue;
  * Class: ESUNode
  * 
  * @author BioHazard
- * @version 0.1
+ * @version 0.2
  * History - 
  *      2/9/18 - 
  *          File Created
@@ -40,31 +40,42 @@ import java.util.PriorityQueue;
  *              correct "Node filtering" logic.
  *          Implemented getLevels()
  *          Updated documentation/comments
+ *      2/14/18 - 
+ *          Started implementing step log support.
+ *          Fixed a bug where copied leaf Nodes were not updating their
+ *              parent tree's leaf list.
+ *              - Tested: Passed.
+ *      2/17/18 - 
+ *          Finished implementing step log support.
+ *          Changed printing sequence for subgraphs (prints in order now).
+ *              - Tested: Failed - minor fixes.
+ *              - Tested: Passed
+ *          updated to version 0.2
  ************************************************************************** */
 public class ESUNode {
 
     //lists
-    private PriorityQueue<Integer> possibleSteps; //next possible steps
-    private LinkedList<ESUNode> children;         //children nodes
-    private LinkedList<Integer> subgraphNeighbors;//Vald subgraph neighbors
+    private final PriorityQueue<Integer> possibleSteps; //next possible steps
+    private final LinkedList<ESUNode> children;         //children nodes
+    private final LinkedList<Integer> subgraphNeighbors;//Vald subgraph neighbors
 
     //Tree Reference
-    private ESUTree tree;
+    private final ESUTree tree;
 
     //parent "pointer"
-    private ESUNode parent;
+    private final ESUNode parent;
 
     //garph reference
-    private TestUndirectedGraph graph;
+    private final TestUndirectedGraph graph;
 
     //current level in tree
-    private int level;
+    private final int level;
 
     //My "step" into a possible subgraph
-    private Integer myStep; //<--- null if root
+    private final Integer myStep; //<--- null if root
     
     //the first step in this tree's branch
-    private Integer firstStep; //<--- null if root
+    private final Integer firstStep; //<--- null if root
     
     
     
@@ -98,6 +109,7 @@ public class ESUNode {
         children = new LinkedList<>();
         graph = ug;
         tree = esu;
+        parent = null;
     }
     
     /** ***********************************************************************
@@ -135,6 +147,10 @@ public class ESUNode {
         children = new LinkedList<>();
         for(ESUNode child : copy.children){
             children.add(new ESUNode(this, child));
+        }
+        
+        if(level == tree.maxHeight){
+            tree.leaves.add(this);
         }
     }
     
@@ -181,20 +197,47 @@ public class ESUNode {
         }
         //**********************************************************
         
+        String desc = "Creating new node.";
+        tree.log.add(new StepInfo(this, desc, StepInfo.Code.Start, null, null));
+        
         //If i'm not a leaf
         if(level < tree.maxHeight){
             
+            //update log with node creation
+            String parentPS = "(";
+            for(Integer i : parent.possibleSteps){
+                parentPS += " " + i + ",";
+            }
+            parentPS = parentPS.substring(0, parentPS.length()-1);
+            parentPS += " )";
+            
+            
             //copy parent's possible steps if parent not root
             if(parent.myStep != null){
+                desc = "Create node %c, copy %t's possible steps " + parentPS + " into %c's possible steps () and subgraph neighbors [].";
+                tree.log.add(new StepInfo(this, desc, StepInfo.Code.InheritLists, parent, null));
                 for (Integer ps : parent.possibleSteps) {
                     possibleSteps.add(ps);
                     subgraphNeighbors.add(ps);
                 }
             }
             //add my step's neighbors (if not included by parents)
-            for (Integer neighbor : graph.getNeighbors(nextStep)) {
+            desc = "Getting " + myStep + "'s neighbors: {";
+            LinkedList<Integer> neighbors = graph.getNeighbors(nextStep);
+            for(Integer vertex : neighbors){
+                desc += " " + vertex + ",";
+            }
+            desc = desc.substring(0, desc.length() -1) + " }.";
+            tree.log.add(new StepInfo(this, desc, StepInfo.Code.GetNeighbors, null, null));
+            for (Integer neighbor : neighbors) {
                 
-                if (neighbor > firstStep && checkParents(neighbor)) {
+                if(neighbor <= firstStep){
+                    desc = "" + neighbor + " is less than or equal to this branch's first step (" + firstStep + "). Validation denied.";
+                    tree.log.add(new StepInfo(this, desc, StepInfo.Code.RegisterCheck, null, neighbor));
+                }
+                else if (checkParents(neighbor, this)) {
+                    desc = "" + neighbor + " added to %c's lists.";
+                    tree.log.add(new StepInfo(this, desc, StepInfo.Code.UpdateLists, null, neighbor));
                     possibleSteps.add(neighbor);
                     subgraphNeighbors.add(neighbor);
                 }
@@ -207,6 +250,8 @@ public class ESUNode {
         }else{
             //im a leaf
             //let my tree know.
+            desc = "Created a uniquie subgraph %c.";
+            tree.log.add(new StepInfo(this, desc, StepInfo.Code.SubgraphCreation, null, null));
             tree.leaves.add(this); //<--------------------------
             //leaking "this" in constructor is not considered safe,
             //but in this case can be responsible as the last call
@@ -227,20 +272,26 @@ public class ESUNode {
      * @param i     - An integer to validate
      * @return      - True if the integer is invalid, false otherwise
      ********************************************************************** */
-    private boolean checkParents(Integer i) {
+    private boolean checkParents(Integer i, ESUNode caller) {
         
         //base case, tree root
         if (myStep == null) {
+            String desc = "Validation approved for " + i + ".";
+            tree.log.add(new StepInfo(caller, desc, StepInfo.Code.RegisterCheck, this, i));
             return true;
         }
         
         //check my subgraphNeighbors and myStep
         if ( i.equals(myStep) || subgraphNeighbors.contains(i) ) {
+            String desc = "" + i + " was found in %t's data. Validation denied.";
+            tree.log.add(new StepInfo(caller, desc, StepInfo.Code.RegisterCheck, this, i));
             return false;
         }
         
         //check next node up the tree
-        return parent.checkParents(i);
+        String desc = "" + i + " was not found in %t's data. Validation continues.";
+        tree.log.add(new StepInfo(caller, desc, StepInfo.Code.RegisterCheck, this, i));
+        return parent.checkParents(i, caller);
     }
     
     /** **********************************************************************
@@ -252,9 +303,9 @@ public class ESUNode {
      * @param list  - A list of integers that will represent the vertices in a 
      *              subgraph for this ESU Tree's graph object.
      *********************************************************************** */
-    public void getSubGraph(LinkedList<Integer> list) {
+    public final void getSubGraph(LinkedList<Integer> list) {
         if (myStep != null && list != null) {
-            list.add(myStep);
+            list.addFirst(myStep);
             parent.getSubGraph(list);
         }
     }
@@ -289,6 +340,8 @@ public class ESUNode {
         //make one child, return true
         ESUNode newChild = new ESUNode(this, pop);
         children.add(newChild);
+        String desc = "Finished making node %c.";
+        tree.log.add(new StepInfo(newChild, desc, StepInfo.Code.Start, null, null));
         return true;
         
     }
@@ -303,6 +356,32 @@ public class ESUNode {
      ************************************************************************ */
     public LinkedList<ESUNode> getChildren(){
         return children;
+    }
+    
+    /** ***********************************************************************
+     * Get Possible Steps:
+     * Accessor for this ESU Node's possible steps. 
+     * This returns a shallow copy, proceed with caution! Do not mutate the
+     * returned object at all as it's changes will be reflected in the building
+     * of the ESU Tree.
+     * 
+     * @return - This ESUNode's possible steps Priority Queue. [shallow copy]
+     *********************************************************************** */
+    public PriorityQueue getPossibleSteps(){
+        return possibleSteps;
+    }
+    
+    /** **********************************************************************
+     * Get Subgraph Neighbors:
+     * Accessor for this ESUNode's subgraph neighbors. The list returned stores
+     * the vertices of all possible neighbors of the subgraph that this node
+     * is to represent.
+     * 
+     * @return - a deep copy of this ESUNode's subgraphNeighbors as a 
+     *              linked list.
+     ********************************************************************** */
+    public LinkedList<Integer> getSubgraphNeighbors(){
+        return (LinkedList<Integer>)subgraphNeighbors.clone();
     }
     
     /** ***********************************************************************
