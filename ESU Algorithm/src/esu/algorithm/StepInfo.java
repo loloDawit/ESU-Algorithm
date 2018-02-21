@@ -11,6 +11,9 @@ package esu.algorithm;
 
 //no imports
 
+import java.util.List;
+
+
 /** **************************************************************************
  * Class: Step Information
  * 
@@ -24,6 +27,8 @@ package esu.algorithm;
  *      2/17/18 - 
  *          Revised Code enum.
  *          Filled in documentation
+ *      2/20/18 - 
+ *          Added a copy of the ESUTree to the StepInfo data
  ************************************************************************** */
 public class StepInfo {
     
@@ -33,6 +38,7 @@ public class StepInfo {
     public String description;  //a text description of this log entry
     public Integer check;       //An optional Integer for this log entry
     public Code stepCode;       //Log Code: see enum at bottom of file
+    public ESUTree tree;        //A copy of the tree's state for the log
     //*****************************************************************
     
     /** ***********************************************************************
@@ -55,11 +61,37 @@ public class StepInfo {
      *                      during this step.
      *********************************************************************** */
     public StepInfo(ESUNode caller, String desc, Code code, ESUNode target, Integer check){
-        this.caller = caller;
+        
+        this.caller = null;//default to null
         description = desc;
         stepCode = code;
         this.target = target;
         this.check = check;
+        
+        tree = caller.getTree();
+        
+        List<ESUNode> levels[] = tree.getNodesByLevel();
+        
+        //find relavent caller node in tree copy
+        for(int node = 0; node < levels[caller.getLevel()].size(); node++){
+            if (caller.getSubgraphAsString().equals(levels[caller.getLevel()].get(node).getSubgraphAsString())){
+                this.caller = levels[caller.getLevel()].get(node);
+                break;
+            }
+        }
+        
+        //find relavent target node in tree copy if not null
+        if(target != null){
+            for(int node = 0; node < levels[target.getLevel()].size(); node++){
+                if (target.getSubgraphAsString().equals(levels[target.getLevel()].get(node).getSubgraphAsString())){
+                    this.target = levels[target.getLevel()].get(node);
+                    break;
+                }
+            }
+        }
+        
+        
+        
     }
     
     

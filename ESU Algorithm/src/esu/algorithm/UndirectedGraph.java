@@ -33,7 +33,7 @@ public class UndirectedGraph {
      * each line should have 2 numbers representing the nodes separated by any
      * amount of whitespace.
      *
-     * @param filename name of the file to read graph from
+     * @param fileName name of the file to read graph from
      */
     public void fillGraph(String fileName) {
         int from;
@@ -108,6 +108,23 @@ public class UndirectedGraph {
         return neighbors;
     }
 
+    /**
+     * Return a list of vertices.
+     * 
+     * @return - An array list of integers to represent all vertices of this graph.
+     */
+    public ArrayList<Integer> getVertices(){
+        ArrayList<Integer> vertices = new ArrayList<>();
+        for(int x = 0; x < size; x++){
+            for(int y = 0; y < size; y++){
+                if(graph[x][y] != 0){
+                    vertices.add(x);
+                    break;
+                }
+            }
+        }
+        return vertices;
+    }
     /**
      * printGraph
      *

@@ -16,6 +16,7 @@
 package esu.algorithm;
 
 //imports
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.PriorityQueue;
 
@@ -66,7 +67,7 @@ public class ESUNode {
     private final ESUNode parent;
 
     //garph reference
-    private final TestUndirectedGraph graph;
+    private final UndirectedGraph graph;
 
     //current level in tree
     private final int level;
@@ -97,7 +98,7 @@ public class ESUNode {
      * @param ug - An undirected graph to build this tree based on.
      * @param esu - The ESU Tree that owns this set of ESU Nodes.
      *********************************************************************** */
-    public ESUNode(TestUndirectedGraph ug, ESUTree esu){
+    public ESUNode(UndirectedGraph ug, ESUTree esu){
         myStep = null;
         firstStep = null;
         level = 0;
@@ -197,9 +198,11 @@ public class ESUNode {
         }
         //**********************************************************
         
-        String desc = "Creating new node.";
-        tree.log.add(new StepInfo(this, desc, StepInfo.Code.Start, null, null));
         
+    }
+    
+    public void setLists(){
+        String desc;
         //If i'm not a leaf
         if(level < tree.maxHeight){
             
@@ -223,7 +226,7 @@ public class ESUNode {
             }
             //add my step's neighbors (if not included by parents)
             desc = "Getting " + myStep + "'s neighbors: {";
-            LinkedList<Integer> neighbors = graph.getNeighbors(nextStep);
+            ArrayList<Integer> neighbors = graph.getNeighbors(myStep);
             for(Integer vertex : neighbors){
                 desc += " " + vertex + ",";
             }
@@ -339,13 +342,36 @@ public class ESUNode {
         
         //make one child, return true
         ESUNode newChild = new ESUNode(this, pop);
+        String desc = "Creating new node.";
+        tree.log.add(new StepInfo(this, desc, StepInfo.Code.Start, null, null));
         children.add(newChild);
-        String desc = "Finished making node %c.";
+        newChild.setLists();
+        desc = "Finished making node %c.";
         tree.log.add(new StepInfo(newChild, desc, StepInfo.Code.Start, null, null));
         return true;
         
     }
     
+    /** **********************************************************************
+     * Get Level:
+     * Accessor for this ESUNode's height (or level) in the ESUTree.
+     * 
+     * @return - An int representing this ESUNode's height (or level) in the 
+     *              owning ESUTree.
+     *********************************************************************** */
+    public int getLevel(){
+        return level;
+    }
+    
+    /** ***********************************************************************
+     * Get Tree:
+     * Returns a deep copy of this ESUNode's tree reference.
+     * 
+     * @return - A deep copy of this ESUNode's ESUTree.
+     *********************************************************************** */
+    public ESUTree getTree(){
+        return new ESUTree(tree);
+    }
     /** ***********************************************************************
      * Get Children:
      * A simple accessor for this ESUNode's children nodes.
@@ -382,6 +408,69 @@ public class ESUNode {
      ********************************************************************** */
     public LinkedList<Integer> getSubgraphNeighbors(){
         return (LinkedList<Integer>)subgraphNeighbors.clone();
+    }
+    
+    /** **********************************************************************
+     * Get Subgraph As Sting:
+     * Returns a string representation of this ESUNode's subgraph.
+     * 
+     * @return - A string representation of this ESUNode's subgraph.
+     *********************************************************************** */
+    public String getSubgraphAsString(){
+        String out = "{";
+        LinkedList<Integer> list = new LinkedList<>();
+        getSubGraph(list);
+        for(Integer i : list){
+            out += "" + i + ", ";
+        }
+        
+        if(out.length() > 1){
+            out = out.substring(0, out.length()-2);
+        }
+        out += "}";
+        return out;
+    }
+    
+    /** **********************************************************************
+     * Get Subgraph Neighbors As Sting:
+     * Returns a string representation of this ESUNode's subGraph neighbors.
+     * 
+     * @return - A string representation of this ESUNode's subgraph neighbors.
+     *********************************************************************** */
+    public String getSubgraphNeighborsAsString(){
+        String out = "[";
+        
+        for(Integer i : subgraphNeighbors){
+            out += "" + i + ", ";
+        }
+        
+        out = out.substring(0, out.length()-2) + "]";
+        return out;
+    }
+    
+    /** **********************************************************************
+     * Get Possible Steps As Sting:
+     * Returns a string representation of this ESUNode's possibleSteps Queue.
+     * 
+     * @return - A string representation of this ESUNode's possibleSteps Queue.
+     *********************************************************************** */
+    public String getPossibleStepsAsString(){
+        String out = "(";
+        
+        //populate temporary queue
+        PriorityQueue<Integer> temp = new PriorityQueue<>();
+        for(Integer i : possibleSteps){
+            temp.add(i);
+        }
+        
+        //pop in order
+        while(!temp.isEmpty()){
+            out += "" + temp.poll() + ", ";
+        }
+        
+        //delete trailing ", " from string and add closing parenthesis
+        out = out.substring(0, out.length()-2) + ")";
+        return out;//return out
     }
     
     /** ***********************************************************************

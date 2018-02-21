@@ -52,7 +52,7 @@ public class ESUTree {
     ESUNode root;
     
     //my graph to search for subgraphs
-    TestUndirectedGraph graph;
+    UndirectedGraph graph;
     
     //max height (sub graph size)
     protected int maxHeight;
@@ -71,13 +71,13 @@ public class ESUTree {
      * @param ug            - a base undirected graph to search for subgraphs
      * @param subGraphSize  - The size of the subgraphs to search for.
      *********************************************************************** */
-    public ESUTree(TestUndirectedGraph ug, int subGraphSize){
+    public ESUTree(UndirectedGraph ug, int subGraphSize){
         leaves = new LinkedList<>();
         log = new ArrayList<>();
         maxHeight = subGraphSize;
         graph = ug;
         root = new ESUNode(graph, this);
-        
+        //root.setLists();
         //add Root creation to step log
         String desc = "Create root Node";
         log.add(new StepInfo(root, desc, 
@@ -109,10 +109,13 @@ public class ESUTree {
         }
         
         //clear copy's step log
-        copy.log.clear();
+        //copy.log.clear();
         //gets "copy"'s step log ready to record all events from this point on.
     }
     
+    public void clearStepLog(){
+        log.clear();
+    }
     /** **********************************************************************
      * Step:
      * Attempts to take the next step of the algorithm. If a step was taken,
@@ -173,9 +176,9 @@ public class ESUTree {
      * @return An array of linked lists where each index of the array 
      *             has a list of nodes for that level.
      *********************************************************************** */
-    LinkedList<ESUNode>[] getNodesByLevel(){
+    public LinkedList<ESUNode>[] getNodesByLevel(){
         LinkedList<ESUNode> lists[];
-        lists = new LinkedList[maxHeight];
+        lists = new LinkedList[maxHeight + 1];
         for(int i = 0; i < lists.length; i++){
             lists[i] = new LinkedList<>();
         }
@@ -195,12 +198,15 @@ public class ESUTree {
     public static void main(String args[]){
         
         //set-up
-        TestUndirectedGraph graph = new TestUndirectedGraph();
-        ESUTree tree = new ESUTree(graph, 3);
+        //TestUndirectedGraph graph = new TestUndirectedGraph();
+        UndirectedGraph graph = new UndirectedGraph(101);
+        graph.fillGraph("/home/nate/gits/ESU-Algorithm/ESU Algorithm/src/esu/algorithm/myGraph.txt");
+        ESUTree tree = new ESUTree(graph, 4);
         ArrayList<ESUTree> treeList= new ArrayList<>();
         //step until done
         while(tree.step()){
             ESUTree tempTree = new ESUTree(tree);
+            tree.clearStepLog();
             treeList.add(tempTree);
         }
         
