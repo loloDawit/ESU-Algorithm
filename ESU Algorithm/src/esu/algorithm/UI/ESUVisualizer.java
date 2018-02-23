@@ -15,6 +15,7 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -68,6 +69,8 @@ public class ESUVisualizer extends Application {
         scrollPane.setPrefSize(60, 513);
         scrollPane.setMaxWidth(777);
         vBox.getChildren().addAll(toolBar,scrollPane);
+        Pane pane = new Pane();
+        
     }
     
     /**

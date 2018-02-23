@@ -113,6 +113,10 @@ public class ESUTree {
         //gets "copy"'s step log ready to record all events from this point on.
     }
     
+    public int getMaxHeight(){
+        return maxHeight;
+    }
+    
     public void clearStepLog(){
         log.clear();
     }

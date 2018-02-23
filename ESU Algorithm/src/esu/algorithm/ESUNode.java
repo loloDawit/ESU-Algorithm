@@ -410,6 +410,10 @@ public class ESUNode {
         return (LinkedList<Integer>)subgraphNeighbors.clone();
     }
     
+    public ESUNode getParent(){
+        return parent;
+    }
+    
     /** **********************************************************************
      * Get Subgraph As Sting:
      * Returns a string representation of this ESUNode's subgraph.
