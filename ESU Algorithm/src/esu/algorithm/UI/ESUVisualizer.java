@@ -20,7 +20,10 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import esu.*;
+import esu.algorithm.*;
 import java.util.ArrayList;
+import javafx.scene.Node;
+import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -48,14 +51,51 @@ public class ESUVisualizer extends Application {
     ScrollPane scrollPane = new ScrollPane();
     Pane pane = new Pane();
     ToolBar toolBar = new ToolBar();
+    Canvas screen;
+    
+    //tree variables
+    ArrayList<ESUTree> treeList;
+    int currentIndex = -1;
+    Rectangle treeSpace;
+    ArrayList<Rectangle>[] rectangles;
+    ArrayList<ESUNode>[] finalNodes;
+    
+    public ESUVisualizer(){
+        super();
+        UndirectedGraph graph = new UndirectedGraph(101);
+        //**************    INSERT PATH TO GRAPH TEXT FILE **********************
+        graph.fillGraph("/home/nate/gits/ESU-Algorithm/ESU Algorithm/src/esu/algorithm/myGraph.txt");
+        //***********************************************************************
+        ESUTree tree = new ESUTree(graph, 4);
+        treeList= new ArrayList<>();
+        //step until done
+        while(tree.step()){
+            ESUTree tempTree = new ESUTree(tree);
+            tree.clearStepLog();
+            treeList.add(tempTree);
+        }
+        finalNodes = treeList.get(treeList.size()-1).getNodesByLevel();
+        AuxilaryClass.setNodeDims(treeList.get(treeList.size()-1));
+        treeSpace = AuxilaryClass.getTreeSpace(treeList.get(treeList.size()-1));
+        rectangles = AuxilaryClass.getRectangles(treeList.get(treeList.size()-1));
+        currentIndex = 0;
+    }
     /**
      * SetNodes
      * A simple method that sets and executes all action listeners.  
      */
     public void setNodes(){
         textField.setPromptText("open file");
+        
+        //screen = new Canvas();
+        //screen.setHeight(treeSpace.getHeight());
+        //screen.setWidth(treeSpace.getWidth());
+        
         scrollPane.setTranslateX(7);
         scrollPane.setTranslateY(7);
+        
+        //scrollPane.setContent(screen);
+        
         menu.setSpacing(5);
         menu.getChildren().addAll(zoomInButton,zoomOutButton,textField,
                 openFileButton,resetButton,nextButton);
@@ -71,6 +111,14 @@ public class ESUVisualizer extends Application {
             scrollPane.setContent(nodeContainer);
         });
         nextButton.setOnAction((event) ->{
+            if(currentIndex < 0){
+                currentIndex = 0;
+            }
+            else if(currentIndex < treeList.size()-1){
+                currentIndex++;
+            }
+            showTree();
+            /*
             sampleField.setText("Hello");
             Rectangle r1 = new Rectangle();
             r1.setX(20);
@@ -97,6 +145,7 @@ public class ESUVisualizer extends Application {
                 pane.getChildren().addAll(r.get(i));
                 scrollPane.setContent(pane);
             }
+            */
             //scrollPane.setContent(r.);
         });
         toolBar.getItems().addAll(menu);
@@ -126,8 +175,18 @@ public class ESUVisualizer extends Application {
         stage.setTitle("ESU Visualization Software");
         stage.show();
         
+        
     }
 
+    void showTree(){
+        pane.getChildren().clear();
+        pane.getChildren().addAll(0,AuxilaryClass.getPrintables(rectangles, treeList.get(currentIndex).getNodesByLevel(), finalNodes));
+        scrollPane.setContent(pane);
+        
+        // ************ @DEPRICATED ****************
+        //AuxilaryClass.drawTo(screen.getGraphicsContext2D(), AuxilaryClass.getPrintables(rectangles, treeList.get(currentIndex).getNodesByLevel()));
+        // *****************************************
+    }
     /**
      * start the application 
      * @param args the command line arguments

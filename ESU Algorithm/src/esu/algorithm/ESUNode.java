@@ -448,7 +448,9 @@ public class ESUNode {
             out += "" + i + ", ";
         }
         
-        out = out.substring(0, out.length()-2) + "]";
+        if(out.length() > 2)
+            out = out.substring(0, out.length()-2);
+        out += "]";
         return out;
     }
     
@@ -473,7 +475,9 @@ public class ESUNode {
         }
         
         //delete trailing ", " from string and add closing parenthesis
-        out = out.substring(0, out.length()-2) + ")";
+        if(out.length() > 2)
+            out = out.substring(0, out.length()-2);
+        out += ")";
         return out;//return out
     }
     
@@ -501,7 +505,7 @@ public class ESUNode {
      * @param lists - An array of linked lists where each index of the array 
      *                  has a list of nodes for that level.
      */
-    public void getLevels(LinkedList<ESUNode> lists[]) {
+    public void getLevels(ArrayList<ESUNode> lists[]) {
         if (lists != null && lists[level] != null) {
             lists[level].add(this);
             for (ESUNode child : children) {

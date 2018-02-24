@@ -11,7 +11,7 @@ package esu.algorithm;
 
 //no imports
 
-import java.util.List;
+import java.util.ArrayList;
 
 
 /** **************************************************************************
@@ -69,9 +69,13 @@ public class StepInfo {
         this.check = check;
         
         tree = caller.getTree();
-        
-        List<ESUNode> levels[] = tree.getNodesByLevel();
-        
+        ArrayList<ESUNode> levels[] = null;
+        try{
+            levels = tree.getNodesByLevel();
+        }
+        catch(Exception e){
+            System.out.println(e.getMessage());
+        }
         //find relavent caller node in tree copy
         for(int node = 0; node < levels[caller.getLevel()].size(); node++){
             if (caller.getSubgraphAsString().equals(levels[caller.getLevel()].get(node).getSubgraphAsString())){

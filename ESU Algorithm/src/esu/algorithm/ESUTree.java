@@ -80,8 +80,9 @@ public class ESUTree {
         //root.setLists();
         //add Root creation to step log
         String desc = "Create root Node";
-        log.add(new StepInfo(root, desc, 
-                StepInfo.Code.CreateRoot, null, null));
+        StepInfo step = new StepInfo(root, desc, 
+                StepInfo.Code.CreateRoot, null, null);
+        log.add(step);
     }
     
     /** *********************************************************************
@@ -180,11 +181,11 @@ public class ESUTree {
      * @return An array of linked lists where each index of the array 
      *             has a list of nodes for that level.
      *********************************************************************** */
-    public LinkedList<ESUNode>[] getNodesByLevel(){
-        LinkedList<ESUNode> lists[];
-        lists = new LinkedList[maxHeight + 1];
+    public ArrayList<ESUNode>[] getNodesByLevel(){
+        ArrayList<ESUNode> lists[];
+        lists = new ArrayList[maxHeight + 1];
         for(int i = 0; i < lists.length; i++){
-            lists[i] = new LinkedList<>();
+            lists[i] = new ArrayList<>();
         }
         root.getLevels(lists);
         return lists;
