@@ -21,17 +21,27 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import esu.*;
 import esu.algorithm.*;
+import java.awt.Desktop;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.stage.FileChooser;
 /**
  *
  * @author BioHazard
  */
 public class ESUVisualizer extends Application {
+    private Desktop desktop = Desktop.getDesktop();
+    final FileChooser fileChooser = new FileChooser();
+    UndirectedGraph graph = new UndirectedGraph(101);
+    
     ArrayList<Rectangle> r = new ArrayList<Rectangle>();
     private Rectangle box; 
     // controls 
@@ -63,8 +73,9 @@ public class ESUVisualizer extends Application {
     public ESUVisualizer(){
         super();
         UndirectedGraph graph = new UndirectedGraph(101);
+        
         //**************    INSERT PATH TO GRAPH TEXT FILE **********************
-        graph.fillGraph("/home/nate/gits/ESU-Algorithm/ESU Algorithm/src/esu/algorithm/myGraph.txt");
+        graph.fillGraph("/Users/dawitabera/Desktop/myGraph.txt");
         //***********************************************************************
         ESUTree tree = new ESUTree(graph, 4);
         treeList= new ArrayList<>();
@@ -79,6 +90,31 @@ public class ESUVisualizer extends Application {
         treeSpace = AuxilaryClass.getTreeSpace(treeList.get(treeList.size()-1));
         rectangles = AuxilaryClass.getRectangles(treeList.get(treeList.size()-1));
         currentIndex = 0;
+    }
+    /**
+     * Open graph from file 
+     * @param file  
+     */
+    private void openGraphFile(File file){
+        try {
+            desktop.open(file);
+        } catch (Exception e) {
+            Logger.getLogger(ESUVisualizer.class.getName()).log(Level.SEVERE,null,e);
+        }
+        
+    }
+    /**
+     * ConfigureFileChooer 
+     * @param fileChooser only open text files 
+     */
+    private static void configureFileChooser(final FileChooser fileChooser){                           
+        fileChooser.setTitle("View Graph Files");
+        fileChooser.setInitialDirectory(
+            new File(System.getProperty("user.home"))
+        ); 
+        fileChooser.getExtensionFilters().addAll(
+                new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt"));
+        
     }
     /**
      * SetNodes
@@ -100,16 +136,28 @@ public class ESUVisualizer extends Application {
         menu.getChildren().addAll(zoomInButton,zoomOutButton,textField,
                 openFileButton,resetButton,nextButton);
         
-        
+        // zoom in canvas content 
         zoomInButton.setOnAction((event) -> {
             nodeContainer.setPrefSize(Math.max(nodeContainer.getBoundsInParent().
                     getMaxX()*1.1, scrollPane.getViewportBounds().getWidth()),
             Math.max(nodeContainer.getBoundsInParent().getMaxY()*1.1, scrollPane.
                     getViewportBounds().getHeight())
             );
-            
+            nodeContainer.getChildren().add(pane);
             scrollPane.setContent(nodeContainer);
         });
+        // zoomout canvas content 
+        zoomInButton.setOnAction((event) -> {
+            nodeContainer.setPrefSize(Math.max(nodeContainer.getBoundsInParent().
+                    getMaxX()/1.1, scrollPane.getViewportBounds().getWidth()),
+            Math.max(nodeContainer.getBoundsInParent().getMaxY()/1.1, scrollPane.
+                    getViewportBounds().getHeight())
+            );
+            nodeContainer.getChildren().add(pane);
+            scrollPane.setContent(nodeContainer);
+            
+        });
+        
         nextButton.setOnAction((event) ->{
             if(currentIndex < 0){
                 currentIndex = 0;
@@ -117,37 +165,20 @@ public class ESUVisualizer extends Application {
             else if(currentIndex < treeList.size()-1){
                 currentIndex++;
             }
+            // here instead of show tree, we can call nextstep to show step 
+            // by step execution of the tree. 
             showTree();
-            /*
-            sampleField.setText("Hello");
-            Rectangle r1 = new Rectangle();
-            r1.setX(20);
-            r1.setY(50);
-            r1.setWidth(200);
-            r1.setHeight(150);
-            r1.setFill(Color.BISQUE);
-            Rectangle r2 = new Rectangle();
-            r2.setX(140);
-            r2.setY(150);
-            r2.setWidth(200);
-            r2.setHeight(150);
-            r2.setFill(Color.BLUE);
-            Rectangle r3 = new Rectangle();
-            r3.setX(200);
-            r3.setY(150);
-            r3.setWidth(200);
-            r3.setHeight(150);
-            r3.setFill(Color.AZURE);
-            r.add(r1);
-            r.add(r2);
-            r.add(r3);
-            for(int i=0; i < r.size();i++ ){
-                pane.getChildren().addAll(r.get(i));
-                scrollPane.setContent(pane);
-            }
-            */
-            //scrollPane.setContent(r.);
         });
+        openFileButton.setOnAction(((event) -> {
+            configureFileChooser(fileChooser);
+            File file = fileChooser.showOpenDialog(new Stage());
+            if(file !=null){
+                openGraphFile(file);
+                graph.fillGraph(file.getPath());
+                showTree();
+            }
+            
+        }));
         toolBar.getItems().addAll(menu);
         toolBar.setPrefWidth(800);
         menu.setPrefWidth(780);
@@ -180,7 +211,8 @@ public class ESUVisualizer extends Application {
 
     void showTree(){
         pane.getChildren().clear();
-        pane.getChildren().addAll(0,AuxilaryClass.getPrintables(rectangles, treeList.get(currentIndex).getNodesByLevel(), finalNodes));
+        pane.getChildren().addAll(0,AuxilaryClass.getPrintables(rectangles, 
+                treeList.get(currentIndex).getNodesByLevel(), finalNodes));
         scrollPane.setContent(pane);
         
         // ************ @DEPRICATED ****************
