@@ -15,7 +15,6 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -26,11 +25,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javafx.event.EventHandler;
-import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
 /**
@@ -40,10 +37,7 @@ import javafx.stage.FileChooser;
 public class ESUVisualizer extends Application {
     private Desktop desktop = Desktop.getDesktop();
     final FileChooser fileChooser = new FileChooser();
-    UndirectedGraph graph = new UndirectedGraph(101);
-    
-    ArrayList<Rectangle> r = new ArrayList<Rectangle>();
-    private Rectangle box; 
+    UndirectedGraph graph = new UndirectedGraph(101); 
     // controls 
     Button zoomInButton = new Button("+");
     Button zoomOutButton = new Button("-");
@@ -57,9 +51,10 @@ public class ESUVisualizer extends Application {
     Group root = new Group();
     VBox vBox = new VBox();
     HBox menu = new HBox();
-    StackPane nodeContainer = new StackPane();
-    ScrollPane scrollPane = new ScrollPane();
+    AnchorPane nodeContainer = new AnchorPane();
+    
     Pane pane = new Pane();
+    ScrollPane scrollPane = new ScrollPane(pane);
     ToolBar toolBar = new ToolBar();
     Canvas screen;
     
@@ -129,7 +124,6 @@ public class ESUVisualizer extends Application {
         
         scrollPane.setTranslateX(7);
         scrollPane.setTranslateY(7);
-        
         //scrollPane.setContent(screen);
         
         menu.setSpacing(5);
@@ -138,23 +132,22 @@ public class ESUVisualizer extends Application {
         
         // zoom in canvas content 
         zoomInButton.setOnAction((event) -> {
-            nodeContainer.setPrefSize(Math.max(nodeContainer.getBoundsInParent().
+            pane.setPrefSize(Math.max(pane.getBoundsInParent().
                     getMaxX()*1.1, scrollPane.getViewportBounds().getWidth()),
-            Math.max(nodeContainer.getBoundsInParent().getMaxY()*1.1, scrollPane.
+            Math.max(pane.getBoundsInParent().getMaxY()*1.1, scrollPane.
                     getViewportBounds().getHeight())
             );
-            nodeContainer.getChildren().add(pane);
-            scrollPane.setContent(nodeContainer);
+            scrollPane.setContent(pane);
+            
         });
         // zoomout canvas content 
-        zoomInButton.setOnAction((event) -> {
-            nodeContainer.setPrefSize(Math.max(nodeContainer.getBoundsInParent().
-                    getMaxX()/1.1, scrollPane.getViewportBounds().getWidth()),
-            Math.max(nodeContainer.getBoundsInParent().getMaxY()/1.1, scrollPane.
+        zoomOutButton.setOnAction((event) -> {
+            pane.setPrefSize(Math.max(pane.getBoundsInParent().
+                    getMaxX()/3.3, scrollPane.getViewportBounds().getWidth()),
+            Math.max(pane.getBoundsInParent().getMaxY()/3.3, scrollPane.
                     getViewportBounds().getHeight())
             );
-            nodeContainer.getChildren().add(pane);
-            scrollPane.setContent(nodeContainer);
+            scrollPane.setContent(pane);
             
         });
         
@@ -169,6 +162,7 @@ public class ESUVisualizer extends Application {
             // by step execution of the tree. 
             showTree();
         });
+        
         openFileButton.setOnAction(((event) -> {
             configureFileChooser(fileChooser);
             File file = fileChooser.showOpenDialog(new Stage());
@@ -176,18 +170,19 @@ public class ESUVisualizer extends Application {
                 openGraphFile(file);
                 graph.fillGraph(file.getPath());
                 showTree();
-            }
+            }else 
+                Alerts.displayFileNotFound();
             
         }));
         toolBar.getItems().addAll(menu);
         toolBar.setPrefWidth(800);
         menu.setPrefWidth(780);
         menu.setAlignment(Pos.CENTER);
-        scrollPane.setPrefSize(60, 513);
-        scrollPane.setMaxWidth(777);
-        vBox.getChildren().addAll(toolBar,scrollPane);
-        Pane pane = new Pane();
+        scrollPane.setPrefSize(600, 800);
+        scrollPane.setPrefViewportWidth(500);
+        scrollPane.setPrefViewportHeight(500);
         
+        vBox.getChildren().addAll(toolBar,scrollPane);
     }
     /**
      * 
@@ -199,16 +194,21 @@ public class ESUVisualizer extends Application {
         Stage stage = new Stage();
         Scene scene = new Scene(root);
         
-        stage.setWidth(800);
-        stage.setHeight(600);
-        root.getChildren().addAll(vBox);
+       // stage.setWidth(800);
+        //stage.setHeight(600);
+        
+        // needs more work
+        stage.setResizable(false);
+        nodeContainer.getChildren().add(vBox);
+        root.getChildren().addAll(nodeContainer);
+        
         stage.setScene(scene);
         stage.setTitle("ESU Visualization Software");
+        stage.sizeToScene();
         stage.show();
         
         
     }
-
     void showTree(){
         pane.getChildren().clear();
         pane.getChildren().addAll(0,AuxilaryClass.getPrintables(rectangles, 
