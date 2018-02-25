@@ -7,26 +7,32 @@
 package esu.algorithm.UI;
 
 import javafx.application.Application;
-import javafx.geometry.Pos;
-import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import esu.*;
 import esu.algorithm.*;
 import java.awt.Desktop;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.geometry.Bounds;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
-import javafx.scene.layout.AnchorPane;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.Separator;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.FileChooser;
@@ -43,20 +49,23 @@ public class ESUVisualizer extends Application {
     Button zoomOutButton = new Button("-");
     Button resetButton = new Button("Reset");
     Button nextButton = new Button("Next");
+    ToggleButton scaleButton = new ToggleButton("Scale");
     Button openFileButton = new Button("open File");
     TextField textField = new TextField();
     TextField sampleField = new TextField();
     
     // Containers 
-    Group root = new Group();
+    BorderPane root = new BorderPane();
     VBox vBox = new VBox();
-    HBox menu = new HBox();
-    AnchorPane nodeContainer = new AnchorPane();
+    StackPane nodeContainer = new StackPane();
     
     Pane pane = new Pane();
-    ScrollPane scrollPane = new ScrollPane(pane);
+    ScrollPane scrollPane = new ScrollPane();
     ToolBar toolBar = new ToolBar();
-    Canvas screen;
+    ToolBar toolBar2 = new ToolBar();
+    ToolBar toolBar3 = new ToolBar();
+    RadioButton radioButton = new RadioButton("Undirected graph");
+    Node node = pane;
     
     //tree variables
     ArrayList<ESUTree> treeList;
@@ -126,10 +135,6 @@ public class ESUVisualizer extends Application {
         scrollPane.setTranslateY(7);
         //scrollPane.setContent(screen);
         
-        menu.setSpacing(5);
-        menu.getChildren().addAll(zoomInButton,zoomOutButton,textField,
-                openFileButton,resetButton,nextButton);
-        
         // zoom in canvas content 
         zoomInButton.setOnAction((event) -> {
             pane.setPrefSize(Math.max(pane.getBoundsInParent().
@@ -174,15 +179,58 @@ public class ESUVisualizer extends Application {
                 Alerts.displayFileNotFound();
             
         }));
-        toolBar.getItems().addAll(menu);
-        toolBar.setPrefWidth(800);
-        menu.setPrefWidth(780);
-        menu.setAlignment(Pos.CENTER);
-        scrollPane.setPrefSize(600, 800);
-        scrollPane.setPrefViewportWidth(500);
-        scrollPane.setPrefViewportHeight(500);
+        scaleButton.setOnAction(((event) -> {
+            if(scaleButton.isSelected()){
+                node.setScaleX(0.3);
+                node.setScaleY(0.3);
+            }else{
+                node.setScaleX(1);
+                node.setScaleY(1);
+            }
+            Platform.runLater(new Runnable(){
+                @Override
+                public void run() {
+                    nodeContainer.setPrefSize(Math.max(nodeContainer.
+                            getBoundsInParent().getMaxX(), scrollPane.
+                                    getViewportBounds().getWidth()),
+                            Math.max(nodeContainer.getBoundsInParent().
+                                    getMaxY(), scrollPane.getViewportBounds().
+                                            getHeight())
+                    );
+                }
+                
+            });
+        }));
+        nodeContainer.getChildren().add(node);
+        scrollPane.setContent(nodeContainer);
+        scrollPane.setContent(nodeContainer);
+        scrollPane.viewportBoundsProperty().addListener(new ChangeListener<Bounds>() {
+            @Override public void changed(ObservableValue<? extends Bounds> observableValue, Bounds oldBounds, Bounds newBounds) {
+                nodeContainer.setPrefSize(
+                        Math.max(node.getBoundsInParent().getMaxX(), newBounds.getWidth()),
+                        Math.max(node.getBoundsInParent().getMaxY(), newBounds.getHeight())
+                );
+            }
+        });
         
-        vBox.getChildren().addAll(toolBar,scrollPane);
+        root.setTop(toolBar);
+        toolBar.getItems().addAll(zoomInButton,zoomOutButton,
+                                  new Separator(),textField,
+                                  new Separator(),openFileButton,
+                                  resetButton,nextButton, new Separator());
+        
+        toolBar.setPadding(new Insets(5, 25, 5, 150));
+        toolBar2.setOrientation(Orientation.VERTICAL);
+        toolBar2.getItems().addAll(new Separator(),scaleButton);
+        root.setLeft(toolBar2);
+        scrollPane.setPadding(new Insets(5, 5, 5, 5));
+        root.setCenter(scrollPane);
+        toolBar3.setOrientation(Orientation.VERTICAL);
+        toolBar3.getItems().addAll(new Separator(),radioButton);
+        root.setRight(toolBar3);
+//        scrollPane.setPrefSize(400, 400);
+//        scrollPane.setPrefViewportWidth(500);
+//        scrollPane.setPrefViewportHeight(500);
     }
     /**
      * 
@@ -192,15 +240,7 @@ public class ESUVisualizer extends Application {
     public void start(Stage primaryStage) {
         setNodes();
         Stage stage = new Stage();
-        Scene scene = new Scene(root);
-        
-       // stage.setWidth(800);
-        //stage.setHeight(600);
-        
-        // needs more work
-        stage.setResizable(false);
-        nodeContainer.getChildren().add(vBox);
-        root.getChildren().addAll(nodeContainer);
+        Scene scene = new Scene(root,800,600);
         
         stage.setScene(scene);
         stage.setTitle("ESU Visualization Software");
@@ -210,6 +250,7 @@ public class ESUVisualizer extends Application {
         
     }
     void showTree(){
+        
         pane.getChildren().clear();
         pane.getChildren().addAll(0,AuxilaryClass.getPrintables(rectangles, 
                 treeList.get(currentIndex).getNodesByLevel(), finalNodes));
