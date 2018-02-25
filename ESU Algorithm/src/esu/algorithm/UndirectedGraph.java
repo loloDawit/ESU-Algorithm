@@ -3,6 +3,7 @@
  */
 package esu.algorithm;
 
+import esu.algorithm.UI.Alerts;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
@@ -41,11 +42,19 @@ public class UndirectedGraph {
         try {
             File file = new File(fileName);
             Scanner scanner = new Scanner(file);
-            while (scanner.hasNextLine()) {
-                from = scanner.nextInt();
-                to = scanner.nextInt();
+            if(scanner.hasNextInt()){
+                while (scanner.hasNextLine()) {
+                    from = scanner.nextInt();
+                    to = scanner.nextInt();
+                
                 insertNode(from, to);
             }
+                
+            }else{
+                // we hit string
+                Alerts.displayInputMismatch();
+            }
+            
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         }
