@@ -33,14 +33,10 @@ import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.RadioButton;
 import javafx.scene.control.Separator;
+import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
@@ -52,7 +48,7 @@ import javafx.stage.FileChooser;
  * @author BioHazard
  */
 public class ESUVisualizer extends Application {
-    private Desktop desktop = Desktop.getDesktop();
+    private final Desktop desktop = Desktop.getDesktop();
     final FileChooser fileChooser = new FileChooser();
     UndirectedGraph graph = new UndirectedGraph(101); 
     // controls 
@@ -73,6 +69,7 @@ public class ESUVisualizer extends Application {
     BorderPane root = new BorderPane();
     VBox vBox = new VBox();
     StackPane nodeContainer = new StackPane();
+    Slider slider = new Slider(0.5,2,1);
     
     Pane pane = new Pane();
     ScrollPane scrollPane = new ScrollPane();
@@ -142,13 +139,8 @@ public class ESUVisualizer extends Application {
     public void setNodes(){
         textField.setPromptText("open file");
         
-        //screen = new Canvas();
-        //screen.setHeight(treeSpace.getHeight());
-        //screen.setWidth(treeSpace.getWidth());
-        
         scrollPane.setTranslateX(7);
         scrollPane.setTranslateY(7);
-        //scrollPane.setContent(screen);
         
         // zoom in canvas content 
         zoomInButton.setOnAction((event) -> {
@@ -223,28 +215,31 @@ public class ESUVisualizer extends Application {
                 
             });
         }));
-        scrollPane.setContent(nodeContainer);
-        scrollPane.viewportBoundsProperty().addListener(new ChangeListener<Bounds>() {
-            @Override public void changed(ObservableValue<? extends Bounds> observableValue, Bounds oldBounds, Bounds newBounds) {
-                nodeContainer.setPrefSize(
-                        Math.max(node.getBoundsInParent().getMaxX(), newBounds.getWidth()),
-                        Math.max(node.getBoundsInParent().getMaxY(), newBounds.getHeight())
-                );
-            }
+        ZoomingPane zoomingPane = new ZoomingPane(scrollPane);
+       
+        zoomingPane.zoomFactorProperty().bind(slider.valueProperty());
+        scrollPane.setContent
+        (nodeContainer);
+        scrollPane.viewportBoundsProperty().addListener((ObservableValue<? extends Bounds> observableValue, Bounds oldBounds, Bounds newBounds) -> {
+            nodeContainer.setPrefSize(
+                    Math.max(node.getBoundsInParent().getMaxX(), newBounds.getWidth()),
+                    Math.max(node.getBoundsInParent().getMaxY(), newBounds.getHeight())
+            );
         });
-        
+        root.setCenter(zoomingPane);
         root.setTop(toolBar);
         toolBar.getItems().addAll(zoomInButton,zoomOutButton,
                                   new Separator(),textField,
                                   new Separator(),openFileButton,
-                                  resetButton,nextButton, new Separator());
+                                  resetButton,nextButton, new Separator(),slider,new Separator());
         
         toolBar.setPadding(new Insets(5, 25, 5, 150));
         toolBar2.setOrientation(Orientation.VERTICAL);
-        toolBar2.getItems().addAll(new Separator(),scaleButton,new Separator(),graphButton);
+        toolBar2.getItems().addAll(new Separator(),scaleButton,new Separator(),
+                graphButton);
         root.setLeft(toolBar2);
         scrollPane.setPadding(new Insets(5, 5, 5, 5));
-        root.setCenter(scrollPane);
+        //root.setCenter(scrollPane);
         toolBar3.setOrientation(Orientation.VERTICAL);
         toolBar3.getItems().addAll(new Separator(),saveButton);
         root.setRight(toolBar3);
@@ -271,8 +266,6 @@ public class ESUVisualizer extends Application {
         stage.setTitle("ESU Visualization Software");
         stage.sizeToScene();
         stage.show();
-        
-        
     }
     /**
      * 
