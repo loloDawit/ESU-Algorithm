@@ -22,19 +22,30 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 /**
  *
@@ -50,9 +61,13 @@ public class ESUVisualizer extends Application {
     Button resetButton = new Button("Reset");
     Button nextButton = new Button("Next");
     ToggleButton scaleButton = new ToggleButton("Scale");
+    Button graphButton = new Button("Graph");
     Button openFileButton = new Button("open File");
     TextField textField = new TextField();
     TextField sampleField = new TextField();
+    Label showProgressLabel = new Label("Progress: ");
+    Button saveButton = new Button("Save output");
+    ListView<String> showProgress = new ListView<>();
     
     // Containers 
     BorderPane root = new BorderPane();
@@ -64,7 +79,7 @@ public class ESUVisualizer extends Application {
     ToolBar toolBar = new ToolBar();
     ToolBar toolBar2 = new ToolBar();
     ToolBar toolBar3 = new ToolBar();
-    RadioButton radioButton = new RadioButton("Undirected graph");
+    ToolBar toolBar4 = new ToolBar();
     Node node = pane;
     
     //tree variables
@@ -138,8 +153,8 @@ public class ESUVisualizer extends Application {
         // zoom in canvas content 
         zoomInButton.setOnAction((event) -> {
             pane.setPrefSize(Math.max(pane.getBoundsInParent().
-                    getMaxX()*1.1, scrollPane.getViewportBounds().getWidth()),
-            Math.max(pane.getBoundsInParent().getMaxY()*1.1, scrollPane.
+                    getMaxX()*3.3, scrollPane.getViewportBounds().getWidth()),
+            Math.max(pane.getBoundsInParent().getMaxY()*3.3, scrollPane.
                     getViewportBounds().getHeight())
             );
             scrollPane.setContent(pane);
@@ -148,8 +163,8 @@ public class ESUVisualizer extends Application {
         // zoomout canvas content 
         zoomOutButton.setOnAction((event) -> {
             pane.setPrefSize(Math.max(pane.getBoundsInParent().
-                    getMaxX()/3.3, scrollPane.getViewportBounds().getWidth()),
-            Math.max(pane.getBoundsInParent().getMaxY()/3.3, scrollPane.
+                    getMaxX()/10, scrollPane.getViewportBounds().getWidth()),
+            Math.max(pane.getBoundsInParent().getMaxY()/10, scrollPane.
                     getViewportBounds().getHeight())
             );
             scrollPane.setContent(pane);
@@ -179,6 +194,13 @@ public class ESUVisualizer extends Application {
                 Alerts.displayFileNotFound();
             
         }));
+        graphButton.setOnAction((event) ->{
+            reset();
+            setNode(createGraph());
+        });
+        resetButton.setOnAction((event) ->{
+            reset();
+        });
         scaleButton.setOnAction(((event) -> {
             if(scaleButton.isSelected()){
                 node.setScaleX(0.3);
@@ -201,8 +223,6 @@ public class ESUVisualizer extends Application {
                 
             });
         }));
-        nodeContainer.getChildren().add(node);
-        scrollPane.setContent(nodeContainer);
         scrollPane.setContent(nodeContainer);
         scrollPane.viewportBoundsProperty().addListener(new ChangeListener<Bounds>() {
             @Override public void changed(ObservableValue<? extends Bounds> observableValue, Bounds oldBounds, Bounds newBounds) {
@@ -221,16 +241,21 @@ public class ESUVisualizer extends Application {
         
         toolBar.setPadding(new Insets(5, 25, 5, 150));
         toolBar2.setOrientation(Orientation.VERTICAL);
-        toolBar2.getItems().addAll(new Separator(),scaleButton);
+        toolBar2.getItems().addAll(new Separator(),scaleButton,new Separator(),graphButton);
         root.setLeft(toolBar2);
         scrollPane.setPadding(new Insets(5, 5, 5, 5));
         root.setCenter(scrollPane);
         toolBar3.setOrientation(Orientation.VERTICAL);
-        toolBar3.getItems().addAll(new Separator(),radioButton);
+        toolBar3.getItems().addAll(new Separator(),saveButton);
         root.setRight(toolBar3);
-//        scrollPane.setPrefSize(400, 400);
-//        scrollPane.setPrefViewportWidth(500);
-//        scrollPane.setPrefViewportHeight(500);
+        showProgress.setPrefSize(610, 100);
+        ObservableList<String> items =FXCollections.observableArrayList
+                                ("sample progress 1 ", "sample progress 2",
+                                 "sample progress 3", "sample progress 4");
+        showProgress.setItems(items);
+        toolBar4.getItems().addAll(showProgressLabel,new Separator(),showProgress,new Separator());
+        root.setBottom(toolBar4);
+        root.setPadding(new Insets(5, 5, 5, 5));
     }
     /**
      * 
@@ -240,7 +265,7 @@ public class ESUVisualizer extends Application {
     public void start(Stage primaryStage) {
         setNodes();
         Stage stage = new Stage();
-        Scene scene = new Scene(root,800,600);
+        Scene scene = new Scene(root,850,650);
         
         stage.setScene(scene);
         stage.setTitle("ESU Visualization Software");
@@ -249,13 +274,43 @@ public class ESUVisualizer extends Application {
         
         
     }
+    /**
+     * 
+     * @param newNode 
+     */
+    private void setNode(Node newNode) {
+        Pane parent = this.node != null ? (Pane) this.node.getParent() : null;
+        if (parent != null) {
+            parent.getChildren().remove(this.node);
+            parent.getChildren().add(newNode);
+        }
+        this.node = newNode;
+        reset();
+        node.boundsInParentProperty().addListener(new ChangeListener<Bounds>() {
+            @Override public void changed(ObservableValue<? extends Bounds> observableValue, Bounds oldBounds, Bounds newBounds) {
+                nodeContainer.setPrefSize(
+                        Math.max(newBounds.getMaxX(), scrollPane.getViewportBounds().getWidth()),
+                        Math.max(newBounds.getMaxY(), scrollPane.getViewportBounds().getHeight())
+        );
+      }
+    });
+    }
+    /**
+     * reset the canvas 
+     */
+    void reset(){
+        pane.getChildren().clear();
+        nodeContainer.getChildren().clear();
+    }
+    /**
+     * showTree 
+     */
     void showTree(){
         
         pane.getChildren().clear();
         pane.getChildren().addAll(0,AuxilaryClass.getPrintables(rectangles, 
                 treeList.get(currentIndex).getNodesByLevel(), finalNodes));
         scrollPane.setContent(pane);
-        
         // ************ @DEPRICATED ****************
         //AuxilaryClass.drawTo(screen.getGraphicsContext2D(), AuxilaryClass.getPrintables(rectangles, treeList.get(currentIndex).getNodesByLevel()));
         // *****************************************
@@ -268,4 +323,51 @@ public class ESUVisualizer extends Application {
         launch(args);
     }
     
+    private Node createGraph() {// create a graph node to be acted on by the controls.// setup graph
+        return node;
+    }
+    public class ZoomingPane extends Pane{
+    Node content;
+    private DoubleProperty zoomFactor = new SimpleDoubleProperty(1);
+    
+    private ZoomingPane(Node content){
+        this.content = content;
+        getChildren().add(content);
+        Scale scale = new Scale(1,1);
+        content.getTransforms().add(scale);
+        zoomFactor.addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> {
+            scale.setX(newValue.doubleValue());
+            scale.setY(newValue.doubleValue());
+            requestLayout();
+        });
+    }
+    @Override
+    protected void layoutChildren() {
+        Pos pos = Pos.TOP_LEFT;
+        double width = getWidth();
+        double height = getHeight();
+        double top = getInsets().getTop();
+        double right = getInsets().getRight();
+        double left = getInsets().getLeft();
+        double bottom = getInsets().getBottom();
+        double contentWidth = (width - left - right)/zoomFactor.get();
+        double contentHeight = (height - top - bottom)/zoomFactor.get();
+        layoutInArea(content, left, top,
+                    contentWidth, contentHeight,
+                    0, null,
+                    pos.getHpos(),
+                    pos.getVpos());
+        }
+
+        public final Double getZoomFactor() {
+            return zoomFactor.get();
+        }
+        public final void setZoomFactor(Double zoomFactor) {
+            this.zoomFactor.set(zoomFactor);
+        }
+        public final DoubleProperty zoomFactorProperty() {
+            return zoomFactor;
+        }
+    }
 }
+
