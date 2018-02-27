@@ -46,9 +46,13 @@ public class UndirectedGraph {
             while (scanner.hasNextLine()) {
                 if (scanner.hasNextInt()) {
                     from = scanner.nextInt();
+                } else {
+                    return;
                 }
                 if (scanner.hasNextInt()) {
                     to = scanner.nextInt();
+                } else {
+                    return;
                 }
                 insertNode(from, to);
             }
