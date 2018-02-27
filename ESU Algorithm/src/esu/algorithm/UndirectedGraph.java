@@ -32,29 +32,26 @@ public class UndirectedGraph {
      * the file should be formatted as such:
      *
      * each line should have 2 numbers representing the nodes separated by any
-     * amount of whitespace.
+     * amount of whitespace. If it doesn't, the function simply stops reading
+     * when it hits invalid data
      *
-     * @param fileName name of the file to read graph from
+     * @param filename name of the file to read graph from
      */
     public void fillGraph(String fileName) {
-        int from;
-        int to;
+        int from = 0;
+        int to = 0;
         try {
             File file = new File(fileName);
             Scanner scanner = new Scanner(file);
-            if(scanner.hasNextInt()){
-                while (scanner.hasNextLine()) {
+            while (scanner.hasNextLine()) {
+                if (scanner.hasNextInt()) {
                     from = scanner.nextInt();
+                }
+                if (scanner.hasNextInt()) {
                     to = scanner.nextInt();
-                
+                }
                 insertNode(from, to);
             }
-                
-            }else{
-                // we hit string
-                Alerts.displayInputMismatch();
-            }
-            
         } catch (FileNotFoundException e) {
             System.out.println("File not found");
         }
