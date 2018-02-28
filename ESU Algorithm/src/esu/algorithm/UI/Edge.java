@@ -13,18 +13,18 @@ package esu.algorithm.UI;
 public class Edge {
     
     private final int   weight;
-    private final DrawNode  nodeOne;
-    private final DrawNode  nodeTwo;
+    private final DrawNode  nodeFrom;
+    private final DrawNode  nodeTo;
     /**
      * Default constructor
      * 
-     * @param newNodeOne    startNode of the edge (or node one as edges are undirected)
-     * @param newNodeTwo    endNode of the edge (or node two as edges are undirected)
+     * @param nodeFrom    startNode of the edge (or node one as edges are undirected)
+     * @param nodeTo      endNode of the edge (or node two as edges are undirected)
      * @param newWeight     random integer weight of the edge
      */
-    public Edge(DrawNode newNodeOne, DrawNode newNodeTwo, int newWeight) {    
-        nodeOne = newNodeOne;
-        nodeTwo = newNodeTwo;
+    public Edge(DrawNode nodeFrom, DrawNode nodeTo, int newWeight) {    
+        this.nodeFrom = nodeFrom;
+        this.nodeTo = nodeTo;
         weight  = newWeight;
     }
     /**
@@ -38,15 +38,15 @@ public class Edge {
      * Getter for the startNode of the edge (or node one as edges are undirected)
      * @return Node startNode of the edge
      */              
-    public DrawNode getNodeOne() {
-        return  nodeOne;
+    public DrawNode getNodeFrom() {
+        return  nodeFrom;
     }
     /**
      * Getter for the endNode of the edge
      * @return Node endNode of the edge (or node two as edges are undirected)
      */                  
-    public DrawNode getNodeTwo() {
-        return  nodeTwo;
+    public DrawNode getNodeTo() {
+        return  nodeTo;
     }
     
 }
