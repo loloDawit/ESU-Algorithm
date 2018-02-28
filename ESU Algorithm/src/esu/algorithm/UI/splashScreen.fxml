@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.image.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" fx:id="root" prefHeight="371.0" prefWidth="594.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="esu.algorithm.UI.SplashScreenController">
+   <children>
+      <ImageView fx:id="sScreenImage" fitHeight="371.0" fitWidth="623.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@sScreen.jpg" />
+         </image>
+      </ImageView>
+      <ProgressBar fx:id="progressBar" layoutX="197.0" layoutY="210.0" prefWidth="200.0" progress="0.0" />
+      <ProgressIndicator fx:id="pIndicator" layoutX="273.0" layoutY="230.0" progress="0.0" />
+   </children>
+</AnchorPane>
