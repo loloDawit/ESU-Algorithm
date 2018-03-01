@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="376.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="esu.algorithm.UI.LoadScreenController">
+   <children>
+      <VBox layoutX="188.0" layoutY="100.0" prefHeight="200.0" prefWidth="156.0">
+         <children>
+            <CheckBox fx:id="checkUniGraph" mnemonicParsing="false" prefHeight="18.0" prefWidth="141.0" text="Undirected Graph">
+               <VBox.margin>
+                  <Insets bottom="5.0" />
+               </VBox.margin>
+            </CheckBox>
+            <Separator prefWidth="200.0" />
+            <Button mnemonicParsing="false" onAction="#startApp" prefHeight="27.0" prefWidth="128.0" text="Start Application">
+               <VBox.margin>
+                  <Insets bottom="5.0" />
+               </VBox.margin>
+            </Button>
+            <Separator prefWidth="200.0" />
+            <Button mnemonicParsing="false" onAction="#showDoc" prefHeight="27.0" prefWidth="128.0" text="Document">
+               <VBox.margin>
+                  <Insets bottom="5.0" />
+               </VBox.margin>
+            </Button>
+            <Separator prefWidth="200.0" />
+            <Button mnemonicParsing="false" onAction="#showTeam" prefHeight="27.0" prefWidth="128.0" text="Team Members">
+               <VBox.margin>
+                  <Insets bottom="5.0" />
+               </VBox.margin>
+            </Button>
+         </children>
+      </VBox>
+      <Separator layoutX="175.0" layoutY="82.0" orientation="VERTICAL" prefHeight="200.0" />
+      <Label layoutX="22.0" layoutY="65.0" prefHeight="17.0" prefWidth="200.0" text="ESU   V I S U A L I Z A T I O N" wrapText="true" />
+   </children>
+</AnchorPane>
