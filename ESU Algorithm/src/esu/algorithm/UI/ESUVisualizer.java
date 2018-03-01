@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 import esu.algorithm.*;
 import java.awt.Desktop;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -28,11 +29,13 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
@@ -43,11 +46,13 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
+import javafx.stage.StageStyle;
 /**
  *
  * @author BioHazard
  */
 public class ESUVisualizer extends Application {
+    MainGraph graphApp = new MainGraph();
     private final Desktop desktop = Desktop.getDesktop();
     final FileChooser fileChooser = new FileChooser();
     UndirectedGraph graph = new UndirectedGraph(101); 
@@ -188,7 +193,7 @@ public class ESUVisualizer extends Application {
         }));
         graphButton.setOnAction((event) ->{
             reset();
-            setNode(createGraph());
+            loadWindow("/esu/algorithm/UI/GraphApp.fxml","Undirected Graph");
         });
         resetButton.setOnAction((event) ->{
             reset();
@@ -361,6 +366,18 @@ public class ESUVisualizer extends Application {
         public final DoubleProperty zoomFactorProperty() {
             return zoomFactor;
         }
+    }
+    void loadWindow(String loc, String title){
+        try {
+            Parent parent = FXMLLoader.load(getClass().getResource(loc));
+            Stage stage = new Stage(StageStyle.DECORATED);
+            stage.setTitle(title);
+            stage.setScene(new Scene(parent));
+            stage.show();
+        } catch (IOException ex) {
+            Logger.getLogger(ESUVisualizer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 }
 
