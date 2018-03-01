@@ -5,6 +5,8 @@
  */
 package esu.algorithm.UI;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javafx.animation.FadeTransition;
 import javafx.application.Application;
 import static javafx.application.Application.launch;
@@ -19,7 +21,7 @@ import javafx.util.Duration;
  * @author dawitabera
  */
 public class Run extends Application{
-    ESUDriver open = new ESUDriver();
+    startESU open = new startESU();
     
     @Override
     public void start(Stage stage) throws Exception {
@@ -38,7 +40,11 @@ public class Run extends Application{
         
         fadeIn.setOnFinished((event)->{
             fadeOut.play();
-            open.start(stage);
+            try {
+                open.start(stage);
+            } catch (Exception ex) {
+                Logger.getLogger(Run.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
         Scene scene = new Scene(root);
         stage.setTitle("Undirected Subgraph Enumeration Software");
