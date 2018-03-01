@@ -420,6 +420,7 @@ public class ESUVisualizer extends Application {
             scan.close();
         }
         catch(Exception e){
+            Alerts.displayInputMismatch();
             System.out.println("Error opening file: " + file.getAbsolutePath());
         }
         return result;
