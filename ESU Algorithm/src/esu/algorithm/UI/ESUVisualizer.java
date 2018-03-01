@@ -20,6 +20,7 @@ import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
@@ -55,12 +56,13 @@ public class ESUVisualizer extends Application {
     MainGraph graphApp = new MainGraph();
     private final Desktop desktop = Desktop.getDesktop();
     final FileChooser fileChooser = new FileChooser();
-    UndirectedGraph graph = new UndirectedGraph(101); 
+    UndirectedGraph graph = null;
     // controls 
     Button zoomInButton = new Button("+");
     Button zoomOutButton = new Button("-");
     Button resetButton = new Button("Reset");
     Button nextButton = new Button("Next");
+    Button prevButton = new Button("Prev");
     ToggleButton scaleButton = new ToggleButton("Scale");
     Button graphButton = new Button("Graph");
     Button openFileButton = new Button("open File");
@@ -85,7 +87,7 @@ public class ESUVisualizer extends Application {
     Node node = pane;
     
     //tree variables
-    ArrayList<ESUTree> treeList;
+    ArrayList<ESUTree> treeList = null;
     int currentIndex = -1;
     Rectangle treeSpace;
     ArrayList<Rectangle>[] rectangles;
@@ -93,24 +95,6 @@ public class ESUVisualizer extends Application {
     
     public ESUVisualizer(){
         super();
-        UndirectedGraph graph = new UndirectedGraph(101);
-        
-        //**************    INSERT PATH TO GRAPH TEXT FILE **********************
-        graph.fillGraph("/Users/dawitabera/Desktop/myGraph.txt");
-        //***********************************************************************
-        ESUTree tree = new ESUTree(graph, 4);
-        treeList= new ArrayList<>();
-        //step until done
-        while(tree.step()){
-            ESUTree tempTree = new ESUTree(tree);
-            tree.clearStepLog();
-            treeList.add(tempTree);
-        }
-        finalNodes = treeList.get(treeList.size()-1).getNodesByLevel();
-        AuxilaryClass.setNodeDims(treeList.get(treeList.size()-1));
-        treeSpace = AuxilaryClass.getTreeSpace(treeList.get(treeList.size()-1));
-        rectangles = AuxilaryClass.getRectangles(treeList.get(treeList.size()-1));
-        currentIndex = 0;
     }
     /**
      * Open graph from file 
@@ -143,6 +127,7 @@ public class ESUVisualizer extends Application {
      */
     public void setNodes(){
         textField.setPromptText("open file");
+        textField.setEditable(false);
         
         scrollPane.setTranslateX(7);
         scrollPane.setTranslateY(7);
@@ -169,6 +154,8 @@ public class ESUVisualizer extends Application {
         });
         
         nextButton.setOnAction((event) ->{
+            if (treeList == null)
+                return;
             if(currentIndex < 0){
                 currentIndex = 0;
             }
@@ -179,14 +166,26 @@ public class ESUVisualizer extends Application {
             // by step execution of the tree. 
             showTree();
         });
+        prevButton.setOnAction((event) ->{
+            if (treeList == null)
+                return;
+            if(currentIndex < 1){
+                currentIndex = 0;
+            }
+            else{
+                currentIndex--;
+            }
+            // here instead of show tree, we can call nextstep to show step 
+            // by step execution of the tree. 
+            showTree();
+        });
         
         openFileButton.setOnAction(((event) -> {
             configureFileChooser(fileChooser);
             File file = fileChooser.showOpenDialog(new Stage());
             if(file !=null){
-                openGraphFile(file);
-                graph.fillGraph(file.getPath());
-                showTree();
+                //openGraphFile(file);
+                loadGraph(file);
             }else 
                 Alerts.displayFileNotFound();
             
@@ -236,7 +235,7 @@ public class ESUVisualizer extends Application {
         toolBar.getItems().addAll(zoomInButton,zoomOutButton,
                                   new Separator(),textField,
                                   new Separator(),openFileButton,
-                                  resetButton,nextButton, new Separator(),slider,new Separator());
+                                  resetButton,nextButton,prevButton, new Separator(),slider,new Separator());
         
         toolBar.setPadding(new Insets(5, 25, 5, 150));
         toolBar2.setOrientation(Orientation.VERTICAL);
@@ -249,9 +248,7 @@ public class ESUVisualizer extends Application {
         toolBar3.getItems().addAll(new Separator(),saveButton);
         root.setRight(toolBar3);
         showProgress.setPrefSize(610, 100);
-        ObservableList<String> items =FXCollections.observableArrayList
-                                ("sample progress 1 ", "sample progress 2",
-                                 "sample progress 3", "sample progress 4");
+        ObservableList<String> items =FXCollections.observableArrayList();
         showProgress.setItems(items);
         toolBar4.getItems().addAll(showProgressLabel,new Separator(),showProgress,new Separator());
         root.setBottom(toolBar4);
@@ -299,16 +296,30 @@ public class ESUVisualizer extends Application {
     void reset(){
         pane.getChildren().clear();
         nodeContainer.getChildren().clear();
+        currentIndex = -1;
     }
     /**
      * showTree 
      */
     void showTree(){
-        
+        if(treeList == null)
+            return;
         pane.getChildren().clear();
         pane.getChildren().addAll(0,AuxilaryClass.getPrintables(rectangles, 
                 treeList.get(currentIndex).getNodesByLevel(), finalNodes));
         scrollPane.setContent(pane);
+        showProgress.getItems().clear();
+        ArrayList<StepInfo> stepLog = treeList.get(currentIndex).getLog();
+        for (int entry = 0; entry < stepLog.size(); entry++) {
+            String caller = stepLog.get(entry).caller.getSubgraphAsString();
+            String target = "{}";
+            if(stepLog.get(entry).target != null)
+                target = stepLog.get(entry).target.getSubgraphAsString();
+            String description = stepLog.get(entry).description;
+            description = description.replace("%t", target);
+            description = description.replace("%c", caller);
+            showProgress.getItems().add(description);
+        }
         // ************ @DEPRICATED ****************
         //AuxilaryClass.drawTo(screen.getGraphicsContext2D(), AuxilaryClass.getPrintables(rectangles, treeList.get(currentIndex).getNodesByLevel()));
         // *****************************************
