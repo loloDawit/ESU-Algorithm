@@ -118,6 +118,9 @@ public class ESUTree {
         return maxHeight;
     }
     
+    public ArrayList<StepInfo> getLog(){
+        return log;
+    }
     public void clearStepLog(){
         log.clear();
     }
