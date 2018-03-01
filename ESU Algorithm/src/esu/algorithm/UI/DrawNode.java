@@ -18,7 +18,7 @@ public class DrawNode {
      * 
      * @param newLocationX  location on the x axis
      * @param newLocationY  location on the y axis
-     * @param name          character identifier of the node
+     * @param gname          character identifier of the node
      */
     public DrawNode(int newLocationX, int newLocationY, char gname){
         this.nodeName    = gname;
