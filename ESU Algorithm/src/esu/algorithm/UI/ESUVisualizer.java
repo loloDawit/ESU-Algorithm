@@ -378,17 +378,52 @@ public class ESUVisualizer extends Application {
             return zoomFactor;
         }
     }
-    void loadWindow(String loc, String title){
-        try {
-            Parent parent = FXMLLoader.load(getClass().getResource(loc));
-            Stage stage = new Stage(StageStyle.DECORATED);
-            stage.setTitle(title);
-            stage.setScene(new Scene(parent));
-            stage.show();
-        } catch (IOException ex) {
-            Logger.getLogger(ESUVisualizer.class.getName()).log(Level.SEVERE, null, ex);
+    
+    public void loadGraph(File file){
+        int size = getLargestVertex(file);
+        if(size < 0){
+            return;
         }
+        textField.setText(file.getName());
+        graph = new UndirectedGraph(size);
+        graph.fillGraph(file.getPath());
         
+        ESUTree tree = new ESUTree(graph, 4);
+        treeList= new ArrayList<>();
+        ESUTree tempTree = new ESUTree(tree);
+        tree.clearStepLog();
+        treeList.add(tempTree);
+        tree.clearStepLog();
+        //step until done
+        while(tree.step()){
+            tempTree = new ESUTree(tree);
+            tree.clearStepLog();
+            treeList.add(tempTree);
+        }
+        finalNodes = treeList.get(treeList.size()-1).getNodesByLevel();
+        AuxilaryClass.setNodeDims(treeList.get(treeList.size()-1));
+        treeSpace = AuxilaryClass.getTreeSpace(treeList.get(treeList.size()-1));
+        rectangles = AuxilaryClass.getRectangles(treeList.get(treeList.size()-1));
+        currentIndex = -1;
     }
+    
+    int getLargestVertex(File file){
+        int result = -1;
+        try{
+            Scanner scan = new Scanner(file);
+            while(scan.hasNext()){
+                int next = scan.nextInt();
+                if(next > result){
+                    result = next;
+                }
+            }
+            scan.close();
+        }
+        catch(Exception e){
+            System.out.println("Error opening file: " + file.getAbsolutePath());
+        }
+        return result;
+    }
+    
 }
 
