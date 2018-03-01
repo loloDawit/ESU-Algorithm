@@ -425,6 +425,11 @@ public class ESUVisualizer extends Application {
         }
         return result;
     }
+    /**
+     * 
+     * @param loc   location of the fxml class
+     * @param title to the scene 
+     */
     void loadWindow(String loc, String title){
         try {
             Parent parent = FXMLLoader.load(getClass().getResource(loc));
