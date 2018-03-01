@@ -18,6 +18,7 @@ import javafx.stage.Stage;
 import esu.algorithm.*;
 import java.awt.Desktop;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
@@ -37,6 +38,7 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.ButtonBuilder;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
@@ -45,9 +47,12 @@ import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextBuilder;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.StageStyle;
+import jdk.jfr.events.FileWriteEvent;
 /**
  *
  * @author BioHazard
@@ -196,6 +201,23 @@ public class ESUVisualizer extends Application {
         });
         resetButton.setOnAction((event) ->{
             reset();
+        });
+        
+        saveButton.setOnAction((event) ->{
+            String testString = "Biohazard";
+            Text tString = TextBuilder.create().text(testString).build();
+            
+            FileChooser fileChooser = new FileChooser();
+            //Set extension filter
+            FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt");
+            fileChooser.getExtensionFilters().add(extFilter);
+              
+            //Show save file dialog
+            File file = fileChooser.showSaveDialog(new Stage());
+            if(file != null){
+                saveFile(testString, file);
+                
+            }
         });
         scaleButton.setOnAction(((event) -> {
             if(scaleButton.isSelected()){
@@ -441,6 +463,21 @@ public class ESUVisualizer extends Application {
             Logger.getLogger(ESUVisualizer.class.getName()).log(Level.SEVERE, null, ex);
         }
         
+    }
+    /**
+     * 
+     * @param content
+     * @param file 
+     */
+    private void saveFile(String content, File file){
+        try {
+            FileWriter fileWriter = null;
+            fileWriter = new FileWriter(file);
+            fileWriter.write(content);
+            fileWriter.close();
+        } catch (IOException e) {
+            Logger.getLogger(ESUVisualizer.class.getName()).log(Level.SEVERE,null,e);
+        }
     }
     
 }
