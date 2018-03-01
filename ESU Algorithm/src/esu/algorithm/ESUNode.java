@@ -207,13 +207,7 @@ public class ESUNode {
         if(level < tree.maxHeight){
             
             //update log with node creation
-            String parentPS = "(";
-            for(Integer i : parent.possibleSteps){
-                parentPS += " " + i + ",";
-            }
-            parentPS = parentPS.substring(0, parentPS.length()-1);
-            parentPS += " )";
-            
+            String parentPS = parent.getPossibleStepsAsString();
             
             //copy parent's possible steps if parent not root
             if(parent.myStep != null){
