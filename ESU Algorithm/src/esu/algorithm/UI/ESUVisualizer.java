@@ -31,6 +31,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
@@ -77,7 +79,8 @@ public class ESUVisualizer extends Application {
     Button saveButton = new Button("Save output");
     ListView<String> showProgress = new ListView<>();
     Button backButton = new Button("Back");
-    
+    Button showFinalTree = new Button("FinalTree");
+    int count = 0;
     // Containers 
     BorderPane root = new BorderPane();
     VBox vBox = new VBox();
@@ -158,6 +161,19 @@ public class ESUVisualizer extends Application {
             scrollPane.setContent(pane);
             
         });
+        //show final ESU Tree
+        showFinalTree.setOnAction((event) ->{
+            if(textField.getText().isEmpty()){
+                Alerts.displayFileNotFound();
+                return;
+            }
+            currentIndex = 0;
+            while(currentIndex < treeList.size() - 1 ){
+                
+                showTree();
+                currentIndex++;
+            }
+        });
         
         nextButton.setOnAction((event) ->{
             if (treeList == null)
@@ -205,7 +221,10 @@ public class ESUVisualizer extends Application {
         });
         
         saveButton.setOnAction((event) ->{
-            String testString = "Biohazard";
+            String testString = "Biohazard    \n "
+                    + "Subgraph found: " + count + "\n"
+                    + "Subgraph contenet: "+ "1 5 6 7\n";
+           
             Text tString = TextBuilder.create().text(testString).build();
             
             FileChooser fileChooser = new FileChooser();
@@ -262,7 +281,8 @@ public class ESUVisualizer extends Application {
         toolBar.getItems().addAll(zoomInButton,zoomOutButton,
                                   new Separator(),textField,
                                   new Separator(),openFileButton,
-                                  resetButton,nextButton,prevButton, new Separator(),slider,new Separator());
+                                  resetButton,nextButton,prevButton, new Separator(),slider,new Separator()
+                                  ,showFinalTree,new Separator());
         
         toolBar.setPadding(new Insets(5, 25, 5, 150));
         toolBar2.setOrientation(Orientation.VERTICAL);
@@ -289,7 +309,7 @@ public class ESUVisualizer extends Application {
     public void start(Stage primaryStage) {
         setNodes();
         Stage stage = new Stage();
-        Scene scene = new Scene(root,850,650);
+        Scene scene = new Scene(root,950,650);
         
         stage.setScene(scene);
         stage.setTitle("ESU Visualization Software");
@@ -345,7 +365,7 @@ public class ESUVisualizer extends Application {
             String description = stepLog.get(entry).description;
             description = description.replace("%t", target);
             description = description.replace("%c", caller);
-            showProgress.getItems().add(description);
+            showProgress.getItems().add(description);        
         }
         // ************ @DEPRICATED ****************
         //AuxilaryClass.drawTo(screen.getGraphicsContext2D(), AuxilaryClass.getPrintables(rectangles, treeList.get(currentIndex).getNodesByLevel()));
