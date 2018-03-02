@@ -282,17 +282,17 @@ public class ESUVisualizer extends Application {
                                   new Separator(),textField,
                                   new Separator(),openFileButton,
                                   resetButton,nextButton,prevButton, new Separator(),slider,new Separator()
-                                  ,showFinalTree,new Separator());
+                                  );
         
         toolBar.setPadding(new Insets(5, 25, 5, 150));
         toolBar2.setOrientation(Orientation.VERTICAL);
         toolBar2.getItems().addAll(new Separator(),scaleButton,new Separator(),
-                graphButton);
+                                   graphButton);
         root.setLeft(toolBar2);
         scrollPane.setPadding(new Insets(5, 5, 5, 5));
         //root.setCenter(scrollPane);
         toolBar3.setOrientation(Orientation.VERTICAL);
-        toolBar3.getItems().addAll(new Separator(),saveButton);
+        toolBar3.getItems().addAll(new Separator(),saveButton,showFinalTree,new Separator());
         root.setRight(toolBar3);
         showProgress.setPrefSize(610, 100);
         ObservableList<String> items =FXCollections.observableArrayList();
@@ -309,7 +309,7 @@ public class ESUVisualizer extends Application {
     public void start(Stage primaryStage) {
         setNodes();
         Stage stage = new Stage();
-        Scene scene = new Scene(root,950,650);
+        Scene scene = new Scene(root,910,650);
         
         stage.setScene(scene);
         stage.setTitle("ESU Visualization Software");
