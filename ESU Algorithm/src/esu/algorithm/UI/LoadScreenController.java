@@ -25,7 +25,7 @@ import javafx.stage.Stage;
  */
 public class LoadScreenController implements Initializable {
     ESUVisualizer openESUVisualizer = new ESUVisualizer();
-    Stage stage;
+    
     @FXML
     private CheckBox checkUniGraph;
 
@@ -41,9 +41,11 @@ public class LoadScreenController implements Initializable {
 
     @FXML
     private void startApp(ActionEvent event) {
+        
         if(checkUniGraph.isSelected()){
             try {
-                openESUVisualizer.start(stage);
+                openESUVisualizer.start(new Stage());
+                closeStage();
             } catch (Exception e) {
             }
         }else
@@ -84,6 +86,9 @@ public class LoadScreenController implements Initializable {
         fileChooser.getExtensionFilters().addAll(
                 new FileChooser.ExtensionFilter("PDF files (*.pdf)\", \"*.pdf"));
         
+    }
+    public void closeStage() {
+        ((Stage)checkUniGraph.getScene().getWindow()).close();
     }
         
     
