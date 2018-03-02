@@ -76,6 +76,7 @@ public class ESUVisualizer extends Application {
     Label showProgressLabel = new Label("Progress: ");
     Button saveButton = new Button("Save output");
     ListView<String> showProgress = new ListView<>();
+    Button backButton = new Button("Back");
     
     // Containers 
     BorderPane root = new BorderPane();
@@ -219,6 +220,10 @@ public class ESUVisualizer extends Application {
                 
             }
         });
+        backButton.setOnAction(((event) -> {
+            loadWindow("/esu/algorithm/UI/loadScreen.fxml", "Undirected Subgraph Enumeration Software");
+            closeStage();
+        }));
         scaleButton.setOnAction(((event) -> {
             if(scaleButton.isSelected()){
                 node.setScaleX(0.3);
@@ -272,7 +277,7 @@ public class ESUVisualizer extends Application {
         showProgress.setPrefSize(610, 100);
         ObservableList<String> items =FXCollections.observableArrayList();
         showProgress.setItems(items);
-        toolBar4.getItems().addAll(showProgressLabel,new Separator(),showProgress,new Separator());
+        toolBar4.getItems().addAll(showProgressLabel,new Separator(),showProgress,new Separator(),backButton);
         root.setBottom(toolBar4);
         root.setPadding(new Insets(5, 5, 5, 5));
     }
@@ -478,6 +483,12 @@ public class ESUVisualizer extends Application {
         } catch (IOException e) {
             Logger.getLogger(ESUVisualizer.class.getName()).log(Level.SEVERE,null,e);
         }
+    }
+    /**
+     * close current stage 
+     */
+    public void closeStage() {
+        ((Stage)root.getScene().getWindow()).close();
     }
     
 }
