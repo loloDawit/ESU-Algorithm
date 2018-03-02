@@ -58,13 +58,16 @@ public class LoadScreenController implements Initializable {
         fileChooser.getExtensionFilters().add(extFilter);
               
         //Show open file dialog
-        File file = fileChooser.showOpenDialog(new Stage());
-        if(file.exists()){
-           if(Desktop.isDesktopSupported()){
-               Desktop.getDesktop().open(file);
-           }
-        }else
+        File pdfFile = fileChooser.showOpenDialog(new Stage());
+        if(pdfFile == null){
+            // show error 
             Alerts.displayFileNotFound();
+        }else{
+            // else open pdf file
+            String path = pdfFile.getPath();
+        }
+            
+            
     }
 
     @FXML
