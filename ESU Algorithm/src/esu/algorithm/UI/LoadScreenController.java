@@ -64,7 +64,9 @@ public class LoadScreenController implements Initializable {
             Alerts.displayFileNotFound();
         }else{
             // else open pdf file
-            String path = pdfFile.getPath();
+            if(Desktop.isDesktopSupported()){
+                Desktop.getDesktop().open(pdfFile.getAbsoluteFile());
+            }
         }
             
             
