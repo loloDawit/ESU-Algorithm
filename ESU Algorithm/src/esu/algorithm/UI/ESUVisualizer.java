@@ -169,7 +169,6 @@ public class ESUVisualizer extends Application {
             }
             currentIndex = 0;
             while(currentIndex < treeList.size() - 1 ){
-                
                 showTree();
                 currentIndex++;
             }
@@ -236,7 +235,6 @@ public class ESUVisualizer extends Application {
             File file = fileChooser.showSaveDialog(new Stage());
             if(file != null){
                 saveFile(testString, file);
-                
             }
         });
         backButton.setOnAction(((event) -> {
@@ -357,6 +355,8 @@ public class ESUVisualizer extends Application {
         scrollPane.setContent(pane);
         showProgress.getItems().clear();
         ArrayList<StepInfo> stepLog = treeList.get(currentIndex).getLog();
+        count = stepLog.get(stepLog.size() - 1).count;
+        
         for (int entry = 0; entry < stepLog.size(); entry++) {
             String caller = stepLog.get(entry).caller.getSubgraphAsString();
             String target = "{}";
@@ -447,7 +447,8 @@ public class ESUVisualizer extends Application {
             tree.clearStepLog();
             treeList.add(tempTree);
         }
-        finalNodes = treeList.get(treeList.size()-1).getNodesByLevel();
+        finalNodes = treeList.get(treeList.size()-1).getNodesByLevel(); 
+        
         AuxilaryClass.setNodeDims(treeList.get(treeList.size()-1));
         treeSpace = AuxilaryClass.getTreeSpace(treeList.get(treeList.size()-1));
         rectangles = AuxilaryClass.getRectangles(treeList.get(treeList.size()-1));
