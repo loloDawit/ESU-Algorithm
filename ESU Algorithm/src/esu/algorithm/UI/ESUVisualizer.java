@@ -77,7 +77,7 @@ public class ESUVisualizer extends Application {
     TextField textField = new TextField();
     TextField sampleField = new TextField();
     Label showProgressLabel = new Label("Progress: ");
-    Button saveButton = new Button("Save output");
+    Button saveButton = new Button("Save");
     ListView<String> showProgress = new ListView<>();
     Button backButton = new Button("Back");
     Button showFinalTree = new Button("FinalTree");
