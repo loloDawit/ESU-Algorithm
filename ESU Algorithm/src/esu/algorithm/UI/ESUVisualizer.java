@@ -304,7 +304,7 @@ public class ESUVisualizer extends Application {
         scrollPane.setPadding(new Insets(5, 5, 5, 5));
         //root.setCenter(scrollPane);
         toolBar3.setOrientation(Orientation.VERTICAL);
-        toolBar3.getItems().addAll(new Separator(),saveButton,showFinalTree,new Separator());
+        toolBar3.getItems().addAll(new Separator(),saveButton,new Separator(),showFinalTree,new Separator());
         root.setRight(toolBar3);
         showProgress.setPrefSize(610, 100);
         ObservableList<String> items =FXCollections.observableArrayList();
