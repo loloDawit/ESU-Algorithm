@@ -91,6 +91,12 @@ public class Alerts {
         alert.setContentText("The software only supports undirected graphs for now");
         alert.show();
     }
+    public static void displaySavedToFile(){
+        alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setHeaderText(null);
+        alert.setContentText("File was successfully saved");
+        alert.show();
+    }
             
     
     
