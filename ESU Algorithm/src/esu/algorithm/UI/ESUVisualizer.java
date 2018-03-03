@@ -235,6 +235,7 @@ public class ESUVisualizer extends Application {
             File file = fileChooser.showSaveDialog(new Stage());
             if(file != null){
                 saveFile(testString, file);
+                Alerts.displaySavedToFile();
             }
         });
         backButton.setOnAction(((event) -> {
