@@ -40,7 +40,7 @@ public class StepInfo {
     public Code stepCode;       //Log Code: see enum at bottom of file
     public ESUTree tree;        //A copy of the tree's state for the log
     //*****************************************************************
-    
+    public int count;
     /** ***********************************************************************
      * Constructor:
      * Simply initializes this StepInformation's internal variables to all those
@@ -92,10 +92,8 @@ public class StepInfo {
                     break;
                 }
             }
-        }
-        
-        
-        
+        } 
+        count =levels[levels.length - 1].size();
     }
     
     
