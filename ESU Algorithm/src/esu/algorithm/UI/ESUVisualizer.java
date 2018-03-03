@@ -21,6 +21,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -80,7 +81,7 @@ public class ESUVisualizer extends Application {
     ListView<String> showProgress = new ListView<>();
     Button backButton = new Button("Back");
     Button showFinalTree = new Button("FinalTree");
-    int count = 0;
+    
     // Containers 
     BorderPane root = new BorderPane();
     VBox vBox = new VBox();
@@ -101,6 +102,8 @@ public class ESUVisualizer extends Application {
     Rectangle treeSpace;
     ArrayList<Rectangle>[] rectangles;
     ArrayList<ESUNode>[] finalNodes;
+    int leaves = 0;
+    int subgraphSize = 5;
     
     public ESUVisualizer(){
         super();
@@ -167,11 +170,15 @@ public class ESUVisualizer extends Application {
                 Alerts.displayFileNotFound();
                 return;
             }
+            /*
             currentIndex = 0;
             while(currentIndex < treeList.size() - 1 ){
                 showTree();
                 currentIndex++;
             }
+            */
+            currentIndex = treeList.size() - 1;
+            showTree();
         });
         
         nextButton.setOnAction((event) ->{
@@ -220,11 +227,17 @@ public class ESUVisualizer extends Application {
         });
         
         saveButton.setOnAction((event) ->{
-            String testString = "Biohazard    \n "
-                    + "Subgraph found: " + count + "\n"
-                    + "Subgraph contenet: "+ "1 5 6 7\n";
+            String output = "Biohazard    \n "
+                    + "Subgraphs found: " + leaves + "\n"
+                    + "Subgraphs: "+ "\n";
            
-            Text tString = TextBuilder.create().text(testString).build();
+            Text tString = TextBuilder.create().text(output).build();
+            
+            //get subgraphs as text for file printing
+            int filler = 0;
+            for(ESUNode eNode : finalNodes[finalNodes.length -1]){
+                output += eNode.getSubgraphAsString() + "\n";
+            }
             
             FileChooser fileChooser = new FileChooser();
             //Set extension filter
@@ -234,7 +247,7 @@ public class ESUVisualizer extends Application {
             //Show save file dialog
             File file = fileChooser.showSaveDialog(new Stage());
             if(file != null){
-                saveFile(testString, file);
+                saveFile(output, file);
                 Alerts.displaySavedToFile();
             }
         });
@@ -356,7 +369,9 @@ public class ESUVisualizer extends Application {
         scrollPane.setContent(pane);
         showProgress.getItems().clear();
         ArrayList<StepInfo> stepLog = treeList.get(currentIndex).getLog();
-        count = stepLog.get(stepLog.size() - 1).count;
+        
+        //moved to "loadGraph" to set on initialization
+        //count = stepLog.get(stepLog.size() - 1).count;
         
         for (int entry = 0; entry < stepLog.size(); entry++) {
             String caller = stepLog.get(entry).caller.getSubgraphAsString();
@@ -436,12 +451,13 @@ public class ESUVisualizer extends Application {
         graph = new UndirectedGraph(size);
         graph.fillGraph(file.getPath());
         
-        ESUTree tree = new ESUTree(graph, 4);
+        ESUTree tree = new ESUTree(graph, subgraphSize);
         treeList= new ArrayList<>();
         ESUTree tempTree = new ESUTree(tree);
         tree.clearStepLog();
         treeList.add(tempTree);
         tree.clearStepLog();
+        
         //step until done
         while(tree.step()){
             tempTree = new ESUTree(tree);
@@ -453,6 +469,8 @@ public class ESUVisualizer extends Application {
         AuxilaryClass.setNodeDims(treeList.get(treeList.size()-1));
         treeSpace = AuxilaryClass.getTreeSpace(treeList.get(treeList.size()-1));
         rectangles = AuxilaryClass.getRectangles(treeList.get(treeList.size()-1));
+        
+        leaves = finalNodes[finalNodes.length-1].size();
         currentIndex = -1;
     }
     

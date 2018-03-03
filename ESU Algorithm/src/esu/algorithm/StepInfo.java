@@ -9,10 +9,8 @@
 //package
 package esu.algorithm;
 
-//no imports
-
+//imports
 import java.util.ArrayList;
-
 
 /** **************************************************************************
  * Class: Step Information
@@ -29,6 +27,8 @@ import java.util.ArrayList;
  *          Filled in documentation
  *      2/20/18 - 
  *          Added a copy of the ESUTree to the StepInfo data
+ *      3/2/18 - 
+ *          added a count public variable for leaf count.
  ************************************************************************** */
 public class StepInfo {
     
@@ -39,8 +39,9 @@ public class StepInfo {
     public Integer check;       //An optional Integer for this log entry
     public Code stepCode;       //Log Code: see enum at bottom of file
     public ESUTree tree;        //A copy of the tree's state for the log
+    public int count;           //The current leaf count
     //*****************************************************************
-    public int count;
+    
     /** ***********************************************************************
      * Constructor:
      * Simply initializes this StepInformation's internal variables to all those
@@ -60,7 +61,8 @@ public class StepInfo {
      *                      step. Can be null if no Integer is being checked
      *                      during this step.
      *********************************************************************** */
-    public StepInfo(ESUNode caller, String desc, Code code, ESUNode target, Integer check){
+    public StepInfo(ESUNode caller, String desc, 
+            Code code, ESUNode target, Integer check){
         
         this.caller = null;//default to null
         description = desc;
@@ -78,7 +80,9 @@ public class StepInfo {
         }
         //find relavent caller node in tree copy
         for(int node = 0; node < levels[caller.getLevel()].size(); node++){
-            if (caller.getSubgraphAsString().equals(levels[caller.getLevel()].get(node).getSubgraphAsString())){
+            if (caller.getSubgraphAsString().equals(levels[caller.getLevel()].
+                    get(node).getSubgraphAsString())){
+                
                 this.caller = levels[caller.getLevel()].get(node);
                 break;
             }
@@ -87,12 +91,16 @@ public class StepInfo {
         //find relavent target node in tree copy if not null
         if(target != null){
             for(int node = 0; node < levels[target.getLevel()].size(); node++){
-                if (target.getSubgraphAsString().equals(levels[target.getLevel()].get(node).getSubgraphAsString())){
+                if (target.getSubgraphAsString().equals(levels[target.getLevel()].
+                        get(node).getSubgraphAsString())){
+                    
                     this.target = levels[target.getLevel()].get(node);
                     break;
                 }
             }
         } 
+        
+        //update leaf count
         count =levels[levels.length - 1].size();
     }
     
@@ -100,7 +108,7 @@ public class StepInfo {
     // ********************  Step Code Enum  *************************** //
     /** **********************************************************************
      * Step Code:
-     * An enumerated type that represents a "type" of StepInfo log. The 
+     * An enumerated type that represents a "type" of StepInfo log entry. The 
      * Code type can be used to make assumptions about the data stored inside
      * a StepInfo object. See the description of each Code type for 
      * understanding of each Code.

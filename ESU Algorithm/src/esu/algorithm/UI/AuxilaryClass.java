@@ -1,7 +1,8 @@
 /* **************************************************************************
- *
- * Auxilary Class:
- * Just some file to work on geometric calculations and concepts.
+ * File: AuxilaryClass.java
+ * 
+ * A static class for running calculations needed for graphically representing
+ * an ESUTree as a series of Rectangles, Lines and Text fields.
  *
  ************************************************************************** */
 
@@ -19,54 +20,98 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 
-/**
- * Just some class as a temporary development environment for writing functions
- * that will be useful for printing rectangles and shit to the screen.
- * 
- * Comments are sparse, ask Nate for any questions. Class-level variables are
- * declared to prevent syntax errors, but are not initialized and are only 
- * place-holders for variables that will be implemented outside of the scope
- * of these functions.
- * 
- * THIS CLASS SHOULD BE ACTUALLY BE USED, IT IS JUST A DEVELOPMENT ENVIRONMENT
- * FOR FUNCTIONS THAT MAY BE USEFUL ELSEWHERE IN OUR CODE.
+/** ***********************************************************************
+ * Class:       Auxilary Class
+ * Purpose: To house the logic associated with the geometric representation
+ * of an ESUTree as Rectangles, Lines and Text fields.
  * 
  * @author Biohazard
- */
+ ************************************************************************* */
 public class AuxilaryClass {
     
+    //"session variables"
     static public double nodeWidth;
     static public double nodeHeight;
     static public double treeWidth;
     static public double treeHeight;
     
-    static public double innerPaddingX = 5;
-    static public double innerPaddingY = 5;
-    static public double outerPaddingX = 15;
-    static public double outerPaddingY = 100;
+    //Visual padding
+    static final public double innerPaddingX = 5;
+    static final public double innerPaddingY = 5;
+    static final public double outerPaddingX = 15;
+    static final public double outerPaddingY = 100;
     
+    //font dimensions
     static public final double FONT_HEIGHT = 20;
     static public final double FONT_WIDTH = 10;
     
+    /** ************************************************
+     * Constructor
+     * Does nothing.
+     ************************************************** */
     //empty consrtuctor, does nothing
     public AuxilaryClass(){/* Nothing to see here... Move along. */}
     
-    /*       Helper functions       */
+    
+    /*******************************************************
+                    Helper functions       
+    *******************************************************/
+    
+    /** *********************************************************************
+     * Max:
+     * 
+     * A simple method for finding the max of two numbers.
+     * 
+     * @param d0 - first candidate.
+     * @param d1 - second candidate
+     * 
+     * @return The larger of the two candidate values.
+     *********************************************************************** */
     public static double max(double d0, double d1){
         if(d0 > d1){
             return d0;
         }
         return d1;
     }
+    
+    /** *********************************************************************
+     * Max:
+     * 
+     * A simple method for finding the max of two numbers.
+     * 
+     * @param d0 - first candidate.
+     * @param d1 - second candidate
+     * 
+     * @return The larger of the two candidate values.
+     *********************************************************************** */
     public static int max(int d0, int d1){
         if(d0 > d1){
             return d0;
         }
         return d1;
     }
-    /* ******************************* */
+    /* *****************************************************************
+    *********************************************************************/
     
-    //calculates the tree space
+    
+    /** ********************************************************************
+     * Get Tree Space:
+     * 
+     * This function calculates and allocates screen space based on the final
+     * state of the ESUTree.
+     * 
+     * This method initializes the tree space that encapsulates the drawing
+     * area. This function requires that the node dimensions have been
+     * determined ahead of time. Rightfully so:
+     * THIS FUNCTION SHOULD BE CALLED AFTER "SET NODE DIMS"
+     * 
+     * @see setNodeDims( ... )
+     * 
+     * @param finalState - The Final state of the ESUTree
+     * 
+     * @return A Rectangle to encase the total space the ESUTree will take
+     *              up.
+     ********************************************************************* */
     public static Rectangle getTreeSpace(ESUTree finalState){
         
         //bounding Rectengle
@@ -96,18 +141,34 @@ public class AuxilaryClass {
         return out;
     }
     
-    //set node dimensions:
-    //height based on FONT_HEIGHT and innerPaddingY
-    //width based on whichever Node has the longest list to display,
-    //  FONT_WIDTH and innerPaddingX
+    
+    /** ********************************************************************
+     * Set Node Dimensions:
+     * 
+     * Calculates the dimensions of the nodes based on the final state of
+     * the ESUTree. 
+     * 
+     * THIS FUNCTION IS REQUIRED TO BE CALLED BEFORE THE OTHER STATIC 
+     * FUNCTIONS OF THIS CLASS.
+     * 
+     * The height is static relative to the font height and inner padding.
+     * The width is based on the widest displayed text for the ESUTree.
+     * 
+     * @param finalState - The final state of the ESUTree to display
+     * 
+     ********************************************************************* */
     public static void setNodeDims(ESUTree finalState){
         int maxChars = 6; //six caharcters in "[root]"
         ArrayList<ESUNode>[] nodes = finalState.getNodesByLevel();
         for(int level = 1; level < finalState.getMaxHeight() + 1; level++){
             for(int node = 0; node < nodes[level].size(); node++){
-                maxChars = max(maxChars, nodes[level].get(node).getSubgraphAsString().length());
-                maxChars = max(maxChars, nodes[level].get(node).getPossibleStepsAsString().length());
-                maxChars = max(maxChars, nodes[level].get(node).getSubgraphNeighborsAsString().length());
+                
+                maxChars = max(maxChars, 
+                        nodes[level].get(node).getSubgraphAsString().length());
+                maxChars = max(maxChars, 
+                        nodes[level].get(node).getPossibleStepsAsString().length());
+                maxChars = max(maxChars, 
+                        nodes[level].get(node).getSubgraphNeighborsAsString().length());
             }
         }
         nodeWidth = maxChars*FONT_WIDTH + 2*innerPaddingX;
@@ -115,10 +176,26 @@ public class AuxilaryClass {
     }
     
     //calculates a Rectangle for each node in the tree, relative to the tree space
+    /** ***********************************************************************
+     * Get Rectangles:
+     * 
+     * Pre-determines the location of each Rectangle for each node in the
+     * final state of the ESUTree. Stores the Rectangles as an array of
+     * ArrayLists where each index of the array hold all the Rectangles for
+     * that level of the tree. The returned array should be used in conjunction
+     * with the other static functions of this file.
+     * 
+     * @param finalState - The final state of the ESUTree to display.
+     * 
+     * @return - An array of ArrayLists of Rectangles (lol)
+     *              representing all Node in the Tree.
+     ************************************************************************ */
     public static ArrayList<Rectangle>[] getRectangles(ESUTree finalState){
         
         //set up variables
-        ArrayList<Rectangle>[] out = new ArrayList[finalState.getMaxHeight() + 1];
+        ArrayList<Rectangle>[] out = 
+                new ArrayList[finalState.getMaxHeight() + 1];
+        
         ArrayList<ESUNode>[] nodes = finalState.getNodesByLevel();
         
         //for each level
@@ -128,7 +205,8 @@ public class AuxilaryClass {
             double totalNodeWidth = nodeWidth*nodes[level].size();
             
             //padding to be evenly distributed on current level
-            double levelPadding = (treeWidth - totalNodeWidth) / (nodes[level].size() + 1);
+            double levelPadding = (treeWidth - totalNodeWidth) / 
+                    (nodes[level].size() + 1);
             
             //create arraylist @ level
             out[level] = new ArrayList<>();
@@ -150,10 +228,12 @@ public class AuxilaryClass {
         return out;
     }
     
-    /**
-    * deep copy for Rectangle lists
-    * @deprecated 
-    * */
+    /** *********************** NOT USED ***********************************
+    * Copy Rectangles:
+    * Deep copy for Rectangle lists. 
+    * *************
+    * @deprecated *
+    ********************************************************************* */
     public static ArrayList<Rectangle>[] copyRectangles(ArrayList<Rectangle>[] in){
         
         //output variable
@@ -174,8 +254,20 @@ public class AuxilaryClass {
         return out;
     }
     
-    //creates a text object for each of the three text fields to show for the
-    //ESUNode, relative to the Rectangle's coordinates.
+    
+    /** *********************************************************************
+     * Get Text:
+     * 
+     * Creates the Text objects for each of the three text fields to show
+     * for the ESUNode. The text coordinates are calculated relative to the
+     * Rectangle accepted.
+     * 
+     * @param rect - The Rectangle space for the ESUNode whose test we are
+     *                  calculating.
+     * @param node - The ESUnode to supply the text fields.
+     * 
+     * @return - A Text array of the text fields calculated.
+     *********************************************************************** */
     public static Text[] getText(Rectangle rect, ESUNode node){
         
         //Text array for returning
@@ -192,7 +284,8 @@ public class AuxilaryClass {
             
             //create Text object for Subgraph
             String text = node.getSubgraphAsString();
-            out[0] = new Text(rect.getX() + rect.getWidth()/2 - text.length() * FONT_WIDTH / 2, 
+            out[0] = new Text(rect.getX() + rect.getWidth()/2 - 
+                        text.length() * FONT_WIDTH / 2, 
                     rect.getY() + innerPaddingY + FONT_HEIGHT, 
                     text);
             //set font
@@ -200,7 +293,8 @@ public class AuxilaryClass {
 
             //create Text object for Possible Steps
             text = node.getPossibleStepsAsString();
-            out[1] = new Text(rect.getX() + rect.getWidth()/2 - text.length() * FONT_WIDTH / 2, 
+            out[1] = new Text(rect.getX() + rect.getWidth()/2 - 
+                        text.length() * FONT_WIDTH / 2, 
                     rect.getY() + (innerPaddingY + FONT_HEIGHT) * 2, 
                     text);
             //set font
@@ -208,7 +302,8 @@ public class AuxilaryClass {
 
             //create Text object for SubgraphNeighbors
             text = node.getSubgraphNeighborsAsString();
-            out[2] = new Text(rect.getX() + rect.getWidth()/2 - text.length() * FONT_WIDTH / 2, 
+            out[2] = new Text(rect.getX() + rect.getWidth()/2 - 
+                        text.length() * FONT_WIDTH / 2, 
                     rect.getY() + (innerPaddingY + FONT_HEIGHT) * 3, 
                     text);
             //set font
@@ -231,7 +326,9 @@ public class AuxilaryClass {
             
             //root's diplay text
             String text = "[root]";
-            out[0] = new Text(rect.getX() + rect.getWidth()/2 - text.length() * FONT_WIDTH / 2, 
+            out[0] = new Text(
+                    rect.getX() + rect.getWidth()/2 - 
+                                text.length() * FONT_WIDTH / 2, 
                     rect.getY() + (innerPaddingY + FONT_HEIGHT) * 2, 
                     text);
             //set font
@@ -242,8 +339,21 @@ public class AuxilaryClass {
         return out;
     }
     
-    //returns drawable Nodes (Rectangles and Text fields)
-    public static List<Node> getPrintables(ArrayList<Rectangle>[] rects, ArrayList<ESUNode>[] currentNodes, ArrayList<ESUNode>[] finalNodes){
+    
+    /** ***********************************************************************
+     * Get Printables:
+     * 
+     * Gets the printable Nodes (javafx) for displaying the ESUTree described
+     * by finalNodes.
+     * 
+     * @param rects - The lits of Rectangles of all ESUNodes
+     * @param currentNodes - The current nodes of the Tree's state to print.
+     * @param finalNodes - The final state of the ESUTree as ESUNode lists.
+     * 
+     * @return A list of drawable "Node" objects for use in javafx.
+     ************************************************************************* */
+    public static List<Node> getPrintables(ArrayList<Rectangle>[] rects, 
+            ArrayList<ESUNode>[] currentNodes, ArrayList<ESUNode>[] finalNodes){
         
         //List to hold the printable Nodes
         LinkedList<Node> out = new LinkedList<>();
@@ -258,7 +368,8 @@ public class AuxilaryClass {
                 Rectangle rect = rects[level].get(node);
                 
                 //get the line to the parent
-                Line line = getLineToParent(rects, finalNodes, currentNodes[level].get(node));
+                Line line = getLineToParent(rects, finalNodes, 
+                        currentNodes[level].get(node));
                 
                 //get text fields for current Rectangle
                 Text[] text = getText(rect, currentNodes[level].get(node));
@@ -282,9 +393,22 @@ public class AuxilaryClass {
         return out;
     }
     
-    //calculates the line between the parameter ESUNode and it's parent, using
-    //the Rectangles and ESUNodes to locate screen position.
-    public static Line getLineToParent(ArrayList<Rectangle>[] rects, ArrayList<ESUNode>[] finalNodes, ESUNode node){
+    
+    /** **********************************************************************
+     * Get Line To Parent:
+     * 
+     * Gets the line from the node to it's parent. The lines are calculated in
+     * such a way that the space on the bottom of the parent's rectangle
+     * is divided between it's children's lines.
+     * 
+     * @param rects - The location of all Rectangles for Nodes
+     * @param finalNodes - The final state of the ESUTree as ESUNode lists
+     * @param node - The current Node to draw the line to its parent.
+     * 
+     * @return - The Line object that will link the node to its parent.
+     *********************************************************************** */
+    public static Line getLineToParent(ArrayList<Rectangle>[] rects, 
+            ArrayList<ESUNode>[] finalNodes, ESUNode node){
         
         //if root, return null
         if(node.getLevel() < 1){
@@ -302,7 +426,8 @@ public class AuxilaryClass {
         
         //count my level index in the tree (via nodes)
         for(ESUNode curr : finalNodes[node.getLevel()]){
-            if(curr.getSubgraphAsString().equals(node.getSubgraphAsString())){
+            if(curr.getSubgraphAsString().equals(
+                    node.getSubgraphAsString())){
                 break;
             }
             levelIndex++;
@@ -313,7 +438,8 @@ public class AuxilaryClass {
         
         //count my parent's level index in tree (via nodes)
         for(ESUNode curr : finalNodes[node.getLevel() - 1]){
-            if(curr.getSubgraphAsString().equals(node.getParent().getSubgraphAsString())){
+            if(curr.getSubgraphAsString().equals(
+                    node.getParent().getSubgraphAsString())){
                 break;
             }
             parentLevelIndex++;
@@ -321,7 +447,8 @@ public class AuxilaryClass {
         
         //number of siblings from parent
         //int numSiblings = node.getParent().getChildren().size();
-        int numSiblings = finalNodes[node.getLevel()-1].get(parentLevelIndex).getChildren().size();
+        int numSiblings = finalNodes[node.getLevel()-1].get(
+                parentLevelIndex).getChildren().size();
         
         //my number in my parents children
         int siblingNum = 0;
@@ -343,36 +470,41 @@ public class AuxilaryClass {
         
         //start X, X value of rectangle, offset by my position in my
         //parents children
-        startX = rects[node.getLevel()].get(levelIndex).getX() + nodeWidth - (levelDivision * (siblingNum + 1) );
+        startX = rects[node.getLevel()].get(levelIndex).getX() 
+                + nodeWidth - (levelDivision * (siblingNum + 1) );
         
         //end Y, bottom of a rectangle of the parent's level
         endY = rects[node.getLevel()-1].get(0).getY() + nodeHeight;
         
         //end X, X value of parent rectangle, opposite offset from my X offest
-        endX = rects[node.getLevel()-1].get(parentLevelIndex).getX() + (levelDivision * (siblingNum + 1) );
+        endX = rects[node.getLevel()-1].get(parentLevelIndex).getX() 
+                + (levelDivision * (siblingNum + 1) );
         
         //return Line
         return new Line(startX, startY, endX, endY);
     }
     
-    /**
-     *      NOT USED CURRENTLY
-     *          @deprecated
-     */
+    /** ****************************************************************
+     *                      NOT USED CURRENTLY
+     *                          @deprecated
+     ****************************************************************** */
     public static void drawTo(GraphicsContext gc, List<Node> drawables){
         gc.clearRect(0, 0, treeWidth, treeHeight);
         for(Node drawable : drawables){
             if(drawable instanceof Line){
                 Line line = (Line)drawable;
-                gc.strokeLine(line.getStartX(), line.getStartY(), line.getEndX(), line.getEndY());
+                gc.strokeLine(line.getStartX(), line.getStartY(), 
+                        line.getEndX(), line.getEndY());
             }
             if(drawable instanceof Rectangle){
                 Rectangle rect = (Rectangle)drawable;
-                gc.strokeRect(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight());
+                gc.strokeRect(rect.getX(), rect.getY(), 
+                        rect.getWidth(), rect.getHeight());
             }
             if(drawable instanceof Text){
                 Text text = (Text) drawable;
-                gc.strokeText(text.getText(), text.getX(), text.getY(), text.getText().length()*FONT_WIDTH);
+                gc.strokeText(text.getText(), text.getX(), 
+                        text.getY(), text.getText().length()*FONT_WIDTH);
             }
         }
     }
