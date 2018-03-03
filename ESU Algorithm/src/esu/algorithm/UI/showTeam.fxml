@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+
+<AnchorPane id="AnchorPane" prefHeight="400.0" prefWidth="459.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/8" fx:controller="esu.algorithm.UI.ShowTeamController">
+   <children>
+      <Label layoutX="139.0" layoutY="85.0" text="BioHazard Team Memembers" />
+      <Label layoutX="167.0" layoutY="31.0" text="2018 Winter Quarter" />
+      <Label layoutX="148.0" layoutY="58.0" text="Bioinformatics 483 Project" />
+      <HBox layoutX="14.0" layoutY="102.0" prefHeight="100.0" prefWidth="441.0">
+         <children>
+            <VBox prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="100.0" text="Nate">
+                     <VBox.margin>
+                        <Insets bottom="10.0" top="5.0" />
+                     </VBox.margin>
+                  </Button>
+                  <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="100.0" text="Dawit">
+                     <VBox.margin>
+                        <Insets bottom="10.0" top="5.0" />
+                     </VBox.margin>
+                  </Button>
+               </children>
+            </VBox>
+            <Separator orientation="VERTICAL" prefHeight="200.0">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Separator>
+            <VBox prefHeight="200.0" prefWidth="100.0">
+               <HBox.margin>
+                  <Insets left="40.0" />
+               </HBox.margin>
+               <children>
+                  <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="100.0" text="Polina">
+                     <VBox.margin>
+                        <Insets bottom="10.0" top="5.0" />
+                     </VBox.margin>
+                  </Button>
+                  <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="100.0" text="Melody">
+                     <VBox.margin>
+                        <Insets bottom="10.0" top="5.0" />
+                     </VBox.margin>
+                  </Button>
+               </children>
+            </VBox>
+            <Separator orientation="VERTICAL" prefHeight="200.0">
+               <HBox.margin>
+                  <Insets left="20.0" />
+               </HBox.margin>
+            </Separator>
+            <VBox prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <Button mnemonicParsing="false" prefHeight="27.0" prefWidth="100.0" text="Aisha">
+                     <VBox.margin>
+                        <Insets top="25.0" />
+                     </VBox.margin>
+                  </Button>
+               </children>
+               <HBox.margin>
+                  <Insets left="40.0" />
+               </HBox.margin>
+            </VBox>
+         </children>
+      </HBox>
+   </children>
+</AnchorPane>
