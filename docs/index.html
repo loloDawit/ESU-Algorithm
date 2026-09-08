@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESU Visualizer — watch a network-motif algorithm think</title>
+<meta name="description" content="A desktop app that shows, one step at a time, how the ESU algorithm enumerates every connected subgraph of a graph.">
+<meta property="og:title" content="ESU Visualizer">
+<meta property="og:description" content="Watch the ESU network-motif algorithm enumerate connected subgraphs, one step at a time.">
+<meta property="og:image" content="screenshot.png">
+<style>
+:root {
+  --bg: #ffffff;
+  --bg-soft: #f6f8fb;
+  --bg-sunk: #eef2f7;
+  --text: #16202b;
+  --text-soft: #5a6a7a;
+  --text-faint: #8a97a6;
+  --line: #e3e8ee;
+  --blue: #2f6fed;
+  --blue-soft: #eaf1fe;
+  --green: #2e7d4f;
+  --green-soft: #d7f0dc;
+  --amber: #b06f00;
+  --amber-soft: #fff3cd;
+  --grey-soft: #f1f3f5;
+  --radius: 12px;
+  --wrap: 1080px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #10151b;
+    --bg-soft: #151c24;
+    --bg-sunk: #1b232d;
+    --text: #e8edf3;
+    --text-soft: #a9b6c4;
+    --text-faint: #7c8b9b;
+    --line: #26313d;
+    --blue: #6f9dff;
+    --blue-soft: #16233c;
+    --green: #6cc493;
+    --green-soft: #16301f;
+    --amber: #e0ac4a;
+    --amber-soft: #33260c;
+    --grey-soft: #1b232d;
+  }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: var(--wrap); margin: 0 auto; padding: 0 22px; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+code, .mono {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.9em;
+}
+p code {
+  background: var(--bg-sunk);
+  padding: 0.12em 0.4em;
+  border-radius: 5px;
+}
+
+/* ---------- header ---------- */
+header {
+  border-bottom: 1px solid var(--line);
+  position: sticky; top: 0;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: saturate(1.6) blur(8px);
+  z-index: 10;
+}
+.bar { display: flex; align-items: center; gap: 18px; height: 58px; }
+.brand { font-weight: 650; letter-spacing: -0.01em; color: var(--text); }
+.brand:hover { text-decoration: none; }
+nav { margin-left: auto; display: flex; gap: 20px; align-items: center; }
+nav a { color: var(--text-soft); font-size: 14.5px; }
+nav a:hover { color: var(--text); text-decoration: none; }
+@media (max-width: 660px) { nav .hide-sm { display: none; } }
+
+/* ---------- hero ---------- */
+.hero { padding: 66px 0 8px; }
+h1 {
+  font-size: clamp(2.1rem, 5.2vw, 3.3rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin: 0 0 18px;
+  max-width: 17ch;
+}
+.lede {
+  font-size: clamp(1.05rem, 2.1vw, 1.24rem);
+  color: var(--text-soft);
+  max-width: 62ch;
+  margin: 0 0 30px;
+}
+.cta { display: flex; flex-wrap: wrap; gap: 11px; margin-bottom: 44px; }
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 18px;
+  border-radius: 9px;
+  font-size: 15px; font-weight: 550;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+.btn:hover { text-decoration: none; border-color: var(--text-faint); }
+.btn-primary {
+  background: var(--blue); border-color: var(--blue); color: #fff;
+}
+.btn-primary:hover { filter: brightness(1.07); border-color: var(--blue); }
+
+.shot {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-soft);
+  box-shadow: 0 18px 46px -22px rgba(16, 32, 56, 0.4);
+}
+.shot img { display: block; width: 100%; height: auto; }
+.shot-caption {
+  font-size: 13px; color: var(--text-faint);
+  padding: 11px 15px; border-top: 1px solid var(--line);
+}
+
+/* ---------- sections ---------- */
+section { padding: 64px 0; border-top: 1px solid var(--line); margin-top: 64px; }
+section:first-of-type { border-top: 0; margin-top: 0; }
+h2 {
+  font-size: clamp(1.5rem, 3vw, 1.95rem);
+  letter-spacing: -0.02em;
+  margin: 0 0 14px;
+}
+h3 { font-size: 1.06rem; margin: 30px 0 8px; letter-spacing: -0.01em; }
+section > p, section > ul { color: var(--text-soft); max-width: 68ch; }
+section > p:first-of-type { margin-top: 0; }
+strong { color: var(--text); font-weight: 600; }
+
+.grid { display: grid; gap: 18px; margin-top: 28px; }
+.grid-3 { grid-template-columns: repeat(auto-fit, minmax(232px, 1fr)); }
+.card {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  background: var(--bg-soft);
+}
+.card h3 { margin: 0 0 7px; font-size: 15.5px; }
+.card p { margin: 0; font-size: 14.5px; color: var(--text-soft); }
+
+/* ---------- legend ---------- */
+.legend { display: grid; gap: 9px; margin-top: 22px; max-width: 640px; }
+.legend-row { display: flex; align-items: center; gap: 13px; font-size: 15px; }
+.chip {
+  width: 42px; height: 25px; border-radius: 6px; flex: none;
+  border: 1.5px solid var(--line); background: var(--bg-soft);
+}
+.chip-active { background: var(--amber-soft); border-color: var(--amber); }
+.chip-done   { background: var(--green-soft); border-color: var(--green); }
+.chip-dead   { background: var(--grey-soft); border-color: var(--text-faint); border-style: dashed; }
+.legend-row span { color: var(--text-soft); }
+.legend-row b { color: var(--text); font-weight: 600; }
+
+/* ---------- code ---------- */
+pre {
+  background: var(--bg-sunk);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 16px 18px;
+  overflow-x: auto;
+  margin: 18px 0;
+  line-height: 1.55;
+}
+pre code { font-size: 13.5px; color: var(--text); }
+.prompt { color: var(--text-faint); user-select: none; }
+
+/* ---------- table ---------- */
+.table-scroll { overflow-x: auto; margin: 24px 0 0; }
+table { border-collapse: collapse; width: 100%; font-size: 14.5px; min-width: 480px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+th { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-faint); font-weight: 600; }
+td.num { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+td .was { color: var(--text-faint); }
+td .now { color: var(--green); font-weight: 600; }
+
+/* ---------- footer ---------- */
+footer {
+  border-top: 1px solid var(--line);
+  margin-top: 70px; padding: 30px 0 56px;
+  color: var(--text-faint); font-size: 14px;
+}
+footer a { color: var(--text-soft); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="brand" href="#top">ESU&nbsp;Visualizer</a>
+    <nav>
+      <a href="#algorithm" class="hide-sm">The algorithm</a>
+      <a href="#reading" class="hide-sm">Reading it</a>
+      <a href="#run">Run it</a>
+      <a href="https://github.com/loloDawit/ESU-Algorithm">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+
+  <div class="hero">
+    <h1>Watch a motif algorithm think.</h1>
+    <p class="lede">
+      ESU enumerates every connected subgraph of a given size in a network — the
+      first step in finding the wiring patterns that make biological networks
+      work. This desktop app draws the search as it happens, one step at a time,
+      so you can see <em>why</em> the algorithm accepts or rejects each candidate.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#run">Run it locally</a>
+      <a class="btn" href="https://github.com/loloDawit/ESU-Algorithm">View source</a>
+    </div>
+    <div class="shot">
+      <img src="screenshot.png" alt="The ESU Visualizer: the input graph on the left with one vertex highlighted, and the search tree on the right with completed subgraphs in green.">
+      <div class="shot-caption">
+        Searching a five-vertex graph for connected subgraphs of size 4. Four were found.
+      </div>
+    </div>
+  </div>
+
+  <section id="algorithm">
+    <h2>What ESU does</h2>
+    <p>
+      Some small wiring patterns appear in a biological network far more often
+      than chance alone would explain. Those patterns — <strong>network
+      motifs</strong> — are thought to be functional building blocks, and finding
+      them means counting every connected subgraph of a given size.
+    </p>
+    <p>
+      The naive approach finds the same subgraph many times over, once from each
+      of its vertices. <strong>ESU</strong> — Enumerate SUbgraphs, from Sebastian
+      Wernicke's work — avoids that with one rule: a branch may only grow into
+      neighbours numbered higher than the vertex it started from. That single
+      constraint makes every subgraph turn up exactly once.
+    </p>
+    <p>
+      It is a rule that takes ten seconds to state and much longer to picture.
+      Which is the point of this app: the rejection is the interesting part, and
+      it is invisible in a list of results.
+    </p>
+  </section>
+
+  <section id="reading">
+    <h2>Reading the picture</h2>
+    <p>
+      The graph sits on the left, the search tree on the right, and they stay in
+      step with each other.
+    </p>
+
+    <div class="grid grid-3">
+      <div class="card">
+        <h3>The graph</h3>
+        <p>Your network. The subgraph being built is filled blue; the vertices it could add next are amber.</p>
+      </div>
+      <div class="card">
+        <h3>The tree</h3>
+        <p>Each box is one subgraph, written as its vertices. The line down to it is the choice that produced it.</p>
+      </div>
+      <div class="card">
+        <h3>The path</h3>
+        <p>The chain from <span class="mono">start</span> to the current box is drawn in blue, so any result traces back to its origin.</p>
+      </div>
+    </div>
+
+    <h3>What the colours mean</h3>
+    <div class="legend">
+      <div class="legend-row"><span class="chip chip-active"></span><span><b>Working on it</b> — the step happening right now</span></div>
+      <div class="legend-row"><span class="chip chip-done"></span><span><b>Found</b> — reached the requested size, an actual result</span></div>
+      <div class="legend-row"><span class="chip chip-dead"></span><span><b>Dead end</b> — the branch ran out of valid vertices</span></div>
+      <div class="legend-row"><span class="chip"></span><span><b>Still expanding</b> — not finished yet</span></div>
+    </div>
+
+    <p style="margin-top:26px">
+      Below the graph, the algorithm narrates itself: which neighbours it looked
+      at, which it rejected, and which rule did the rejecting. Click any line to
+      trace that node back to the start.
+    </p>
+  </section>
+
+  <section id="run">
+    <h2>Run it</h2>
+    <p>
+      You need <strong>JDK&nbsp;21</strong>. Nothing else — the Gradle wrapper
+      fetches Gradle, and Gradle fetches JavaFX.
+    </p>
+<pre><code><span class="prompt">$</span> git clone https://github.com/loloDawit/ESU-Algorithm.git
+<span class="prompt">$</span> cd ESU-Algorithm
+<span class="prompt">$</span> ./gradlew run</code></pre>
+    <p>
+      Press <strong>Open graph</strong> for one of the bundled samples, or
+      <strong>Random</strong> to generate one and run it straight away. A graph
+      file is one edge per line — two whole numbers, such as
+      <code>0&nbsp;1</code>.
+    </p>
+  </section>
+
+  <section id="inside">
+    <h2>How it is built</h2>
+    <p>
+      The algorithm is plain Java with no reference to the user interface, so it
+      can be tested and reused on its own. <code>ESUTree.step()</code> advancing
+      exactly one step is what makes pause-and-step possible at all.
+    </p>
+    <p>
+      Correctness is checked against a <strong>brute-force oracle</strong>:
+      enumerate every subset of the right size, keep the connected ones, and
+      require ESU to return exactly that set with no duplicates. Two other
+      properties are pinned by tests — that a step reached by replay is identical
+      to one reached by stepping, and that the tree layout centres every parent
+      over its children without overlaps.
+    </p>
+
+    <h3>What changed since 2018</h3>
+    <p>
+      This began as a 2018 university project on JavaFX&nbsp;8 and NetBeans. It
+      no longer built: JavaFX left the JDK in version&nbsp;11, and the APIs it
+      used were deleted in version&nbsp;9. The algorithm itself needed no
+      changes — it passes the oracle unaltered. Everything around it did.
+    </p>
+    <p>
+      The largest problem was invisible from the outside. Every log entry
+      deep-copied the entire search tree, and the app kept a full copy of the
+      tree after every step so it could go backwards. Replaying the algorithm
+      turns out to be far cheaper than remembering it:
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Graph</th><th>Memory before</th><th>After</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="num">20 nodes, k=5</td><td class="num was">1,260&nbsp;MB</td><td class="num now">0&nbsp;MB</td></tr>
+          <tr><td class="num">35 nodes, k=5</td><td class="num was">timed out past 25&nbsp;s</td><td class="num now">2&nbsp;MB</td></tr>
+          <tr><td class="num">50 nodes, k=4</td><td class="num was">exhausted a 3&nbsp;GB heap</td><td class="num now">1&nbsp;MB</td></tr>
+          <tr><td class="num">120 nodes, k=6</td><td class="num was">unreachable</td><td class="num now">53&nbsp;MB</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:22px">
+      The full account is in the
+      <a href="https://github.com/loloDawit/ESU-Algorithm/commits/master">commit history</a>.
+    </p>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    MIT licensed · Built in 2018 by the BioHazard team, rebuilt in 2026 ·
+    <a href="https://github.com/loloDawit/ESU-Algorithm">Source on GitHub</a>
+  </div>
+</footer>
+
+</body>
+</html>
