@@ -1,31 +1,35 @@
 /*
- * Turning a laid-out tree into shapes, and colouring them by what the
- * algorithm did with each node.
+ * Turning a laid-out tree into shapes.
  */
 package esu.algorithm.ui;
 
-import esu.algorithm.ESUNode;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import javafx.scene.Node;
 import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
+import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
 /**
  * Class TreeRenderer
  *
- * Builds the shapes for a tree and paints each node according to its state:
- * being worked on, finished as a result, or dead.
+ * Draws the boxes and the connectors between them, and colours each box by
+ * what the algorithm did with that node.
+ *
+ * Connectors are elbows rather than straight diagonals: with the tidy layout
+ * a child sits under its parent, so a drop, a short run across and a drop in
+ * reads as a tree. The old diagonals were a symptom of nodes being placed
+ * nowhere near their parents.
  */
 public class TreeRenderer {
 
     /** A node that has not been reached yet, or is still expanding. */
     public static final Color PENDING_FILL = Color.web("#ffffff");
-    public static final Color PENDING_STROKE = Color.web("#7a8699");
+    public static final Color PENDING_STROKE = Color.web("#aab4c0");
     /** The node the current step is working on. */
     public static final Color ACTIVE_FILL = Color.web("#fff3cd");
     public static final Color ACTIVE_STROKE = Color.web("#b06f00");
@@ -33,238 +37,171 @@ public class TreeRenderer {
     public static final Color COMPLETE_FILL = Color.web("#d7f0dc");
     public static final Color COMPLETE_STROKE = Color.web("#2e7d4f");
     /** A branch that ran out of valid vertices before reaching size k. */
-    public static final Color DEADEND_FILL = Color.web("#f1f3f5");
-    public static final Color DEADEND_STROKE = Color.web("#adb5bd");
+    public static final Color DEADEND_FILL = Color.web("#f4f6f8");
+    public static final Color DEADEND_STROKE = Color.web("#c7cdd4");
+    /** The root, which stands for having chosen nothing yet. */
+    public static final Color ROOT_FILL = Color.web("#eef2f9");
+    public static final Color ROOT_STROKE = Color.web("#8fa2bd");
+
+    private static final Color EDGE = Color.web("#cfd6de");
+    /** The chain of choices leading to the node being looked at. */
+    private static final Color PATH = Color.web("#2f6fed");
+
+    private static final Font LABEL_FONT =
+            Font.font("SF Mono", FontWeight.SEMI_BOLD, 12);
+    private static final Font CAPTION_FONT = Font.font("SF Pro Text", 10);
 
     private TreeRenderer() {
     }
 
-    /** *********************************************************************
-     * Get Text:
-     * 
-     * Creates the Text objects for each of the three text fields to show
-     * for the ESUNode. The text coordinates are calculated relative to the
-     * Rectangle accepted.
-     * 
-     * @param rect - The Rectangle space for the ESUNode whose test we are
-     *                  calculating.
-     * @param node - The ESUnode to supply the text fields.
-     * 
-     * @return - A Text array of the text fields calculated.
-     *********************************************************************** */
-    public static Text[] getText(Rectangle rect, ESUNode node){
-        
-        //Text array for returning
-        Text out[];
-        
-        //create font
-        Font font = new Font(TreeLayout.FONT_FAMILY, TreeLayout.FONT_HEIGHT);
-        
-        //if NOT root, get Text for the three lists
-        if(node.getLevel() != 0){
-            
-            //Store 3 Text fields for each ESUNode
-            out  = new Text[3];
-            
-            //create Text object for Subgraph
-            String text = node.getSubgraphAsString();
-            out[0] = new Text(rect.getX() + rect.getWidth()/2 - 
-                        text.length() * TreeLayout.FONT_WIDTH / 2, 
-                    rect.getY() + TreeLayout.innerPaddingY + TreeLayout.FONT_HEIGHT, 
-                    text);
-            //set font
-            out[0].setFont(font);
-
-            //create Text object for Possible Steps
-            text = node.getPossibleStepsAsString();
-            out[1] = new Text(rect.getX() + rect.getWidth()/2 - 
-                        text.length() * TreeLayout.FONT_WIDTH / 2, 
-                    rect.getY() + (TreeLayout.innerPaddingY + TreeLayout.FONT_HEIGHT) * 2, 
-                    text);
-            //set font
-            out[1].setFont(font);
-
-            //create Text object for SubgraphNeighbors
-            text = node.getSubgraphNeighborsAsString();
-            out[2] = new Text(rect.getX() + rect.getWidth()/2 - 
-                        text.length() * TreeLayout.FONT_WIDTH / 2, 
-                    rect.getY() + (TreeLayout.innerPaddingY + TreeLayout.FONT_HEIGHT) * 3, 
-                    text);
-            //set font
-            out[2].setFont(font);
-            
-            //test for leaves, they have no subgraph neighbors or possible steps
-            if(out[1].getText().length() == 2 && out[2].getText().length() == 2){
-                Text temp = out[0];
-                out = new Text[1];
-                out[0] = temp;
-                out[0].setY(rect.getY() + (TreeLayout.innerPaddingY + TreeLayout.FONT_HEIGHT) * 2);
-            }
-        
-        }
-        //if Root, only get Text for 
-        else{
-            
-            //only one Text fields for the Root
-            out = new Text[1];
-            
-            //root's diplay text
-            String text = "[root]";
-            out[0] = new Text(
-                    rect.getX() + rect.getWidth()/2 - 
-                                text.length() * TreeLayout.FONT_WIDTH / 2, 
-                    rect.getY() + (TreeLayout.innerPaddingY + TreeLayout.FONT_HEIGHT) * 2, 
-                    text);
-            //set font
-            out[0].setFont(font);
-            
-        }
-        //return result
-        return out;
-    }
-    
-    
-    /** ***********************************************************************
-     * Get Printables:
-     * 
-     * Gets the printable Nodes (javafx) for displaying the ESUTree described
-     * by finalNodes.
-     * 
-     * @param rects - The lits of Rectangles of all ESUNodes
-     * @param currentNodes - The current nodes of the Tree's state to print.
-     * @param finalNodes - The final state of the ESUTree as ESUNode lists.
-     * 
-     * @return A list of drawable "Node" objects for use in javafx.
-     ************************************************************************* */
-    public static List<Node> getPrintables(ArrayList<Rectangle>[] rects, 
-            ArrayList<ESUNode>[] currentNodes, ArrayList<ESUNode>[] finalNodes){
-        
-        //List to hold the printable Nodes
-        LinkedList<Node> out = new LinkedList<>();
-        
-        //for each level of ESUNodes
-        for(int level = 0; level < currentNodes.length; level++){
-            
-            //for each ESUNode in the current level
-            for(int node = 0; node < currentNodes[level].size(); node++){
-                
-                //shallow copy... Might need a deep copy...? not sure
-                Rectangle rect = rects[level].get(node);
-                
-                //get the line to the parent
-                Line line = TreeLayout.getLineToParent(rects, finalNodes, 
-                        currentNodes[level].get(node));
-                
-                //get text fields for current Rectangle
-                Text[] text = getText(rect, currentNodes[level].get(node));
-                
-                //add Rectangles and Lines to the front of the list
-                out.addFirst(rect);
-                if(line != null)
-                    out.addFirst(line);
-                
-                //add text fields into the end of the list
-                //hopefully this ensures the text draws on top
-                //(if objects are printed in List ordering)
-                for(Text t: text){
-                    out.addLast(t);
-                }
-            }
-            
-        }
-        
-        //return result
-        return out;
-    }
-    
-    /** **********************************************************************
-     * Style Nodes:
+    /**
+     * Build every shape for the tree as it stands at one step.
      *
-     * Paints every drawn Rectangle according to what the algorithm did with
-     * that node: still working, finished as a result, or died without
-     * reaching size k.
-     *
-     * Every rectangle is repainted on every call. The Rectangle objects are
-     * shared across steps, so a node styled at one step would otherwise keep
-     * that styling at the next one.
-     *
-     * @param rects         - Rectangles for every node, by level
-     * @param currentNodes  - the tree as it stands at this step
-     * @param finalNodes    - the finished tree, which is what says whether a
-     *                        node ever gained children
-     * @param activeSubgraph - subgraph string of the node this step is
-     *                        working on, or null
-     *********************************************************************** */
-    public static void styleNodes(ArrayList<Rectangle>[] rects,
-            ArrayList<ESUNode>[] currentNodes, ArrayList<ESUNode>[] finalNodes,
-            String activeSubgraph){
+     * @param layout    positions for the whole finished tree
+     * @param present   ids of the nodes that exist at this step
+     * @param deadEnds  ids that never gained a child in the finished tree
+     * @param foundAt   the level whose nodes are complete subgraphs
+     * @param activeId  the node being worked on, or null
+     * @param path      ids from the root to the node of interest
+     * @return shapes to add to a pane, connectors first
+     */
+    public static List<Node> render(TreeLayout layout, Set<String> present,
+            Set<String> deadEnds, int foundAt, String activeId,
+            Set<String> path) {
 
-        int lastLevel = finalNodes.length - 1;
+        List<Node> shapes = new ArrayList<>();
 
-        for(int level = 0; level < currentNodes.length; level++){
-            for(int index = 0; index < currentNodes[level].size(); index++){
-
-                Rectangle rect = rects[level].get(index);
-                String subgraph = currentNodes[level].get(index)
-                        .getSubgraphAsString();
-
-                rect.setStrokeWidth(1.0);
-                rect.getStrokeDashArray().clear();
-
-                if(subgraph.equals(activeSubgraph)){
-                    rect.setFill(ACTIVE_FILL);
-                    rect.setStroke(ACTIVE_STROKE);
-                    rect.setStrokeWidth(2.5);
-                }
-                else if(level == lastLevel){
-                    rect.setFill(COMPLETE_FILL);
-                    rect.setStroke(COMPLETE_STROKE);
-                    rect.setStrokeWidth(1.8);
-                }
-                else if(isDeadEnd(finalNodes, subgraph, level, lastLevel)){
-                    rect.setFill(DEADEND_FILL);
-                    rect.setStroke(DEADEND_STROKE);
-                    rect.getStrokeDashArray().addAll(4.0, 3.0);
-                }
-                else {
-                    rect.setFill(PENDING_FILL);
-                    rect.setStroke(PENDING_STROKE);
-                }
+        // Connectors first so the boxes sit on top of them.
+        for (TreeLayout.Box box : layout.boxes()) {
+            if (box.isRoot() || !isVisible(box, present)) {
+                continue;
             }
+            TreeLayout.Box parent = layout.get(box.getParentId());
+            if (parent == null || !isVisible(parent, present)) {
+                continue;
+            }
+            boolean onPath = path.contains(box.getId())
+                    && path.contains(parent.getId());
+            shapes.add(elbow(parent, box, onPath));
         }
+
+        for (TreeLayout.Box box : layout.boxes()) {
+            if (!isVisible(box, present)) {
+                continue;
+            }
+            shapes.addAll(boxShapes(box, deadEnds, foundAt, activeId, path));
+        }
+        return shapes;
     }
 
-    /** **********************************************************************
-     * Is Dead End:
-     *
-     * A node is a dead end when the finished tree shows it never gained a
-     * child and it never reached the requested subgraph size. Asking the
-     * current tree instead would be wrong: at an intermediate step a node
-     * has no children simply because it has not expanded yet.
-     *
-     * Nodes are matched by subgraph string, the same way getLineToParent
-     * does it, because the tree copy taken for each step creates new ESUNode
-     * objects.
-     *
-     * @param finalNodes - the finished tree as ESUNode lists
-     * @param subgraph   - subgraph string of the node in question
-     * @param level      - the node's level
-     * @param lastLevel  - the level holding complete subgraphs
-     *
-     * @return - true if this branch died before reaching size k
-     *********************************************************************** */
-    public static boolean isDeadEnd(ArrayList<ESUNode>[] finalNodes,
-            String subgraph, int level, int lastLevel){
-
-        if(level >= lastLevel){
-            return false;
-        }
-        for(ESUNode candidate : finalNodes[level]){
-            if(candidate.getSubgraphAsString().equals(subgraph)){
-                return candidate.getChildren().isEmpty();
-            }
-        }
-        return false;
+    /** The root is always drawn; other nodes only once they exist. */
+    private static boolean isVisible(TreeLayout.Box box, Set<String> present) {
+        return box.isRoot() || present.contains(box.getId());
     }
 
+    /**
+     * A parent-to-child connector: down out of the parent, across, then down
+     * into the child.
+     *
+     * @param parent the box above
+     * @param child  the box below
+     * @param onPath true to draw it as part of the traced path
+     * @return the connector
+     */
+    private static Polyline elbow(TreeLayout.Box parent, TreeLayout.Box child,
+            boolean onPath) {
+        double midY = (parent.getY() + parent.getHeight() + child.getY()) / 2;
+        Polyline line = new Polyline(
+                parent.centreX(), parent.getY() + parent.getHeight(),
+                parent.centreX(), midY,
+                child.centreX(), midY,
+                child.centreX(), child.getY());
+        line.setStroke(onPath ? PATH : EDGE);
+        line.setStrokeWidth(onPath ? 2.2 : 1.2);
+        line.setFill(null);
+        return line;
+    }
+
+    /**
+     * A box and its label, coloured by the node's state.
+     *
+     * @param box      the node to draw
+     * @param deadEnds ids that never gained a child
+     * @param foundAt  the level whose nodes are complete subgraphs
+     * @param activeId the node being worked on, or null
+     * @param path     ids from the root to the node of interest
+     * @return the rectangle, its label, and the root's caption
+     */
+    private static List<Node> boxShapes(TreeLayout.Box box,
+            Set<String> deadEnds, int foundAt, String activeId,
+            Set<String> path) {
+
+        Rectangle rect = new Rectangle(box.getX(), box.getY(),
+                box.getWidth(), box.getHeight());
+        rect.setArcWidth(8);
+        rect.setArcHeight(8);
+        rect.setStrokeWidth(1.2);
+
+        Color labelFill = Color.web("#20303f");
+
+        if (box.isRoot()) {
+            rect.setFill(ROOT_FILL);
+            rect.setStroke(ROOT_STROKE);
+            labelFill = Color.web("#41566f");
+        } else if (box.getId().equals(activeId)) {
+            rect.setFill(ACTIVE_FILL);
+            rect.setStroke(ACTIVE_STROKE);
+            rect.setStrokeWidth(2.4);
+        } else if (box.getLevel() == foundAt) {
+            rect.setFill(COMPLETE_FILL);
+            rect.setStroke(COMPLETE_STROKE);
+            rect.setStrokeWidth(1.8);
+        } else if (deadEnds.contains(box.getId())) {
+            rect.setFill(DEADEND_FILL);
+            rect.setStroke(DEADEND_STROKE);
+            rect.getStrokeDashArray().addAll(4.0, 3.0);
+            labelFill = Color.web("#93a0ad");
+        } else {
+            rect.setFill(PENDING_FILL);
+            rect.setStroke(PENDING_STROKE);
+        }
+
+        if (path.contains(box.getId()) && !box.getId().equals(activeId)) {
+            rect.setStroke(PATH);
+            rect.setStrokeWidth(2.0);
+        }
+
+        List<Node> shapes = new ArrayList<>();
+        shapes.add(rect);
+        shapes.add(centredText(box.getLabel(), LABEL_FONT, labelFill,
+                box.centreX(), box.centreY()));
+
+        if (box.isRoot()) {
+            // The root is not a subgraph, and nothing on screen said so.
+            shapes.add(centredText("no vertices chosen", CAPTION_FONT,
+                    Color.web("#8a97a6"), box.centreX(),
+                    box.getY() + box.getHeight() + 12));
+        }
+        return shapes;
+    }
+
+    /**
+     * Text centred on a point, measured rather than estimated.
+     *
+     * @param content what to write
+     * @param font    the face to write it in
+     * @param fill    the colour
+     * @param centreX horizontal centre
+     * @param centreY vertical centre of the text
+     * @return the positioned text
+     */
+    private static Text centredText(String content, Font font, Color fill,
+            double centreX, double centreY) {
+        Text text = new Text(content);
+        text.setFont(font);
+        text.setFill(fill);
+        text.setX(centreX - text.getLayoutBounds().getWidth() / 2);
+        text.setY(centreY + text.getLayoutBounds().getHeight() / 4);
+        return text;
+    }
 }

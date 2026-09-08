@@ -13,7 +13,9 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -76,9 +78,10 @@ public class EsuApp extends Application {
     private final Random random = new Random();
 
     /** Tree drawing state, all derived from the session's finished tree. */
-    private ArrayList<Rectangle>[] rectangles;
-    private ArrayList<ESUNode>[] finalNodes;
-    private Rectangle treeSpace;
+    private TreeLayout layout;
+    private Set<String> deadEnds = Set.of();
+    /** Which node the picture is explaining: the active one, or a clicked one. */
+    private String focusId;
 
     private final GraphPanel graphPanel = new GraphPanel();
     private final Pane treePane = new Pane();
@@ -246,7 +249,7 @@ public class EsuApp extends Application {
                 swatch(TreeRenderer.PENDING_FILL, TreeRenderer.PENDING_STROKE,
                         "still expanding", false),
                 separator(),
-                caption("node:  {subgraph}  (extension)  [neighbours]"));
+                caption("each box is a subgraph being built  \u00b7  the line down to it is how it got there"));
         legend.setAlignment(Pos.CENTER_LEFT);
         legend.setPadding(new Insets(6, 12, 6, 12));
         legend.getStyleClass().add("legend-bar");
@@ -419,10 +422,8 @@ public class EsuApp extends Application {
      */
     private void adopt(EsuSession built, File file) {
         session = built;
-        finalNodes = session.getFinalTree().getNodesByLevel();
-        TreeLayout.setNodeDims(session.getFinalTree());
-        treeSpace = TreeLayout.getTreeSpace(session.getFinalTree());
-        rectangles = TreeLayout.getRectangles(session.getFinalTree());
+        layout = TreeLayout.of(session.getFinalTree());
+        deadEnds = findDeadEnds(session.getFinalTree());
 
         graphPanel.setGraph(session.getGraph());
         setControlsEnabled(true);
@@ -448,15 +449,11 @@ public class EsuApp extends Application {
         if (session == null) {
             return;
         }
-        ArrayList<ESUNode> [] currentNodes =
-                session.getCurrentTree().getNodesByLevel();
         List<StepInfo> log = session.getCurrentLog();
         String active = log.isEmpty()
                 ? null : log.get(log.size() - 1).getCallerSubgraph();
-
-        TreeRenderer.styleNodes(rectangles, currentNodes, finalNodes, active);
-        treePane.getChildren().setAll(
-                TreeRenderer.getPrintables(rectangles, currentNodes, finalNodes));
+        focusId = active;
+        drawTree(active, active);
 
         graphPanel.highlight(session.getActiveSubgraph(),
                 session.getActiveExtension());
@@ -504,15 +501,61 @@ public class EsuApp extends Application {
         endButton.setDisable(atEnd);
     }
 
+    /**
+     * Draw the tree as it stands, tracing the path down to one node.
+     *
+     * @param activeId the node being worked on, highlighted amber
+     * @param traceId  the node to trace back to the root, or null
+     */
+    private void drawTree(String activeId, String traceId) {
+        Set<String> present = presentNodes();
+        Set<String> path = traceId == null
+                ? Set.of() : new HashSet<>(layout.pathToRoot(traceId));
+        treePane.getChildren().setAll(TreeRenderer.render(layout, present,
+                deadEnds, session.getSubgraphSize(), activeId, path));
+    }
+
+    /** Ids of the nodes that exist at the step being shown. */
+    private Set<String> presentNodes() {
+        Set<String> present = new HashSet<>();
+        ArrayList<ESUNode>[] levels =
+                session.getCurrentTree().getNodesByLevel();
+        for (int level = 1; level < levels.length; level++) {
+            for (ESUNode node : levels[level]) {
+                present.add(node.getSubgraphAsString());
+            }
+        }
+        return present;
+    }
+
+    /**
+     * Nodes that never gained a child in the finished tree, which is what
+     * makes them dead ends. Asking the current tree would be wrong: mid-run a
+     * node has no children only because it has not expanded yet.
+     *
+     * @param finalTree the finished tree
+     * @return ids of the branches that died
+     */
+    private Set<String> findDeadEnds(esu.algorithm.ESUTree finalTree) {
+        Set<String> dead = new HashSet<>();
+        ArrayList<ESUNode>[] levels = finalTree.getNodesByLevel();
+        for (int level = 1; level < levels.length - 1; level++) {
+            for (ESUNode node : levels[level]) {
+                if (node.getChildren().isEmpty()) {
+                    dead.add(node.getSubgraphAsString());
+                }
+            }
+        }
+        return dead;
+    }
+
     private void highlightFromLog(int index) {
         List<StepInfo> log = session == null
                 ? List.of() : session.getCurrentLog();
-        if (index < 0 || index >= log.size()) {
+        if (index < 0 || index >= log.size() || layout == null) {
             return;
         }
-        TreeRenderer.styleNodes(rectangles,
-                session.getCurrentTree().getNodesByLevel(), finalNodes,
-                log.get(index).getCallerSubgraph());
+        drawTree(focusId, log.get(index).getCallerSubgraph());
     }
 
     private void showEmptyState() {
@@ -549,15 +592,15 @@ public class EsuApp extends Application {
 
     /** Zoom so the whole tree is visible, and scroll back to the top left. */
     private void fitToWindow() {
-        if (treeSpace == null) {
+        if (layout == null) {
             return;
         }
         Bounds view = treeScroll.getViewportBounds();
-        if (treeSpace.getWidth() <= 0 || view.getWidth() <= 0) {
+        if (layout.getWidth() <= 0 || view.getWidth() <= 0) {
             return;
         }
-        double factor = Math.min(view.getWidth() / treeSpace.getWidth(),
-                view.getHeight() / treeSpace.getHeight()) * 0.95;
+        double factor = Math.min(view.getWidth() / layout.getWidth(),
+                view.getHeight() / layout.getHeight()) * 0.92;
         zoomSlider.setValue(clamp(factor,
                 zoomSlider.getMin(), zoomSlider.getMax()));
         treeScroll.setHvalue(0);

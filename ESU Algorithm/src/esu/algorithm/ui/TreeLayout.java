@@ -1,275 +1,277 @@
 /*
- * Where every box and connecting line goes.
- *
- * Split out of the old AuxilaryClass, which mixed geometry, drawing and two
- * unused helpers in one 617-line pile of statics.
+ * Where every node of the search tree goes.
  */
 package esu.algorithm.ui;
 
 import esu.algorithm.ESUNode;
 import esu.algorithm.ESUTree;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Line;
-import javafx.scene.shape.Rectangle;
+import java.util.Map;
 
 /**
  * Class TreeLayout
  *
- * Positions the search tree: how big a node box has to be to hold its text,
- * where each box sits, and how a box connects to its parent. Knows nothing
- * about colour or state.
+ * Positions the tree so that a node sits directly under its parent.
+ *
+ * The 2018 layout spread each level evenly across the full width of the tree,
+ * placing nodes by their index within the level. A node therefore sat nowhere
+ * near its parent, and the connecting lines had to sprawl diagonally across
+ * everything, which is why the picture looked like a web rather than a tree.
+ *
+ * This walks the tree bottom-up: leaves take the next free slot along the
+ * row, and every parent is centred over its children. Subtrees occupy
+ * disjoint ranges of slots, so nothing can overlap.
+ *
+ * Free of JavaFX, so the geometry can be tested without a display.
  */
 public class TreeLayout {
 
-    /** Size of a node box, set by setNodeDims from the widest text. */
-    static public double nodeWidth;
-    static public double nodeHeight;
+    /** Every box is the same width, which keeps parents safely centred. */
+    private static final double BOX_WIDTH = 74;
+    private static final double BOX_HEIGHT = 30;
+    private static final double COLUMN_GAP = 16;
+    private static final double ROW_GAP = 46;
 
-    /** Extent of the whole tree, set by getTreeSpace. */
-    static public double treeWidth;
-    static public double treeHeight;
+    /** What the root box says, since it stands for choosing nothing yet. */
+    public static final String ROOT_ID = "[root]";
+    public static final String ROOT_LABEL = "start";
 
-    /** Space inside a box, around its text. */
-    static final public double innerPaddingX = 5;
-    static final public double innerPaddingY = 5;
+    /**
+     * One positioned node.
+     */
+    public static class Box {
 
-    /** Space between boxes, and between levels. */
-    static final public double outerPaddingX = 15;
-    static final public double outerPaddingY = 45;
+        private final String id;
+        private final String label;
+        private final int level;
+        private final String parentId;
+        private double x;
+        private final double y;
 
-    static public final double FONT_HEIGHT = 12;
-    /** Advance width of the monospaced face, used to centre text. */
-    static public final double FONT_WIDTH = 7.2;
-    /** Monospaced, so FONT_WIDTH stays a true measure of text width. */
-    static public final String FONT_FAMILY = "Menlo";
+        Box(String id, String label, int level, String parentId, double y) {
+            this.id = id;
+            this.label = label;
+            this.level = level;
+            this.parentId = parentId;
+            this.y = y;
+        }
+
+        /** @return the node's subgraph string, which identifies it */
+        public String getId() {
+            return id;
+        }
+
+        /** @return what to draw inside the box */
+        public String getLabel() {
+            return label;
+        }
+
+        /** @return depth in the tree, 0 being the root */
+        public int getLevel() {
+            return level;
+        }
+
+        /** @return the parent's id, or null for the root */
+        public String getParentId() {
+            return parentId;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+
+        public double getWidth() {
+            return BOX_WIDTH;
+        }
+
+        public double getHeight() {
+            return BOX_HEIGHT;
+        }
+
+        public double centreX() {
+            return x + BOX_WIDTH / 2;
+        }
+
+        public double centreY() {
+            return y + BOX_HEIGHT / 2;
+        }
+
+        /** @return true if this is the root, which is not a subgraph */
+        public boolean isRoot() {
+            return parentId == null;
+        }
+    }
+
+    private final Map<String, Box> boxes = new LinkedHashMap<>();
+    private final Map<String, List<Box>> children = new LinkedHashMap<>();
+    private int depth;
+    private double width;
+    private double height;
+
+    private double nextLeafX;
 
     private TreeLayout() {
     }
 
-    /** ********************************************************************
-     * Get Tree Space:
-     * 
-     * This function calculates and allocates screen space based on the final
-     * state of the ESUTree.
-     * 
-     * This method initializes the tree space that encapsulates the drawing
-     * area. This function requires that the node dimensions have been
-     * determined ahead of time. Rightfully so:
-     * THIS FUNCTION SHOULD BE CALLED AFTER "SET NODE DIMS"
-     * 
-     * @see setNodeDims( ... )
-     * 
-     * @param finalState - The Final state of the ESUTree
-     * 
-     * @return A Rectangle to encase the total space the ESUTree will take
-     *              up.
-     ********************************************************************* */
-    public static Rectangle getTreeSpace(ESUTree finalState){
-        
-        //bounding Rectengle
-        Rectangle out = new Rectangle();
-        
-        //get tree as lists of Nodes
-        List<ESUNode>[] tree = finalState.getNodesByLevel();
-        
-        //current longest level
-        int currentMax = 0;
-        
-        //find longest level
-        for(int level = 0; level < tree.length; level++){
-            currentMax = Math.max(currentMax, tree[level].size());
-        }
-        
-        //set width relative to the longest level
-        out.setWidth(currentMax * nodeWidth + (currentMax + 1) * outerPaddingX);
-        
-        //set height relative to the tree height
-        out.setHeight( tree.length * nodeHeight + (tree.length + 1) * outerPaddingY);
-        
-        //set tree dimensions for static variables
-        treeWidth = out.getWidth();
-        treeHeight = out.getHeight();
-        
-        return out;
+    /**
+     * Lay out a finished tree.
+     *
+     * @param tree the tree to position, normally the final state
+     * @return positions for every node in it
+     */
+    public static TreeLayout of(ESUTree tree) {
+        TreeLayout layout = new TreeLayout();
+        layout.build(tree);
+        return layout;
     }
-    
-    
-    /** ********************************************************************
-     * Set Node Dimensions:
-     * 
-     * Calculates the dimensions of the nodes based on the final state of
-     * the ESUTree. 
-     * 
-     * THIS FUNCTION IS REQUIRED TO BE CALLED BEFORE THE OTHER STATIC 
-     * FUNCTIONS OF THIS CLASS.
-     * 
-     * The height is static relative to the font height and inner padding.
-     * The width is based on the widest displayed text for the ESUTree.
-     * 
-     * @param finalState - The final state of the ESUTree to display
-     * 
-     ********************************************************************* */
-    public static void setNodeDims(ESUTree finalState){
-        int maxChars = 6; //six caharcters in "[root]"
-        ArrayList<ESUNode>[] nodes = finalState.getNodesByLevel();
-        for(int level = 1; level < finalState.getMaxHeight() + 1; level++){
-            for(int node = 0; node < nodes[level].size(); node++){
-                
-                maxChars = Math.max(maxChars, 
-                        nodes[level].get(node).getSubgraphAsString().length());
-                maxChars = Math.max(maxChars, 
-                        nodes[level].get(node).getPossibleStepsAsString().length());
-                maxChars = Math.max(maxChars, 
-                        nodes[level].get(node).getSubgraphNeighborsAsString().length());
+
+    private void build(ESUTree tree) {
+        ArrayList<ESUNode>[] levels = tree.getNodesByLevel();
+
+        // The root is not in getNodesByLevel's usable form, so it is placed
+        // explicitly and everything on level 1 is treated as its child.
+        Box root = new Box(ROOT_ID, ROOT_LABEL, 0, null, 0);
+        boxes.put(ROOT_ID, root);
+        children.put(ROOT_ID, new ArrayList<>());
+
+        for (int level = 1; level < levels.length; level++) {
+            for (ESUNode node : levels[level]) {
+                String id = node.getSubgraphAsString();
+                String parentId = level == 1
+                        ? ROOT_ID : node.getParent().getSubgraphAsString();
+                Box box = new Box(id, labelFor(node), level, parentId,
+                        level * (BOX_HEIGHT + ROW_GAP));
+                boxes.put(id, box);
+                children.computeIfAbsent(parentId, key -> new ArrayList<>())
+                        .add(box);
+                children.computeIfAbsent(id, key -> new ArrayList<>());
             }
         }
-        nodeWidth = maxChars*FONT_WIDTH + 2*innerPaddingX;
-        nodeHeight = FONT_HEIGHT * 3 + innerPaddingX * 4;
+
+        place(root);
+
+        // Depth comes from the boxes that exist, not from the tree's declared
+        // height: a graph with no edges produces a root and nothing else.
+        depth = 0;
+        for (Box box : boxes.values()) {
+            depth = Math.max(depth, box.getLevel());
+        }
+
+        width = Math.max(nextLeafX - COLUMN_GAP, BOX_WIDTH);
+        height = (depth + 1) * BOX_HEIGHT + depth * ROW_GAP;
     }
-    
-    //calculates a Rectangle for each node in the tree, relative to the tree space
-    /** ***********************************************************************
-     * Get Rectangles:
-     * 
-     * Pre-determines the location of each Rectangle for each node in the
-     * final state of the ESUTree. Stores the Rectangles as an array of
-     * ArrayLists where each index of the array hold all the Rectangles for
-     * that level of the tree. The returned array should be used in conjunction
-     * with the other static functions of this file.
-     * 
-     * @param finalState - The final state of the ESUTree to display.
-     * 
-     * @return - An array of ArrayLists of Rectangles (lol)
-     *              representing all Node in the Tree.
-     ************************************************************************ */
-    public static ArrayList<Rectangle>[] getRectangles(ESUTree finalState){
-        
-        //set up variables
-        ArrayList<Rectangle>[] out = 
-                new ArrayList[finalState.getMaxHeight() + 1];
-        
-        ArrayList<ESUNode>[] nodes = finalState.getNodesByLevel();
-        
-        //for each level
-        for(int level = 0; level < out.length; level++){
-            
-            ////total node width on this level
-            double totalNodeWidth = nodeWidth*nodes[level].size();
-            
-            //padding to be evenly distributed on current level
-            double levelPadding = (treeWidth - totalNodeWidth) / 
-                    (nodes[level].size() + 1);
-            
-            //create arraylist @ level
-            out[level] = new ArrayList<>();
-            
-            //make each Rectangle for each node in this level
-            for(int node = 0; node < nodes[level].size(); node++){
-                Rectangle cell = new Rectangle();
-                cell.setWidth(nodeWidth);
-                cell.setHeight(nodeHeight);
-                cell.setX(nodeWidth * node + (levelPadding* (node + 1)));
-                cell.setY(nodeHeight * level + outerPaddingY * (level + 1));
-                cell.setFill(null);
-                cell.setStroke(Color.BLACK);
-                out[level].add(cell);
-            }
+
+    /**
+     * Position a node once its children are positioned: a leaf takes the next
+     * free slot, a parent is centred over the children it produced.
+     *
+     * @param box the node to place
+     */
+    private void place(Box box) {
+        List<Box> kids = childrenOf(box);
+        if (kids.isEmpty()) {
+            box.x = nextLeafX;
+            nextLeafX += BOX_WIDTH + COLUMN_GAP;
+            return;
         }
-        
-        //return out
-        return out;
+        for (Box kid : kids) {
+            place(kid);
+        }
+        double first = kids.get(0).centreX();
+        double last = kids.get(kids.size() - 1).centreX();
+        box.x = (first + last) / 2 - BOX_WIDTH / 2;
     }
-    
-    /** **********************************************************************
-     * Get Line To Parent:
-     * 
-     * Gets the line from the node to it's parent. The lines are calculated in
-     * such a way that the space on the bottom of the parent's rectangle
-     * is divided between it's children's lines.
-     * 
-     * @param rects - The location of all Rectangles for Nodes
-     * @param finalNodes - The final state of the ESUTree as ESUNode lists
-     * @param node - The current Node to draw the line to its parent.
-     * 
-     * @return - The Line object that will link the node to its parent.
-     *********************************************************************** */
-    public static Line getLineToParent(ArrayList<Rectangle>[] rects, 
-            ArrayList<ESUNode>[] finalNodes, ESUNode node){
-        
-        //if root, return null
-        if(node.getLevel() < 1){
-            return null;
+
+    /**
+     * The vertices of a node, without set notation: the boxes are small and
+     * the punctuation meant nothing to a reader without a key.
+     *
+     * @param node the node to label
+     * @return its vertices separated by spaces
+     */
+    private String labelFor(ESUNode node) {
+        LinkedList<Integer> vertices = new LinkedList<>();
+        node.getSubGraph(vertices);
+        StringBuilder out = new StringBuilder();
+        for (Integer vertex : vertices) {
+            out.append(out.length() == 0 ? "" : " ").append(vertex);
         }
-        
-        //line start/end coordinates
-        double startX = 0.;
-        double startY = 0.;
-        double endX = 0.;
-        double endY = 0.;
-        
-        //my level index
-        int levelIndex = 0;
-        
-        //count my level index in the tree (via nodes)
-        for(ESUNode curr : finalNodes[node.getLevel()]){
-            if(curr.getSubgraphAsString().equals(
-                    node.getSubgraphAsString())){
-                break;
-            }
-            levelIndex++;
-        }
-        
-        //my parent's index
-        int parentLevelIndex = 0;
-        
-        //count my parent's level index in tree (via nodes)
-        for(ESUNode curr : finalNodes[node.getLevel() - 1]){
-            if(curr.getSubgraphAsString().equals(
-                    node.getParent().getSubgraphAsString())){
-                break;
-            }
-            parentLevelIndex++;
-        }
-        
-        //number of siblings from parent
-        //int numSiblings = node.getParent().getChildren().size();
-        int numSiblings = finalNodes[node.getLevel()-1].get(
-                parentLevelIndex).getChildren().size();
-        
-        //my number in my parents children
-        int siblingNum = 0;
-        
-        //find my index in my parent's children
-        for(ESUNode sibling : node.getParent().getChildren()){
-            if (sibling == node){
-                break;
-            }
-            siblingNum++;
-        }
-        
-        //helper variable for splitting the width of the Rectangles by number
-        //of siblings
-        double levelDivision = nodeWidth / (numSiblings + 1);
-        
-        //start Y, top of a rectangle on my level
-        startY = rects[node.getLevel()].get(0).getY();
-        
-        //start X, X value of rectangle, offset by my position in my
-        //parents children
-        startX = rects[node.getLevel()].get(levelIndex).getX() 
-                + nodeWidth - (levelDivision * (siblingNum + 1) );
-        
-        //end Y, bottom of a rectangle of the parent's level
-        endY = rects[node.getLevel()-1].get(0).getY() + nodeHeight;
-        
-        //end X, X value of parent rectangle, opposite offset from my X offest
-        endX = rects[node.getLevel()-1].get(parentLevelIndex).getX() 
-                + (levelDivision * (siblingNum + 1) );
-        
-        //return Line
-        return new Line(startX, startY, endX, endY);
+        return out.toString();
     }
-    
+
+    /**
+     * @param id a node's subgraph string
+     * @return its box, or null if the tree has no such node
+     */
+    public Box get(String id) {
+        return boxes.get(id);
+    }
+
+    /**
+     * @return every box, root first
+     */
+    public Collection<Box> boxes() {
+        return boxes.values();
+    }
+
+    /**
+     * @param box the parent
+     * @return its children, left to right
+     */
+    public List<Box> childrenOf(Box box) {
+        return children.getOrDefault(box.getId(), Collections.emptyList());
+    }
+
+    /**
+     * @param level depth to fetch
+     * @return the boxes at that depth
+     */
+    public List<Box> row(int level) {
+        List<Box> row = new ArrayList<>();
+        for (Box box : boxes.values()) {
+            if (box.getLevel() == level) {
+                row.add(box);
+            }
+        }
+        return row;
+    }
+
+    /**
+     * The chain of nodes from the root down to a node, which is the sequence
+     * of choices that produced it.
+     *
+     * @param id the node to trace back from
+     * @return ids from the root to that node, empty if it is not in the tree
+     */
+    public List<String> pathToRoot(String id) {
+        List<String> path = new ArrayList<>();
+        Box box = boxes.get(id);
+        while (box != null) {
+            path.add(0, box.getId());
+            box = box.getParentId() == null ? null : boxes.get(box.getParentId());
+        }
+        return path;
+    }
+
+    /** @return depth of the deepest level, 0 if only the root exists */
+    public int getDepth() {
+        return depth;
+    }
+
+    public double getWidth() {
+        return width;
+    }
+
+    public double getHeight() {
+        return height;
+    }
 }

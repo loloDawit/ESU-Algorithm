@@ -133,7 +133,7 @@ public class GraphPanel extends Pane {
         circle.setStroke(chosen || candidate ? Color.TRANSPARENT : VERTEX_STROKE);
 
         Text label = new Text(Integer.toString(vertex));
-        label.setFont(Font.font(TreeLayout.FONT_FAMILY, FontWeight.BOLD, 13));
+        label.setFont(Font.font("SF Mono", FontWeight.BOLD, 13));
         label.setFill(chosen ? Color.WHITE : VERTEX_LABEL);
         // Centre the label on the circle using its own measured size.
         label.setX(at[0] - label.getLayoutBounds().getWidth() / 2);
