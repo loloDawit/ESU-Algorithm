@@ -95,7 +95,8 @@ public class ESUVisualizer extends Application {
     BorderPane root = new BorderPane();
     VBox vBox = new VBox();
     StackPane nodeContainer = new StackPane();
-    Slider slider = new Slider(0.5,2,1);
+    // Floor is low on purpose: myGraph.txt at k=7 needs 0.05 to fit at all.
+    Slider slider = new Slider(0.02,2,1);
     
     Pane pane = new Pane();
     ScrollPane scrollPane = new ScrollPane();
@@ -418,13 +419,20 @@ public class ESUVisualizer extends Application {
         if(treeList == null){
             return;
         }
-        Bounds tree = pane.getBoundsInLocal();
-        Bounds view = scrollPane.getViewportBounds();
-        if(tree.getWidth() <= 0 || tree.getHeight() <= 0){
+        // Measure the tree, not the pane: the pane is stretched to the
+        // viewport, so measuring it would never zoom out.
+        if(treeSpace == null){
             return;
         }
-        double factor = Math.min(view.getWidth() / tree.getWidth(),
-                view.getHeight() / tree.getHeight());
+        Bounds view = scrollPane.getViewportBounds();
+        double treeWidth = treeSpace.getWidth();
+        double treeHeight = treeSpace.getHeight();
+        if(treeWidth <= 0 || treeHeight <= 0
+                || view.getWidth() <= 0 || view.getHeight() <= 0){
+            return;
+        }
+        double factor = Math.min(view.getWidth() / treeWidth,
+                view.getHeight() / treeHeight) * 0.95;   // a little margin
         slider.setValue(Math.max(slider.getMin(),
                 Math.min(slider.getMax(), factor)));
         scrollPane.setHvalue(0);
@@ -745,6 +753,9 @@ public class ESUVisualizer extends Application {
         currentIndex = -1;
         setControlsEnabled(true);
         updateStatus();
+        // Fit once the pane has been laid out, so the tree is on screen and
+        // whole rather than opening zoomed into a corner of it.
+        Platform.runLater(this::fitToWindow);
         if(leaves == 0){
             Alerts.displayNoSubgraphs(subgraphSize);
         }

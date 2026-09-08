@@ -39,11 +39,14 @@ public class AuxilaryClass {
     static final public double innerPaddingX = 5;
     static final public double innerPaddingY = 5;
     static final public double outerPaddingX = 15;
-    static final public double outerPaddingY = 100;
+    static final public double outerPaddingY = 45;
     
     //font dimensions
-    static public final double FONT_HEIGHT = 20;
-    static public final double FONT_WIDTH = 10;
+    static public final double FONT_HEIGHT = 12;
+    /** Advance width of the monospaced face below, used to centre text. */
+    static public final double FONT_WIDTH = 7.2;
+    /** Monospaced, so FONT_WIDTH stays a true measure of text width. */
+    static public final String FONT_FAMILY = "Menlo";
     
     /** ************************************************
      * Constructor
@@ -274,7 +277,7 @@ public class AuxilaryClass {
         Text out[];
         
         //create font
-        Font font = new Font("Times New Roman", FONT_HEIGHT);
+        Font font = new Font(FONT_FAMILY, FONT_HEIGHT);
         
         //if NOT root, get Text for the three lists
         if(node.getLevel() != 0){
