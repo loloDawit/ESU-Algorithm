@@ -619,14 +619,7 @@ public class ESUVisualizer extends Application {
         //count = stepLog.get(stepLog.size() - 1).count;
         
         for (int entry = 0; entry < stepLog.size(); entry++) {
-            String caller = stepLog.get(entry).caller.getSubgraphAsString();
-            String target = "{}";
-            if(stepLog.get(entry).target != null)
-                target = stepLog.get(entry).target.getSubgraphAsString();
-            String description = stepLog.get(entry).description;
-            description = description.replace("%t", target);
-            description = description.replace("%c", caller);
-            showProgress.getItems().add(description);        
+            showProgress.getItems().add(stepLog.get(entry).render());
         }
         // ************ @DEPRICATED ****************
         //AuxilaryClass.drawTo(screen.getGraphicsContext2D(), AuxilaryClass.getPrintables(rectangles, treeList.get(currentIndex).getNodesByLevel()));
@@ -644,8 +637,7 @@ public class ESUVisualizer extends Application {
         if(stepLog == null || stepLog.isEmpty()){
             return null;
         }
-        ESUNode caller = stepLog.get(stepLog.size() - 1).caller;
-        return caller == null ? null : caller.getSubgraphAsString();
+        return stepLog.get(stepLog.size() - 1).getCallerSubgraph();
     }
 
     /**
@@ -658,13 +650,9 @@ public class ESUVisualizer extends Application {
         if(currentLog == null || logIndex < 0 || logIndex >= currentLog.size()){
             return;
         }
-        ESUNode caller = currentLog.get(logIndex).caller;
-        if(caller == null){
-            return;
-        }
         AuxilaryClass.styleNodes(rectangles,
                 treeList.get(currentIndex).getNodesByLevel(), finalNodes,
-                caller.getSubgraphAsString());
+                currentLog.get(logIndex).getCallerSubgraph());
     }
     /**
      * start the application 
