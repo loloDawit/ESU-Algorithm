@@ -6,12 +6,18 @@
  */
 package esu.algorithm.UI;
 
+import javafx.animation.Animation;
+import javafx.util.Duration;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToolBar;
+import javafx.scene.layout.HBox;
+import javafx.scene.paint.Color;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -78,6 +84,9 @@ public class ESUVisualizer extends Application {
     Button saveButton = new Button("Save");
     ListView<String> showProgress = new ListView<>();
     Button backButton = new Button("Back");
+    ToggleButton playButton = new ToggleButton("Play");
+    Slider speedSlider = new Slider(1, 20, 5);
+    Timeline player = null;
     Button showFinalTree = new Button("FinalTree");
     
     // Containers 
@@ -105,6 +114,7 @@ public class ESUVisualizer extends Application {
     static final int MAX_SUBGRAPH_SIZE = 9;
     int subgraphSize = 5;
     File currentFile = null;
+    ArrayList<StepInfo> currentLog = null;
     
     public ESUVisualizer(){
         super();
@@ -150,6 +160,27 @@ public class ESUVisualizer extends Application {
                 "Subgraph size to search for (" + MIN_SUBGRAPH_SIZE
                 + "-" + MAX_SUBGRAPH_SIZE + ")"));
         sampleField.setOnAction((event) -> applySubgraphSize());
+
+        // Autoplay. The speed slider is its own control: `slider` is already
+        // bound to the canvas zoom factor.
+        speedSlider.setPrefWidth(90);
+        speedSlider.setTooltip(new Tooltip("Playback speed (steps per second)"));
+        playButton.setOnAction((event) -> {
+            if(playButton.isSelected()){
+                startPlayback();
+            } else {
+                stopPlayback();
+            }
+        });
+        speedSlider.valueProperty().addListener((obs, was, now) -> {
+            if(player != null){
+                startPlayback();   // rebuild at the new rate
+            }
+        });
+
+        // Selecting a log line highlights the node that line is about.
+        showProgress.getSelectionModel().selectedIndexProperty()
+                .addListener((obs, was, now) -> highlightFromLog(now.intValue()));
         sampleField.focusedProperty().addListener((obs, hadFocus, hasFocus) -> {
             if(!hasFocus){
                 applySubgraphSize();
@@ -266,6 +297,7 @@ public class ESUVisualizer extends Application {
             }
         });
         backButton.setOnAction(((event) -> {
+            stopPlayback();
             loadWindow("/esu/algorithm/UI/loadScreen.fxml", "Undirected Subgraph Enumeration Software");
             closeStage();
         }));
@@ -303,11 +335,12 @@ public class ESUVisualizer extends Application {
             );
         });
         root.setCenter(zoomingPane);
-        root.setTop(toolBar);
+        root.setTop(new VBox(toolBar, buildLegend()));
         toolBar.getItems().addAll(zoomInButton,zoomOutButton,
                                   new Separator(),textField,
                                   new Separator(),openFileButton,
-                                  resetButton,nextButton,prevButton,
+                                  resetButton,prevButton,nextButton,
+                                  playButton,speedSlider,
                                   new Separator(),new Label("k ="),sampleField,
                                   new Separator(),slider,new Separator()
                                   );
@@ -337,7 +370,9 @@ public class ESUVisualizer extends Application {
     public void start(Stage primaryStage) {
         setNodes();
         Stage stage = new Stage();
-        Scene scene = new Scene(root,910,650);
+        Scene scene = new Scene(root,1040,720);
+        scene.getStylesheets().add(
+                getClass().getResource("esu.css").toExternalForm());
         
         stage.setScene(scene);
         stage.setTitle("ESU Visualization Software");
@@ -365,6 +400,92 @@ public class ESUVisualizer extends Application {
       }
     });
     }
+    /**
+     * One legend entry: a swatch in a node's colour and its meaning.
+     *
+     * @param fill   swatch fill
+     * @param stroke swatch outline
+     * @param label  what that colour means
+     * @param dashed true to draw the outline dashed, as dead ends are
+     * @return the swatch and its caption
+     */
+    private HBox legendEntry(Color fill, Color stroke, String label,
+            boolean dashed){
+        Rectangle swatch = new Rectangle(16, 11, fill);
+        swatch.setStroke(stroke);
+        if(dashed){
+            swatch.getStrokeDashArray().addAll(3.0, 2.0);
+        }
+        Label caption = new Label(label);
+        caption.getStyleClass().add("legend-label");
+        HBox entry = new HBox(5, swatch, caption);
+        entry.setAlignment(Pos.CENTER_LEFT);
+        return entry;
+    }
+
+    /**
+     * The legend bar: what each node colour means, and how to read the three
+     * lines inside a node.
+     *
+     * @return the assembled legend
+     */
+    private HBox buildLegend(){
+        Label reading = new Label("node:  {subgraph}  (extension)  [neighbors]");
+        reading.getStyleClass().add("legend-key");
+        HBox legend = new HBox(14,
+                legendEntry(AuxilaryClass.ACTIVE_FILL,
+                        AuxilaryClass.ACTIVE_STROKE, "working on", false),
+                legendEntry(AuxilaryClass.COMPLETE_FILL,
+                        AuxilaryClass.COMPLETE_STROKE, "subgraph found", false),
+                legendEntry(AuxilaryClass.DEADEND_FILL,
+                        AuxilaryClass.DEADEND_STROKE, "dead end", true),
+                legendEntry(AuxilaryClass.PENDING_FILL,
+                        AuxilaryClass.PENDING_STROKE, "still expanding", false),
+                new Separator(Orientation.VERTICAL),
+                reading);
+        legend.setAlignment(Pos.CENTER_LEFT);
+        legend.setPadding(new Insets(4, 10, 4, 10));
+        legend.getStyleClass().add("legend-bar");
+        return legend;
+    }
+
+    /**
+     * Start (or restart) stepping the tree forward on a timer.
+     * Stops on its own at the last step.
+     */
+    private void startPlayback(){
+        stopPlayback();
+        if(treeList == null){
+            playButton.setSelected(false);
+            return;
+        }
+        Duration tick = Duration.seconds(1.0 / speedSlider.getValue());
+        player = new Timeline(new KeyFrame(tick, (event) -> {
+            if(currentIndex >= treeList.size() - 1){
+                stopPlayback();
+                playButton.setSelected(false);
+                return;
+            }
+            currentIndex = currentIndex < 0 ? 0 : currentIndex + 1;
+            showTree();
+        }));
+        player.setCycleCount(Animation.INDEFINITE);
+        player.play();
+        playButton.setText("Pause");
+    }
+
+    /**
+     * Stop the playback timer. Safe to call when nothing is playing, and
+     * called before anything that invalidates the tree or the window.
+     */
+    private void stopPlayback(){
+        if(player != null){
+            player.stop();
+            player = null;
+        }
+        playButton.setText("Play");
+    }
+
     /**
      * Read k from its field and rebuild the tree if it changed.
      * Out-of-range or non-numeric input snaps back to the current value.
@@ -397,6 +518,8 @@ public class ESUVisualizer extends Application {
      * reset the canvas 
      */
     void reset(){
+        stopPlayback();
+        playButton.setSelected(false);
         pane.getChildren().clear();
         nodeContainer.getChildren().clear();
         currentIndex = -1;
@@ -407,12 +530,19 @@ public class ESUVisualizer extends Application {
     void showTree(){
         if(treeList == null)
             return;
+        ArrayList<ESUNode>[] currentNodes =
+                treeList.get(currentIndex).getNodesByLevel();
+        currentLog = treeList.get(currentIndex).getLog();
+
+        AuxilaryClass.styleNodes(rectangles, currentNodes, finalNodes,
+                activeSubgraph(currentLog));
+
         pane.getChildren().clear();
         pane.getChildren().addAll(0,AuxilaryClass.getPrintables(rectangles, 
-                treeList.get(currentIndex).getNodesByLevel(), finalNodes));
+                currentNodes, finalNodes));
         scrollPane.setContent(pane);
         showProgress.getItems().clear();
-        ArrayList<StepInfo> stepLog = treeList.get(currentIndex).getLog();
+        ArrayList<StepInfo> stepLog = currentLog;
         
         //moved to "loadGraph" to set on initialization
         //count = stepLog.get(stepLog.size() - 1).count;
@@ -430,6 +560,40 @@ public class ESUVisualizer extends Application {
         // ************ @DEPRICATED ****************
         //AuxilaryClass.drawTo(screen.getGraphicsContext2D(), AuxilaryClass.getPrintables(rectangles, treeList.get(currentIndex).getNodesByLevel()));
         // *****************************************
+    }
+
+    /**
+     * The node this step is working on: the caller of the step's last log
+     * entry.
+     *
+     * @param stepLog the log for the step being displayed
+     * @return its subgraph string, or null if there is nothing to highlight
+     */
+    private String activeSubgraph(ArrayList<StepInfo> stepLog){
+        if(stepLog == null || stepLog.isEmpty()){
+            return null;
+        }
+        ESUNode caller = stepLog.get(stepLog.size() - 1).caller;
+        return caller == null ? null : caller.getSubgraphAsString();
+    }
+
+    /**
+     * Highlight the node a log line is talking about. Log entries are added
+     * in stepLog order, so the selected row indexes straight into it.
+     *
+     * @param logIndex row selected in the progress list
+     */
+    private void highlightFromLog(int logIndex){
+        if(currentLog == null || logIndex < 0 || logIndex >= currentLog.size()){
+            return;
+        }
+        ESUNode caller = currentLog.get(logIndex).caller;
+        if(caller == null){
+            return;
+        }
+        AuxilaryClass.styleNodes(rectangles,
+                treeList.get(currentIndex).getNodesByLevel(), finalNodes,
+                caller.getSubgraphAsString());
     }
     /**
      * start the application 
