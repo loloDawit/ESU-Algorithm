@@ -1,0 +1,139 @@
+/*
+ * The demo, styled to sit inside the project page. Every colour is a variable
+ * the page already defines, so the demo follows its light or dark theme.
+ */
+
+.demo {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+}
+
+.demo-main { display: flex; min-height: 330px; }
+
+/* ---- left: graph, sets, log ---- */
+
+.demo-side {
+  width: 268px; flex: none;
+  padding: 14px;
+  border-right: 1px solid var(--line);
+  display: flex; flex-direction: column; gap: 6px;
+}
+
+.demo-title {
+  font-size: 11px; font-weight: 700; color: var(--text-faint);
+  text-transform: uppercase; letter-spacing: 0.05em;
+}
+
+.demo-graph {
+  width: 100%; height: 200px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.demo-sets { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; margin: 4px 0 2px; }
+.demo-sets dt { font-size: 11.5px; color: var(--text-faint); }
+.demo-sets dd {
+  margin: 0; font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; font-weight: 600;
+}
+.demo-subgraph { color: var(--blue); }
+.demo-extension { color: var(--amber); }
+
+.demo-log {
+  list-style: none; margin: 0; padding: 8px 10px;
+  background: var(--bg-soft);
+  border: 1px solid var(--line); border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px; line-height: 1.45; color: var(--text-soft);
+  height: 118px; overflow-y: auto;
+}
+.demo-log li { margin-bottom: 3px; }
+
+/* ---- right: the tree ---- */
+
+.demo-treewrap { flex: 1; min-width: 0; padding: 12px; overflow: hidden; }
+.demo-tree { width: 100%; height: 100%; min-height: 300px; }
+
+.t-edge { fill: none; stroke: var(--line); stroke-width: 1.2; }
+.t-edge-path { stroke: var(--blue); stroke-width: 2.2; }
+
+.t-box { stroke-width: 1.2; }
+.t-root { fill: var(--blue-soft); stroke: var(--blue); }
+.t-pending { fill: var(--bg); stroke: var(--text-faint); }
+.t-active { fill: var(--amber-soft); stroke: var(--amber); stroke-width: 2.4; }
+.t-complete { fill: var(--green-soft); stroke: var(--green); stroke-width: 1.8; }
+.t-dead { fill: var(--bg-sunk); stroke: var(--text-faint); stroke-dasharray: 4 3; }
+.t-on-path { stroke: var(--blue); stroke-width: 2; }
+
+.t-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px; font-weight: 600; fill: var(--text);
+}
+.t-text-dead { fill: var(--text-faint); }
+.t-caption { font-size: 10px; fill: var(--text-faint); }
+
+/* ---- graph shapes ---- */
+
+.g-edge { stroke: var(--line); stroke-width: 1.5; }
+.g-edge-in { stroke: var(--blue); stroke-width: 3; }
+.g-vertex { stroke-width: 1.5; }
+.g-plain { fill: var(--bg-sunk); stroke: var(--text-faint); }
+.g-chosen { fill: var(--blue); stroke: var(--blue); }
+.g-candidate { fill: var(--amber); stroke: var(--amber); }
+.g-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 13px; font-weight: 700; fill: var(--text);
+}
+.g-label-chosen { fill: #fff; }
+.g-label-candidate { fill: #20303f; }
+
+/* ---- controls ---- */
+
+.demo-bar {
+  display: flex; flex-wrap: wrap; gap: 14px; align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  background: var(--bg-soft);
+}
+.demo-choices, .demo-transport { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.demo-caption { font-size: 11.5px; color: var(--text-faint); margin-right: 2px; }
+.demo-graphs, .demo-sizes { display: inline-flex; gap: 4px; }
+
+.demo-pill, .demo-btn {
+  font: inherit; font-size: 12.5px;
+  padding: 5px 11px;
+  border: 1px solid var(--line); border-radius: 7px;
+  background: var(--bg); color: var(--text);
+  cursor: pointer;
+}
+.demo-pill:hover, .demo-btn:hover { border-color: var(--text-faint); }
+.demo-pill.is-on { background: var(--blue); border-color: var(--blue); color: #fff; font-weight: 600; }
+.demo-play { min-width: 62px; font-weight: 600; }
+.demo-scrubber { width: 120px; accent-color: var(--blue); }
+
+.demo-footer {
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 11.5px; color: var(--text-soft);
+}
+.demo-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+.demo-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.sw { width: 15px; height: 11px; border-radius: 3px; border: 1.5px solid; display: inline-block; }
+.sw-active { background: var(--amber-soft); border-color: var(--amber); }
+.sw-complete { background: var(--green-soft); border-color: var(--green); }
+.sw-dead { background: var(--bg-sunk); border-color: var(--text-faint); border-style: dashed; }
+
+/* ---- narrow screens: graph above the tree ---- */
+
+@media (max-width: 720px) {
+  .demo-main { flex-direction: column; }
+  .demo-side { width: auto; border-right: 0; border-bottom: 1px solid var(--line); }
+  .demo-log { height: 84px; }
+}

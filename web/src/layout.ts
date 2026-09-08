@@ -142,3 +142,46 @@ export function deadEnds(finalTree: ESUTree): Set<string> {
   }
   return dead;
 }
+
+/** A placed vertex in the input-graph drawing. */
+export interface Point {
+  readonly vertex: number;
+  readonly x: number;
+  readonly y: number;
+}
+
+/**
+ * Place vertices evenly on the largest circle that fits, starting at the top
+ * so a given graph always looks the same.
+ *
+ * Deterministic and needs no layout library. A force-directed layout would
+ * look better on large graphs, which this cannot draw legibly anyway.
+ *
+ * @param vertices vertices to place, in drawing order
+ * @param width    available width
+ * @param height   available height
+ * @param margin   space kept clear of the edge for labels and strokes
+ */
+export function circlePositions(
+  vertices: number[],
+  width: number,
+  height: number,
+  margin = 26,
+): Point[] {
+  const centreXValue = width / 2;
+  const centreYValue = height / 2;
+
+  if (vertices.length === 1) {
+    return [{ vertex: vertices[0]!, x: centreXValue, y: centreYValue }];
+  }
+
+  const radius = Math.max(0, Math.min(centreXValue, centreYValue) - margin);
+  return vertices.map((vertex, i) => {
+    const angle = (2 * Math.PI * i) / vertices.length - Math.PI / 2;
+    return {
+      vertex,
+      x: centreXValue + radius * Math.cos(angle),
+      y: centreYValue + radius * Math.sin(angle),
+    };
+  });
+}

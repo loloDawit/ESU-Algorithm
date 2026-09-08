@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { UndirectedGraph } from '../src/graph.js';
 import { ESUTree } from '../src/esu.js';
-import { TreeLayout, centreX } from '../src/layout.js';
+import { TreeLayout, centreX, circlePositions } from '../src/layout.js';
 import { SAMPLES } from './samples.js';
 
 function finished(graph: UndirectedGraph, k: number): ESUTree {
@@ -69,5 +69,41 @@ describe('TreeLayout', () => {
     const layout = layoutOf('bowtie.txt', 3);
 
     expect(layout.pathToRoot('{0, 1, 2}')).toEqual(['[root]', '{0}', '{0, 1}', '{0, 1, 2}']);
+  });
+});
+
+describe('circlePositions', () => {
+  it('places one vertex in the middle', () => {
+    expect(circlePositions([7], 200, 100)).toEqual([{ vertex: 7, x: 100, y: 50 }]);
+  });
+
+  it('starts at the top so a graph always looks the same', () => {
+    const [first] = circlePositions([0, 1, 2, 3], 200, 200, 20);
+
+    expect(first!.x).toBeCloseTo(100, 6);
+    expect(first!.y).toBeCloseTo(20, 6);
+  });
+
+  it('spaces vertices evenly around one circle', () => {
+    const points = circlePositions([0, 1, 2, 3, 4, 5], 240, 240, 20);
+    const radii = points.map((p) => Math.hypot(p.x - 120, p.y - 120));
+
+    for (const radius of radii) expect(radius).toBeCloseTo(100, 6);
+
+    // Neighbouring vertices are all the same distance apart.
+    const gaps = points.map((p, i) => {
+      const next = points[(i + 1) % points.length]!;
+      return Math.hypot(p.x - next.x, p.y - next.y);
+    });
+    for (const gap of gaps) expect(gap).toBeCloseTo(gaps[0]!, 6);
+  });
+
+  it('keeps every vertex inside the box it was given', () => {
+    for (const point of circlePositions([0, 1, 2, 3, 4], 300, 180, 26)) {
+      expect(point.x).toBeGreaterThanOrEqual(0);
+      expect(point.x).toBeLessThanOrEqual(300);
+      expect(point.y).toBeGreaterThanOrEqual(0);
+      expect(point.y).toBeLessThanOrEqual(180);
+    }
   });
 });

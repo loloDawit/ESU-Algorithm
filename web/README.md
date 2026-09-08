@@ -1,14 +1,19 @@
 # Web engine
 
-A TypeScript port of the ESU engine, for an in-browser version of the
-visualizer. No UI yet: this is the algorithm, the session, and the tree
-layout, with the tests that prove they behave like the desktop app.
+A TypeScript port of the ESU visualizer for the browser: the algorithm, the
+session, the tree layout, and an SVG rendering of both the graph and the search
+tree. The desktop app remains the reference implementation.
 
 ```bash
 npm install
-npm test          # 58 tests
+npm test          # 68 tests
 npm run typecheck
+npm run build     # -> dist/demo.js, dist/demo.css
 ```
+
+The built bundle is about 21 KB, 7 KB gzipped, with no runtime dependencies.
+Colours come from CSS variables the host page defines, so the demo follows its
+light or dark theme.
 
 ## How the port is kept honest
 
@@ -27,6 +32,11 @@ implementation detail.
 `oracle.test.ts` additionally carries over the brute-force check from the Java
 suite: enumerate every subset of the right size, keep the connected ones, and
 require ESU to return exactly that set with no duplicates.
+
+`render.test.ts` drives the demo in a real DOM and checks it draws the graph,
+grows the tree, highlights the current subgraph, and builds every control. The
+desktop app has no equivalent, which is how a button went missing during a
+rebuild and stayed missing until someone read the README.
 
 ## Regenerating the fixtures
 
