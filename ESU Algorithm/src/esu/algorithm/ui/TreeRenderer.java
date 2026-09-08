@@ -178,9 +178,9 @@ public class TreeRenderer {
 
         if (box.isRoot()) {
             // The root is not a subgraph, and nothing on screen said so.
+            // Above the box: below it runs the row of connectors.
             shapes.add(centredText("no vertices chosen", CAPTION_FONT,
-                    Color.web("#8a97a6"), box.centreX(),
-                    box.getY() + box.getHeight() + 12));
+                    Color.web("#8a97a6"), box.centreX(), box.getY() - 9));
         }
         return shapes;
     }

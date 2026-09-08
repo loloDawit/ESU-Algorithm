@@ -36,6 +36,8 @@ public class TreeLayout {
     private static final double BOX_HEIGHT = 30;
     private static final double COLUMN_GAP = 16;
     private static final double ROW_GAP = 46;
+    /** Space above the root for its caption. */
+    private static final double CAPTION_ROOM = 16;
 
     /** What the root box says, since it stands for choosing nothing yet. */
     public static final String ROOT_ID = "[root]";
@@ -139,7 +141,7 @@ public class TreeLayout {
 
         // The root is not in getNodesByLevel's usable form, so it is placed
         // explicitly and everything on level 1 is treated as its child.
-        Box root = new Box(ROOT_ID, ROOT_LABEL, 0, null, 0);
+        Box root = new Box(ROOT_ID, ROOT_LABEL, 0, null, CAPTION_ROOM);
         boxes.put(ROOT_ID, root);
         children.put(ROOT_ID, new ArrayList<>());
 
@@ -149,7 +151,7 @@ public class TreeLayout {
                 String parentId = level == 1
                         ? ROOT_ID : node.getParent().getSubgraphAsString();
                 Box box = new Box(id, labelFor(node), level, parentId,
-                        level * (BOX_HEIGHT + ROW_GAP));
+                        CAPTION_ROOM + level * (BOX_HEIGHT + ROW_GAP));
                 boxes.put(id, box);
                 children.computeIfAbsent(parentId, key -> new ArrayList<>())
                         .add(box);
@@ -167,7 +169,7 @@ public class TreeLayout {
         }
 
         width = Math.max(nextLeafX - COLUMN_GAP, BOX_WIDTH);
-        height = (depth + 1) * BOX_HEIGHT + depth * ROW_GAP;
+        height = CAPTION_ROOM + (depth + 1) * BOX_HEIGHT + depth * ROW_GAP;
     }
 
     /**

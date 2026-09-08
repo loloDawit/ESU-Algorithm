@@ -11,7 +11,9 @@ import esu.algorithm.StepInfo;
 import esu.algorithm.UndirectedGraph;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Random;
@@ -31,6 +33,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.ScrollPane;
@@ -94,6 +97,7 @@ public class EsuApp extends Application {
 
     private final Button openButton = new Button("Open graph");
     private final Button randomButton = new Button("Random");
+    private final Button saveButton = new Button("Save results");
     private final Button startButton = new Button("«");
     private final Button prevButton = new Button("‹");
     private final Button nextButton = new Button("›");
@@ -145,7 +149,7 @@ public class EsuApp extends Application {
         Label zoomCaption = new Label("Zoom");
         zoomCaption.getStyleClass().add("caption");
 
-        HBox bar = new HBox(8, openButton, randomButton,
+        HBox bar = new HBox(8, openButton, randomButton, saveButton,
                 separator(), sizeCaption, sizePills,
                 separator(), zoomCaption, zoomOutButton, zoomSlider,
                 zoomInButton, fitButton);
@@ -289,6 +293,9 @@ public class EsuApp extends Application {
         randomButton.setOnAction(event -> generateRandomGraph());
         randomButton.setTooltip(new Tooltip(
                 "Generate a random connected graph and run ESU on it"));
+        saveButton.setOnAction(event -> saveResults());
+        saveButton.setTooltip(new Tooltip(
+                "Write the subgraphs found to a text file"));
 
         startButton.setTooltip(new Tooltip("Back to the first step"));
         endButton.setTooltip(new Tooltip("Jump to the finished tree"));
@@ -342,6 +349,26 @@ public class EsuApp extends Application {
 
         stepLog.getSelectionModel().selectedIndexProperty()
                 .addListener((obs, was, now) -> highlightFromLog(now.intValue()));
+
+        // Entries are sentences, so wrap them rather than clipping to one
+        // line behind a horizontal scrollbar.
+        stepLog.setCellFactory(view -> new ListCell<>() {
+            private final Label text = new Label();
+            {
+                text.setWrapText(true);
+                text.getStyleClass().add("log-line");
+                text.maxWidthProperty().bind(
+                        stepLog.widthProperty().subtract(34));
+                setGraphic(text);
+            }
+
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                text.setText(empty ? "" : item);
+                setGraphic(empty ? null : text);
+            }
+        });
     }
 
     // ------------------------------------------------------------------
@@ -369,6 +396,39 @@ public class EsuApp extends Application {
             file.getParentFile().mkdirs();
             RandomGraph.writeToFile(RandomGraph.generate(random), file);
             loadGraph(file);
+        } catch (IOException e) {
+            Alerts.displayCouldNotWrite(e.getMessage());
+        }
+    }
+
+    /**
+     * Write the subgraphs found to a file the user picks.
+     */
+    private void saveResults() {
+        FileChooser chooser = new FileChooser();
+        chooser.setTitle("Save the subgraphs found");
+        chooser.setInitialFileName("subgraphs.txt");
+        chooser.getExtensionFilters().setAll(
+                new FileChooser.ExtensionFilter("Text files (*.txt)", "*.txt"));
+
+        File file = chooser.showSaveDialog(saveButton.getScene().getWindow());
+        if (file == null) {
+            return;
+        }
+        try (PrintWriter out = new PrintWriter(file)) {
+            out.println(session.getSubgraphCount() + " connected subgraphs of "
+                    + "size " + session.getSubgraphSize()
+                    + " in " + (currentFile == null
+                            ? "the current graph" : currentFile.getName()));
+            out.println();
+            for (LinkedList<Integer> subgraph
+                    : session.getFinalTree().getSubGraphs()) {
+                StringBuilder line = new StringBuilder();
+                for (Integer vertex : subgraph) {
+                    line.append(line.length() == 0 ? "" : " ").append(vertex);
+                }
+                out.println(line);
+            }
         } catch (IOException e) {
             Alerts.displayCouldNotWrite(e.getMessage());
         }
@@ -566,7 +626,7 @@ public class EsuApp extends Application {
     private void setControlsEnabled(boolean loaded) {
         for (Node control : new Node[]{startButton, prevButton, nextButton,
                 endButton, playButton, speedSlider, fitButton, zoomInButton,
-                zoomOutButton, zoomSlider}) {
+                zoomOutButton, zoomSlider, saveButton}) {
             control.setDisable(!loaded);
         }
     }

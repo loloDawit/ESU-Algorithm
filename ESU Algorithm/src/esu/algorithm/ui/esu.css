@@ -143,3 +143,9 @@
     -fx-text-fill: #3d4b5c;
     -fx-font-size: 12px;
 }
+
+.log-line {
+    -fx-font-family: "SF Mono", "Menlo", monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: #2d3748;
+}
