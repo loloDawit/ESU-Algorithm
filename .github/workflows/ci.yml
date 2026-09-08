@@ -34,3 +34,23 @@ jobs:
         with:
           name: test-report
           path: build/reports/tests/test
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+        working-directory: web
+      - run: npm run typecheck
+        working-directory: web
+      # Includes the fixtures generated from the Java engine, so a change to
+      # one implementation and not the other fails here.
+      - run: npm test
+        working-directory: web
