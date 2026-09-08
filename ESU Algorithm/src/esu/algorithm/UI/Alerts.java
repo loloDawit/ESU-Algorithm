@@ -26,6 +26,40 @@ public class Alerts {
         
     }
     /**
+     * Report that the search finished without finding anything, so an
+     * incomplete tree on screen is not mistaken for a result.
+     *
+     * @param subgraphSize the k that was searched for
+     */
+    public static void displayNoSubgraphs(int subgraphSize){
+        alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("No subgraphs found");
+        alert.setHeaderText("No connected subgraphs of size " + subgraphSize);
+        alert.setContentText("The tree shows how far each branch got before it "
+                + "ran out of valid vertices. None reached size " + subgraphSize
+                + ", so nothing on screen is a result.\n\n"
+                + "Try a smaller k, or a graph with more edges.");
+        alert.showAndWait();
+    }
+
+    /**
+     * Report that the requested subgraph size is outside what the
+     * step-by-step history can hold.
+     *
+     * @param min smallest accepted k
+     * @param max largest accepted k
+     */
+    public static void displaySubgraphSizeRange(int min, int max){
+        alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Subgraph size");
+        alert.setHeaderText("k must be between " + min + " and " + max);
+        alert.setContentText("Every step keeps a full copy of the tree so you "
+                + "can step backwards, and above " + max + " that history "
+                + "outgrows the available memory.");
+        alert.showAndWait();
+    }
+
+    /**
      * display error message 
      * error type: file not found 
      */

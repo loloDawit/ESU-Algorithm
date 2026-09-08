@@ -20,6 +20,48 @@ public class UndirectedGraph {
     private int[][] graph;
     private int size;
 
+    /**
+     * fromFile
+     *
+     * Builds a graph sized to hold every vertex named in the file.
+     *
+     * @param file file of whitespace-separated vertex pairs
+     * @return the graph, or null if the file could not be read
+     */
+    public static UndirectedGraph fromFile(File file) {
+        int largest = largestVertex(file);
+        if (largest < 0) {
+            return null;
+        }
+        // vertex ids are 0-based, so a largest id of 4 needs 5 slots.
+        UndirectedGraph graph = new UndirectedGraph(largest + 1);
+        graph.fillGraph(file.getPath());
+        return graph;
+    }
+
+    /**
+     * largestVertex
+     *
+     * @param file file of whitespace-separated vertex pairs
+     * @return the highest vertex id in the file, or -1 if unreadable
+     */
+    public static int largestVertex(File file) {
+        int result = -1;
+        try {
+            Scanner scan = new Scanner(file);
+            while (scan.hasNextInt()) {
+                int next = scan.nextInt();
+                if (next > result) {
+                    result = next;
+                }
+            }
+            scan.close();
+        } catch (Exception e) {
+            return -1;
+        }
+        return result;
+    }
+
     public UndirectedGraph(int size) {
         this.size = size;
         graph = new int[size][size];

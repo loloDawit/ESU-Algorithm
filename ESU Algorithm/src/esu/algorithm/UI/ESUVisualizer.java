@@ -46,6 +46,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
@@ -100,7 +101,10 @@ public class ESUVisualizer extends Application {
     ArrayList<Rectangle>[] rectangles;
     ArrayList<ESUNode>[] finalNodes;
     int leaves = 0;
+    static final int MIN_SUBGRAPH_SIZE = 2;
+    static final int MAX_SUBGRAPH_SIZE = 9;
     int subgraphSize = 5;
+    File currentFile = null;
     
     public ESUVisualizer(){
         super();
@@ -137,6 +141,20 @@ public class ESUVisualizer extends Application {
     public void setNodes(){
         textField.setPromptText("open file");
         textField.setEditable(false);
+
+        // Subgraph size. Above MAX_SUBGRAPH_SIZE the step-by-step history
+        // (one full tree copy per step) exhausts the heap.
+        sampleField.setPrefWidth(50);
+        sampleField.setText(Integer.toString(subgraphSize));
+        sampleField.setTooltip(new Tooltip(
+                "Subgraph size to search for (" + MIN_SUBGRAPH_SIZE
+                + "-" + MAX_SUBGRAPH_SIZE + ")"));
+        sampleField.setOnAction((event) -> applySubgraphSize());
+        sampleField.focusedProperty().addListener((obs, hadFocus, hasFocus) -> {
+            if(!hasFocus){
+                applySubgraphSize();
+            }
+        });
         
         scrollPane.setTranslateX(7);
         scrollPane.setTranslateY(7);
@@ -289,7 +307,9 @@ public class ESUVisualizer extends Application {
         toolBar.getItems().addAll(zoomInButton,zoomOutButton,
                                   new Separator(),textField,
                                   new Separator(),openFileButton,
-                                  resetButton,nextButton,prevButton, new Separator(),slider,new Separator()
+                                  resetButton,nextButton,prevButton,
+                                  new Separator(),new Label("k ="),sampleField,
+                                  new Separator(),slider,new Separator()
                                   );
         
         toolBar.setPadding(new Insets(5, 25, 5, 150));
@@ -345,6 +365,34 @@ public class ESUVisualizer extends Application {
       }
     });
     }
+    /**
+     * Read k from its field and rebuild the tree if it changed.
+     * Out-of-range or non-numeric input snaps back to the current value.
+     */
+    private void applySubgraphSize(){
+        int requested;
+        try {
+            requested = Integer.parseInt(sampleField.getText().trim());
+        } catch (NumberFormatException e) {
+            sampleField.setText(Integer.toString(subgraphSize));
+            return;
+        }
+        if(requested < MIN_SUBGRAPH_SIZE || requested > MAX_SUBGRAPH_SIZE){
+            Alerts.displaySubgraphSizeRange(MIN_SUBGRAPH_SIZE, MAX_SUBGRAPH_SIZE);
+            sampleField.setText(Integer.toString(subgraphSize));
+            return;
+        }
+        if(requested == subgraphSize){
+            return;
+        }
+        subgraphSize = requested;
+        if(currentFile != null){
+            reset();
+            loadGraph(currentFile);
+            showTree();
+        }
+    }
+
     /**
      * reset the canvas 
      */
@@ -439,13 +487,13 @@ public class ESUVisualizer extends Application {
     }
     
     public void loadGraph(File file){
-        int size = getLargestVertex(file);
-        if(size < 0){
+        graph = UndirectedGraph.fromFile(file);
+        if(graph == null){
+            Alerts.displayInputMismatch();
             return;
         }
+        currentFile = file;
         textField.setText(file.getName());
-        graph = new UndirectedGraph(size);
-        graph.fillGraph(file.getPath());
         
         ESUTree tree = new ESUTree(graph, subgraphSize);
         treeList= new ArrayList<>();
@@ -468,26 +516,11 @@ public class ESUVisualizer extends Application {
         
         leaves = finalNodes[finalNodes.length-1].size();
         currentIndex = -1;
+        if(leaves == 0){
+            Alerts.displayNoSubgraphs(subgraphSize);
+        }
     }
     
-    int getLargestVertex(File file){
-        int result = -1;
-        try{
-            Scanner scan = new Scanner(file);
-            while(scan.hasNext()){
-                int next = scan.nextInt();
-                if(next > result){
-                    result = next;
-                }
-            }
-            scan.close();
-        }
-        catch(Exception e){
-            Alerts.displayInputMismatch();
-            System.out.println("Error opening file: " + file.getAbsolutePath());
-        }
-        return result;
-    }
     /**
      * 
      * @param loc   location of the fxml class

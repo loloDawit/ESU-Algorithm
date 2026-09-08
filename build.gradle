@@ -7,6 +7,19 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.11.3'
+    // Gradle 9 fails to run any test without the launcher on the test runtime.
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+    testLogging {
+        events 'passed', 'failed', 'skipped'
+    }
+}
+
 java {
     toolchain {
         languageVersion = JavaLanguageVersion.of(21)
@@ -32,6 +45,14 @@ sourceSets {
         resources {
             srcDirs = ['ESU Algorithm/src']
             exclude '**/*.java'
+        }
+    }
+    test {
+        java {
+            srcDirs = ['ESU Algorithm/test']
+        }
+        resources {
+            srcDirs = ['samples']
         }
     }
 }
