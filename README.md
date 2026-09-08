@@ -14,7 +14,7 @@ It draws the graph and the search tree side by side: as you step, the subgraph
 being built lights up in the graph, the tree grows a box for it, and the step
 log says why the algorithm accepted or rejected each candidate.
 
-![The visualizer running on a five-vertex graph](docs/screenshot.png)
+![The visualizer running: the search tree grows step by step while the matching vertices light up in the graph](docs/demo.gif)
 
 ## Running it
 
