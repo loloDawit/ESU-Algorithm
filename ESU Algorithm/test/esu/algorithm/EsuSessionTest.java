@@ -1,0 +1,116 @@
+package esu.algorithm;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Random;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * A session reaches a step by replaying the algorithm rather than by keeping
+ * a copy of the tree after every step. These tests exist because that is the
+ * one thing about the approach that can silently go wrong: a replayed step
+ * must be indistinguishable from a stepped-to one.
+ */
+public class EsuSessionTest {
+
+    /**
+     * Every node of the tree, level by level, as text. Starts at level 1:
+     * the root carries no lists of its own and never changes.
+     */
+    private String describe(ESUTree tree) {
+        StringBuilder out = new StringBuilder();
+        ArrayList<ESUNode>[] levels = tree.getNodesByLevel();
+        for (int depth = 1; depth < levels.length; depth++) {
+            for (ESUNode node : levels[depth]) {
+                out.append(node.getSubgraphAsString())
+                   .append(node.getPossibleStepsAsString())
+                   .append(node.getSubgraphNeighborsAsString())
+                   .append(' ');
+            }
+            out.append('|');
+        }
+        return out.toString();
+    }
+
+    /** The tree state after stepping forward n times, the slow honest way. */
+    private String byStepping(UndirectedGraph graph, int subgraphSize, int n) {
+        ESUTree tree = new ESUTree(graph, subgraphSize);
+        for (int i = 0; i < n; i++) {
+            tree.step();
+            tree.clearStepLog();
+        }
+        return describe(tree);
+    }
+
+    @ParameterizedTest(name = "{0} at k={1}")
+    @CsvSource({
+        "bowtie.txt, 3", "bowtie.txt, 4",
+        "cluster.txt, 3", "cluster.txt, 4",
+        "sample-small.txt, 3", "sample-small.txt, 5"
+    })
+    public void jumpingToAStepMatchesSteppingToIt(String file, int subgraphSize) {
+        UndirectedGraph graph =
+                UndirectedGraph.fromFile(new File("samples/" + file));
+        EsuSession session = new EsuSession(graph, subgraphSize);
+
+        for (int step = 0; step <= session.getTotalSteps(); step++) {
+            session.goToStep(step);
+            assertEquals(byStepping(graph, subgraphSize, step),
+                    describe(session.getCurrentTree()),
+                    "state differs at step " + step);
+        }
+    }
+
+    @Test
+    public void steppingBackwardsAgreesWithSteppingForwards() {
+        UndirectedGraph graph = RandomGraph.generate(9, new Random(3));
+        EsuSession forward = new EsuSession(graph, 4);
+        EsuSession backward = new EsuSession(graph, 4);
+
+        backward.goToStep(backward.getTotalSteps());
+        for (int i = 0; i < 5; i++) {
+            backward.stepBack();
+        }
+        forward.goToStep(forward.getTotalSteps() - 5);
+
+        assertEquals(describe(forward.getCurrentTree()),
+                describe(backward.getCurrentTree()));
+    }
+
+    @Test
+    public void reportsTheSameSubgraphCountTheAlgorithmFinds() {
+        UndirectedGraph graph =
+                UndirectedGraph.fromFile(new File("samples/cluster.txt"));
+        ESUTree reference = new ESUTree(graph, 4);
+        while (reference.step()) {
+            reference.clearStepLog();
+        }
+
+        EsuSession session = new EsuSession(graph, 4);
+
+        assertEquals(reference.getSubGraphs().size(), session.getSubgraphCount());
+    }
+
+    @Test
+    public void willNotStepPastTheEnd() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+
+        session.goToStep(session.getTotalSteps());
+
+        assertFalse(session.stepForward());
+        assertEquals(session.getTotalSteps(), session.getCurrentStep());
+    }
+
+    @Test
+    public void willNotStepBeforeTheStart() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+
+        assertFalse(session.stepBack());
+        assertEquals(0, session.getCurrentStep());
+    }
+}
