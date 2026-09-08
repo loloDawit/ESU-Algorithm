@@ -7,7 +7,7 @@
 <meta name="description" content="A desktop app that shows, one step at a time, how the ESU algorithm enumerates every connected subgraph of a graph.">
 <meta property="og:title" content="ESU Visualizer">
 <meta property="og:description" content="Watch the ESU network-motif algorithm enumerate connected subgraphs, one step at a time.">
-<meta property="og:image" content="screenshot.png">
+<meta property="og:image" content="demo-poster.jpg">
 <style>
 :root {
   --bg: #ffffff;
@@ -137,7 +137,7 @@ h1 {
   background: var(--bg-soft);
   box-shadow: 0 18px 46px -22px rgba(16, 32, 56, 0.4);
 }
-.shot img { display: block; width: 100%; height: auto; }
+.shot img, .shot video { display: block; width: 100%; height: auto; }
 .shot-caption {
   font-size: 13px; color: var(--text-faint);
   padding: 11px 15px; border-top: 1px solid var(--line);
@@ -246,9 +246,14 @@ footer a { color: var(--text-soft); }
       <a class="btn" href="https://github.com/loloDawit/ESU-Algorithm">View source</a>
     </div>
     <div class="shot">
-      <img src="screenshot.png" alt="The ESU Visualizer: the input graph on the left with one vertex highlighted, and the search tree on the right with completed subgraphs in green.">
+      <video id="demo" poster="demo-poster.jpg" autoplay muted loop playsinline
+             preload="metadata"
+             aria-label="The ESU Visualizer running: the search tree grows step by step while the matching vertices light up in the graph on the left.">
+        <source src="demo.mp4" type="video/mp4">
+        <img src="demo-poster.jpg" alt="The ESU Visualizer: the input graph on the left with one vertex highlighted, and the search tree on the right with completed subgraphs in green.">
+      </video>
       <div class="shot-caption">
-        Searching a five-vertex graph for connected subgraphs of size 4. Four were found.
+        Six vertices, subgraphs of size 4. Twenty-four steps, six subgraphs found.
       </div>
     </div>
   </div>
@@ -387,6 +392,18 @@ footer a { color: var(--text-soft); }
 </footer>
 
 <script>
+// Someone who has asked for less motion gets the still frame and a play
+// button rather than a clip looping at them.
+(function () {
+  var demo = document.getElementById('demo');
+  if (demo && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    demo.autoplay = false;
+    demo.loop = false;
+    demo.controls = true;
+    demo.pause();
+  }
+})();
+
 // The star count is a nicety, not content: if the API is rate limited or
 // offline the button still reads "Star" and still links to the repository.
 fetch('https://api.github.com/repos/loloDawit/ESU-Algorithm')
