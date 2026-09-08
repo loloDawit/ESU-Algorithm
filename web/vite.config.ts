@@ -1,14 +1,15 @@
 import { defineConfig } from 'vite';
 
 /**
- * Builds the demo into a single JS file and a single CSS file, which the
- * project page loads. No hashing: the page references them by name and Pages
- * serves them with its own caching.
+ * Builds the demo straight into the site, so publishing is one directory and
+ * needs no copying step. docs/demo/ is generated and not committed.
+ *
+ * One JS file and one CSS file, unhashed: the page references them by name.
  */
 export default defineConfig({
   base: './',
   build: {
-    outDir: 'dist',
+    outDir: '../docs/demo',
     emptyOutDir: true,
     lib: {
       entry: 'src/main.ts',

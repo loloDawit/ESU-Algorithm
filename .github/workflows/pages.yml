@@ -9,6 +9,7 @@ on:
     branches: [master]
     paths:
       - 'docs/**'
+      - 'web/**'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
 
@@ -30,6 +31,21 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # The demo is built into docs/demo/ rather than committed, so the site
+      # cannot ship a bundle that is out of step with its source.
+      - run: npm ci
+        working-directory: web
+      - run: npm test
+        working-directory: web
+      - run: npm run build
+        working-directory: web
 
       # enablement: true switches Pages to build from this workflow, which is
       # the setting that would otherwise have to be changed in the UI.

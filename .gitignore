@@ -14,3 +14,4 @@ samples/random-graph.txt
 
 # Raw screen recordings; the encoded demo.mp4/gif are committed instead
 docs/*.mov
+docs/demo/

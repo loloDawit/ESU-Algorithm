@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="demo/demo.css">
 <title>ESU Visualizer — watch a network-motif algorithm think</title>
 <meta name="description" content="A desktop app that shows, one step at a time, how the ESU algorithm enumerates every connected subgraph of a graph.">
 <meta property="og:title" content="ESU Visualizer">
@@ -142,6 +143,10 @@ h1 {
   font-size: 13px; color: var(--text-faint);
   padding: 11px 15px; border-top: 1px solid var(--line);
 }
+.shot-note {
+  font-size: 13.5px; color: var(--text-faint);
+  margin: 12px 2px 0; max-width: 62ch;
+}
 
 /* ---------- sections ---------- */
 section { padding: 46px 0; border-top: 1px solid var(--line); }
@@ -246,16 +251,25 @@ footer a { color: var(--text-soft); }
       <a class="btn" href="https://github.com/loloDawit/ESU-Algorithm">View source</a>
     </div>
     <div class="shot">
-      <video id="demo" poster="demo-poster.jpg" autoplay muted loop playsinline
-             preload="metadata"
-             aria-label="The ESU Visualizer running: the search tree grows step by step while the matching vertices light up in the graph on the left.">
-        <source src="demo.mp4" type="video/mp4">
-        <img src="demo-poster.jpg" alt="The ESU Visualizer: the input graph on the left with one vertex highlighted, and the search tree on the right with completed subgraphs in green.">
-      </video>
-      <div class="shot-caption">
-        Six vertices, subgraphs of size 4. Twenty-four steps, six subgraphs found.
+      <!-- Replaced by the live demo once its script loads. Anyone without
+           JavaScript, or before it arrives, keeps the clip. -->
+      <div id="demo-mount" hidden></div>
+      <div id="demo-fallback">
+        <video id="demo" poster="demo-poster.jpg" autoplay muted loop playsinline
+               preload="metadata"
+               aria-label="The ESU Visualizer running: the search tree grows step by step while the matching vertices light up in the graph on the left.">
+          <source src="demo.mp4" type="video/mp4">
+          <img src="demo-poster.jpg" alt="The ESU Visualizer: the input graph on the left with one vertex highlighted, and the search tree on the right with completed subgraphs in green.">
+        </video>
+        <div class="shot-caption">
+          The desktop app. Six vertices, subgraphs of size 4.
+        </div>
       </div>
     </div>
+    <p class="shot-note">
+      Running here in your browser — pick a graph, change the size, or drag
+      through the steps. The desktop app does the same over your own files.
+    </p>
   </div>
 
   <section id="algorithm">
@@ -391,16 +405,18 @@ footer a { color: var(--text-soft); }
   </div>
 </footer>
 
+<script type="module" src="demo/demo.js"></script>
+
 <script>
-// Someone who has asked for less motion gets the still frame and a play
-// button rather than a clip looping at them.
+// The fallback clip, for anyone who has asked for less motion and does not
+// get the demo. The demo handles this for itself.
 (function () {
-  var demo = document.getElementById('demo');
-  if (demo && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    demo.autoplay = false;
-    demo.loop = false;
-    demo.controls = true;
-    demo.pause();
+  var clip = document.getElementById('demo');
+  if (clip && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    clip.autoplay = false;
+    clip.loop = false;
+    clip.controls = true;
+    clip.pause();
   }
 })();
 
