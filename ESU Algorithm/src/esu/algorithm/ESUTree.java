@@ -222,12 +222,7 @@ public class ESUTree {
             System.out.println("Tree[" + i + "] step log:");
             ArrayList<StepInfo> log = treeList.get(i).log;
             for(int entry = 0; entry < log.size(); entry++){
-                String caller = nodeToString(log.get(entry).caller);
-                String target = nodeToString(log.get(entry).target);
-                String description = log.get(entry).description;
-                description = description.replace("%t", target);
-                description = description.replace("%c", caller);
-                System.out.println(description);
+                System.out.println(log.get(entry).render());
             }
             /*
             //display leaves for current tree

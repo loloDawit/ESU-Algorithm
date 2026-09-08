@@ -10,8 +10,9 @@ enumerating every connected subgraph of size *k*, exactly once each. ESU does
 that with a labelling rule that stops the same subgraph being discovered twice.
 
 The rule is easy to state and hard to picture, which is what this app is for.
-It draws the search tree as it grows, so you can watch a branch get accepted or
-rejected and read why in the step log underneath.
+It draws the graph and the search tree side by side: as you step, the subgraph
+being built lights up in the graph, the tree grows a box for it, and the step
+log says why the algorithm accepted or rejected each candidate.
 
 ![The visualizer running on a five-vertex graph](docs/screenshot.png)
 
@@ -29,46 +30,42 @@ cd ESU-Algorithm
 On macOS, `brew install openjdk@21` will get you the JDK. Check what you have
 with `java -version`.
 
-Run the tests with:
-
-```bash
-./gradlew test
-```
-
 ## Using it
 
-Press **Start Application**, then either **open File** to load a graph, or
-**Random** to generate one and run it immediately.
+**Open graph** loads a file, or **Random** generates one and runs it straight
+away. Then press **Play**, or step with the arrows.
 
 | Control | What it does |
 |---|---|
-| **open File** | Load a graph. Opens in `samples/` |
+| **Open graph** | Load a graph file. Opens in `samples/` |
 | **Random** | Generate a random connected graph, save it to `samples/random-graph.txt`, and run it |
-| **k** | Subgraph size to search for, 2–9 |
-| **Play** / **Next** / **Prev** | Step through the search, automatically or by hand |
-| **FinalTree** | Jump to the finished tree |
-| **Fit** | Zoom so the whole tree is visible |
-| **+ / − / slider** | Zoom |
-| **Save** | Write the subgraphs found to a text file |
+| **Subgraph size** | How many vertices a subgraph must have, 2–6 |
+| **Play** | Step automatically, at the speed set bottom right |
+| **‹ ›** | One step back or forward |
+| **« »** | Jump to the start or to the finished tree |
+| **Fit**, **+ −**, slider | Zoom |
+| **Save results** | Write the subgraphs found to a text file |
 
-Each box in the tree is one node of the search, showing three lines:
+### Reading the picture
 
-```
-{0, 1, 2}     the subgraph built so far
-(3, 4)        the extension set: vertices still available to add
-[5]           neighbours of the subgraph
-```
+**Left**, the graph you loaded. The subgraph being built is blue; the vertices
+it could add next are amber.
 
-Colour says what happened to that node:
+**Right**, the search tree. Each box is one subgraph, written as its vertices,
+and the line down to it is the choice that produced it. The path from **start**
+down to the current box is drawn in blue, so you can see how any subgraph was
+reached. **start** is the empty beginning, before any vertex is chosen.
 
-| Colour | Meaning |
+| Box | Meaning |
 |---|---|
 | Amber | the step being performed right now |
-| Green | reached size *k* — an actual result |
+| Green | reached the requested size — an actual result |
 | Grey, dashed | dead end: the branch ran out of valid vertices |
 | White | still expanding |
 
-Clicking a line in the step log highlights the node it is talking about.
+The **Subgraph** and **Extension** lines under the graph give the same two sets
+in full for the current step, and **This step** below them is the algorithm's
+own commentary. Clicking one of its lines traces that node back to the start.
 
 ## Graph file format
 
@@ -103,19 +100,39 @@ ESU Algorithm/src/esu/algorithm/
 ├── ESUNode.java            one node of the search tree; does the real work
 ├── ESUTree.java            the tree; step() advances the algorithm once
 ├── StepInfo.java           a log entry describing one step
+├── EsuSession.java         one run, positioned at a step
 ├── RandomGraph.java        random connected graph generation
-└── UI/                     JavaFX front end
+└── ui/                     JavaFX front end
+    ├── EsuApp.java         the window
+    ├── GraphPanel.java     the input graph, with the subgraph highlighted
+    ├── TreeLayout.java     where every box goes
+    └── TreeRenderer.java   turning that into shapes
 ```
 
-The split matters: everything outside `UI/` is plain Java with no JavaFX
-dependency, so the algorithm can be tested and reused on its own. `ESUTree.step()`
-advancing exactly one step is what makes pause-and-step possible.
+The split matters: everything outside `ui/` is plain Java with no JavaFX
+dependency, so the algorithm can be tested and reused on its own.
+`ESUTree.step()` advancing exactly one step is what makes pause-and-step
+possible.
+
+`EsuSession` holds a run and where you are in it. Rather than keeping a copy of
+the tree after every step, it reaches a step by replaying the algorithm —
+enumerating from scratch is fast enough that re-running beats remembering, and
+it holds two trees instead of hundreds. `TreeLayout` has no JavaFX reference
+either, so the geometry is tested directly.
 
 ## Tests
+
+```bash
+./gradlew test
+```
 
 The algorithm is checked against a brute-force oracle: enumerate every *k*-subset
 of vertices, keep the connected ones, and require ESU to return exactly that set
 with no duplicates. That runs across several graphs and sizes.
+
+Two other things are worth testing and are: that a step reached by replay is
+identical to one reached by stepping, and that the tree layout puts parents over
+their children without overlapping anything.
 
 ## License
 

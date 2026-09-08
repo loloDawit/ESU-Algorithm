@@ -10,7 +10,6 @@
 package esu.algorithm;
 
 //imports
-import java.util.ArrayList;
 
 /** **************************************************************************
  * Class: Step Information
@@ -32,15 +31,14 @@ import java.util.ArrayList;
  ************************************************************************** */
 public class StepInfo {
     
-    // ***** public because i'm lazy. dont change from outside!!! *****
-    public ESUNode caller;      //the ESUNode calling the log entry
-    public ESUNode target;      //an optional target ESUNode for this log entry
-    public String description;  //a text description of this log entry
-    public Integer check;       //An optional Integer for this log entry
-    public Code stepCode;       //Log Code: see enum at bottom of file
-    public ESUTree tree;        //A copy of the tree's state for the log
-    public int count;           //The current leaf count
-    //*****************************************************************
+    /** Stands in for a node that is absent. */
+    private static final String EMPTY = "{}";
+
+    private final String callerSubgraph; //subgraph of the node being built
+    private final String targetSubgraph; //subgraph of an optional other node
+    public final String description;     //text of this log entry
+    public final Integer check;          //an optional Integer for this entry
+    public final Code stepCode;          //Log Code: see enum at bottom of file
     
     /** ***********************************************************************
      * Constructor:
@@ -61,50 +59,48 @@ public class StepInfo {
      *                      step. Can be null if no Integer is being checked
      *                      during this step.
      *********************************************************************** */
-    public StepInfo(ESUNode caller, String desc, 
+    public StepInfo(ESUNode caller, String desc,
             Code code, ESUNode target, Integer check){
-        
-        this.caller = null;//default to null
-        description = desc;
-        stepCode = code;
-        this.target = target;
+
+        // Only the subgraph strings are ever read back, and a node's subgraph
+        // is fixed once the node exists. Keeping them means this constructor
+        // no longer has to snapshot the tree, which it used to do on every
+        // single log entry.
+        this.callerSubgraph = caller == null ? EMPTY : caller.getSubgraphAsString();
+        this.targetSubgraph = target == null ? EMPTY : target.getSubgraphAsString();
+        this.description = desc;
+        this.stepCode = code;
         this.check = check;
-        
-        tree = caller.getTree();
-        ArrayList<ESUNode> levels[] = null;
-        try{
-            levels = tree.getNodesByLevel();
-        }
-        catch(Exception e){
-            System.out.println(e.getMessage());
-        }
-        //find relavent caller node in tree copy
-        for(int node = 0; node < levels[caller.getLevel()].size(); node++){
-            if (caller.getSubgraphAsString().equals(levels[caller.getLevel()].
-                    get(node).getSubgraphAsString())){
-                
-                this.caller = levels[caller.getLevel()].get(node);
-                break;
-            }
-        }
-        
-        //find relavent target node in tree copy if not null
-        if(target != null){
-            for(int node = 0; node < levels[target.getLevel()].size(); node++){
-                if (target.getSubgraphAsString().equals(levels[target.getLevel()].
-                        get(node).getSubgraphAsString())){
-                    
-                    this.target = levels[target.getLevel()].get(node);
-                    break;
-                }
-            }
-        } 
-        
-        //update leaf count
-        count =levels[levels.length - 1].size();
     }
-    
-    
+
+    /**
+     * The subgraph this entry is about.
+     *
+     * @return the caller's subgraph, e.g. "{0, 2}"
+     */
+    public String getCallerSubgraph(){
+        return callerSubgraph;
+    }
+
+    /**
+     * The other subgraph this entry refers to, when it compares two nodes.
+     *
+     * @return the target's subgraph, or "{}" if this entry has no target
+     */
+    public String getTargetSubgraph(){
+        return targetSubgraph;
+    }
+
+    /**
+     * This entry as a sentence, with the node placeholders filled in.
+     *
+     * @return the description with %c and %t resolved
+     */
+    public String render(){
+        return description.replace("%t", targetSubgraph)
+                          .replace("%c", callerSubgraph);
+    }
+
     // ********************  Step Code Enum  *************************** //
     /** **********************************************************************
      * Step Code:

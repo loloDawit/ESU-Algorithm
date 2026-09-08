@@ -32,7 +32,7 @@ javafx {
 }
 
 application {
-    mainClass = 'esu.algorithm.UI.Run'
+    mainClass = 'esu.algorithm.ui.EsuApp'
 }
 
 // The 2018 NetBeans layout keeps sources and resources (.fxml, .jpg, .txt)
