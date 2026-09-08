@@ -1,0 +1,17 @@
+{
+  "name": "esu-web",
+  "private": true,
+  "type": "module",
+  "description": "Browser port of the ESU visualizer engine",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10",
+    "vitest": "^2.1.4"
+  }
+}
