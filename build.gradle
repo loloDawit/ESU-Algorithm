@@ -1,0 +1,37 @@
+plugins {
+    id 'application'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+}
+
+javafx {
+    version = '21.0.2'
+    modules = ['javafx.controls', 'javafx.fxml']
+}
+
+application {
+    mainClass = 'esu.algorithm.UI.Run'
+}
+
+// The 2018 NetBeans layout keeps sources and resources (.fxml, .jpg, .txt)
+// in the same tree, so both source sets point at it.
+sourceSets {
+    main {
+        java {
+            srcDirs = ['ESU Algorithm/src']
+        }
+        resources {
+            srcDirs = ['ESU Algorithm/src']
+            exclude '**/*.java'
+        }
+    }
+}

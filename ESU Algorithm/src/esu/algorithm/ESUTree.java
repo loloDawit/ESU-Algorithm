@@ -208,7 +208,7 @@ public class ESUTree {
         //set-up
         //TestUndirectedGraph graph = new TestUndirectedGraph();
         UndirectedGraph graph = new UndirectedGraph(101);
-        graph.fillGraph("/home/nate/gits/ESU-Algorithm/ESU Algorithm/src/esu/algorithm/myGraph.txt");
+        graph.fillGraph(args.length > 0 ? args[0] : "ESU Algorithm/src/esu/algorithm/myGraph.txt");
         ESUTree tree = new ESUTree(graph, 4);
         ArrayList<ESUTree> treeList= new ArrayList<>();
         //step until done

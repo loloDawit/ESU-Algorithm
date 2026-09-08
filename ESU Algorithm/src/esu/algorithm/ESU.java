@@ -18,7 +18,7 @@ public class ESU {
      */
     public static void main(String[] args) {
         UndirectedGraph g = new UndirectedGraph(5);
-        g.fillGraph("/Users/polina/Desktop/ESU/src/esu/myGraph.txt");
+        g.fillGraph(args.length > 0 ? args[0] : "ESU Algorithm/src/esu/algorithm/myGraph.txt");
         g.printGraph();
         System.out.println(g.getSize());
         g.deleteNode(8);

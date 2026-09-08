@@ -1,0 +1,10 @@
+# Gradle
+build/
+.gradle/
+
+# NetBeans (2018 build)
+dist/
+nbproject/private/
+
+# macOS
+.DS_Store

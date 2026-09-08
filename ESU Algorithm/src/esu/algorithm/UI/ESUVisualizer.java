@@ -41,7 +41,6 @@ import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
-import javafx.scene.control.ButtonBuilder;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Separator;
@@ -51,11 +50,9 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextBuilder;
 import javafx.scene.transform.Scale;
 import javafx.stage.FileChooser;
 import javafx.stage.StageStyle;
-import jdk.jfr.events.FileWriteEvent;
 /**
  *
  * @author BioHazard
@@ -231,7 +228,6 @@ public class ESUVisualizer extends Application {
                     + "Subgraphs found: " + leaves + "\n"
                     + "Subgraphs: "+ "\n";
            
-            Text tString = TextBuilder.create().text(output).build();
             
             //get subgraphs as text for file printing
             int filler = 0;
