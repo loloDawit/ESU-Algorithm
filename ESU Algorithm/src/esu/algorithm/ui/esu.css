@@ -1,0 +1,145 @@
+/*
+ * Styling for the ESU visualizer.
+ *
+ * Palette matches the node state colours in TreeRenderer and the vertex
+ * colours in GraphPanel, so the legend, the tree and the graph agree.
+ */
+
+.root {
+    -fx-font-family: "SF Pro Text", "Helvetica Neue", sans-serif;
+    -fx-font-size: 12.5px;
+    -fx-background-color: #f4f6f9;
+}
+
+/* ---- bars ---- */
+
+.top-bar, .bottom-bar, .legend-bar {
+    -fx-background-color: #ffffff;
+}
+
+.top-bar {
+    -fx-border-color: transparent transparent #e2e6ec transparent;
+    -fx-border-width: 1;
+}
+
+.legend-bar {
+    -fx-background-color: #fafbfc;
+    -fx-border-color: #e2e6ec transparent #e2e6ec transparent;
+    -fx-border-width: 1;
+}
+
+.bottom-bar {
+    -fx-border-color: #e2e6ec transparent transparent transparent;
+    -fx-border-width: 0;
+}
+
+/* ---- controls ---- */
+
+.button, .toggle-button {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #ccd3dc;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-text-fill: #1f2933;
+    -fx-padding: 5 13 5 13;
+    -fx-cursor: hand;
+}
+
+.button:hover, .toggle-button:hover {
+    -fx-background-color: #eef2f7;
+    -fx-border-color: #9aa5b1;
+}
+
+.button:pressed, .toggle-button:selected {
+    -fx-background-color: #2f6fed;
+    -fx-border-color: #2f6fed;
+    -fx-text-fill: white;
+}
+
+/* subgraph size pills sit flush against each other */
+.pill {
+    -fx-padding: 5 15 5 15;
+    -fx-font-weight: bold;
+}
+
+.button:disabled, .toggle-button:disabled,
+.slider:disabled, .list-view:disabled {
+    -fx-opacity: 0.4;
+}
+
+/* ---- side panel ---- */
+
+.side-panel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent #e2e6ec transparent transparent;
+    -fx-border-width: 1;
+}
+
+.panel-title {
+    -fx-text-fill: #6b7683;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.caption {
+    -fx-text-fill: #8a94a6;
+    -fx-font-size: 11px;
+}
+
+.graph-panel {
+    -fx-background-color: #fafbfc;
+    -fx-background-radius: 8;
+    -fx-border-color: #e9edf2;
+    -fx-border-radius: 8;
+}
+
+.set-chosen, .set-candidate {
+    -fx-font-family: "SF Mono", "Menlo", monospace;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+
+.set-chosen { -fx-text-fill: #2f6fed; }
+.set-candidate { -fx-text-fill: #b4820e; }
+
+/* ---- step log ---- */
+
+.list-view {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e6ec;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.list-cell {
+    -fx-font-family: "SF Mono", "Menlo", monospace;
+    -fx-font-size: 11px;
+    -fx-text-fill: #2d3748;
+    -fx-padding: 3 8 3 8;
+    -fx-background-color: transparent;
+}
+
+.list-cell:filled:selected {
+    -fx-background-color: #fff3cd;
+    -fx-text-fill: #7a4b00;
+}
+
+.list-cell:filled:hover {
+    -fx-background-color: #f0f4f9;
+}
+
+/* ---- tree ---- */
+
+.tree-area, .tree-scroll, .tree-scroll .viewport {
+    -fx-background-color: #ffffff;
+}
+
+.tree-scroll {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.status-label {
+    -fx-text-fill: #3d4b5c;
+    -fx-font-size: 12px;
+}

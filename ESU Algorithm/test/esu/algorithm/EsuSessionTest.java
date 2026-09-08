@@ -95,6 +95,37 @@ public class EsuSessionTest {
     }
 
     @Test
+    public void namesTheSubgraphBeingBuiltAtThisStep() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+
+        session.goToStep(7);
+
+        // Step 7 builds node {1}; the graph panel highlights those vertices.
+        assertEquals(java.util.List.of(1), session.getActiveSubgraph());
+    }
+
+    @Test
+    public void offersTheVerticesTheCurrentNodeCouldAddNext() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+
+        session.goToStep(7);
+
+        // {1} finished with 2 approved and 0 rejected by the labelling rule.
+        assertEquals(java.util.List.of(2), session.getActiveExtension());
+    }
+
+    @Test
+    public void hasNothingHighlightedBeforeTheSearchStarts() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+
+        assertTrue(session.getActiveSubgraph().isEmpty());
+        assertTrue(session.getActiveExtension().isEmpty());
+    }
+
+    @Test
     public void willNotStepPastTheEnd() {
         EsuSession session = new EsuSession(
                 UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);

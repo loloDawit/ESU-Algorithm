@@ -4,6 +4,9 @@
 package esu.algorithm;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Class EsuSession
@@ -101,6 +104,62 @@ public class EsuSession {
         }
         goToStep(currentStep - 1);
         return true;
+    }
+
+    /**
+     * The vertices of the subgraph this step is building, for highlighting in
+     * a drawing of the graph.
+     *
+     * @return the active node's vertices, empty before the search starts
+     */
+    public List<Integer> getActiveSubgraph() {
+        ESUNode active = findActiveNode();
+        if (active == null) {
+            return Collections.emptyList();
+        }
+        LinkedList<Integer> vertices = new LinkedList<>();
+        active.getSubGraph(vertices);
+        return new ArrayList<>(vertices);
+    }
+
+    /**
+     * The vertices the active node could still add, which is what the
+     * algorithm is choosing between at this step.
+     *
+     * @return the active node's remaining candidates, empty if there is none
+     */
+    public List<Integer> getActiveExtension() {
+        ESUNode active = findActiveNode();
+        if (active == null) {
+            return Collections.emptyList();
+        }
+        List<Integer> extension = new ArrayList<>(active.getPossibleSteps());
+        Collections.sort(extension);
+        return extension;
+    }
+
+    /**
+     * The node the last log entry is about, located in the current tree by
+     * its subgraph. Log entries carry the subgraph rather than the node so
+     * that they cost nothing to keep.
+     *
+     * @return the node being built, or null if the step names none
+     */
+    private ESUNode findActiveNode() {
+        ArrayList<StepInfo> log = currentTree.getLog();
+        if (log.isEmpty()) {
+            return null;
+        }
+        String wanted = log.get(log.size() - 1).getCallerSubgraph();
+        ArrayList<ESUNode>[] levels = currentTree.getNodesByLevel();
+        for (int depth = 1; depth < levels.length; depth++) {
+            for (ESUNode node : levels[depth]) {
+                if (node.getSubgraphAsString().equals(wanted)) {
+                    return node;
+                }
+            }
+        }
+        return null;
     }
 
     /**
