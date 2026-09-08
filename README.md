@@ -117,16 +117,6 @@ The algorithm is checked against a brute-force oracle: enumerate every *k*-subse
 of vertices, keep the connected ones, and require ESU to return exactly that set
 with no duplicates. That runs across several graphs and sizes.
 
-## History
-
-Built in Winter 2018 as a Bioinformatics 483 project by the BioHazard team —
-Nate, Dawit, Polina and others — on JavaFX 8 and NetBeans.
-
-Revived in 2026 to build and run on current tooling: Gradle in place of Ant,
-JavaFX 21 as an external dependency now that it no longer ships with the JDK,
-and the removal of JavaFX APIs deleted in version 9. The algorithm itself needed
-no changes and passes the oracle tests unaltered.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
