@@ -16,9 +16,9 @@ import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.CheckBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
@@ -31,9 +31,6 @@ import javafx.stage.StageStyle;
 public class LoadScreenController implements Initializable {
     ESUVisualizer openESUVisualizer = new ESUVisualizer();
     
-    @FXML
-    private CheckBox checkUniGraph;
-
     /**
      * Initializes the controller class.
      * @param url
@@ -46,15 +43,13 @@ public class LoadScreenController implements Initializable {
 
     @FXML
     private void startApp(ActionEvent event) {
-        
-        if(checkUniGraph.isSelected()){
-            try {
-                openESUVisualizer.start(new Stage());
-                closeStage();
-            } catch (Exception e) {
-            }
-        }else
-            Alerts.displaySelectGraph();
+        try {
+            openESUVisualizer.start(new Stage());
+            closeStage(event);
+        } catch (Exception e) {
+            Logger.getLogger(LoadScreenController.class.getName())
+                    .log(Level.SEVERE, null, e);
+        }
     }
 
     @FXML
@@ -93,8 +88,13 @@ public class LoadScreenController implements Initializable {
                 new FileChooser.ExtensionFilter("PDF files (*.pdf)\", \"*.pdf"));
         
     }
-    public void closeStage() {
-        ((Stage)checkUniGraph.getScene().getWindow()).close();
+    /**
+     * Close the load screen once the visualizer is up.
+     *
+     * @param event the action that opened the visualizer
+     */
+    public void closeStage(ActionEvent event) {
+        ((Node) event.getSource()).getScene().getWindow().hide();
     }
     /**
      * 

@@ -12,12 +12,6 @@
    <children>
       <VBox layoutX="188.0" layoutY="100.0" prefHeight="200.0" prefWidth="156.0">
          <children>
-            <CheckBox fx:id="checkUniGraph" mnemonicParsing="false" prefHeight="18.0" prefWidth="141.0" text="Undirected Graph">
-               <VBox.margin>
-                  <Insets bottom="5.0" />
-               </VBox.margin>
-            </CheckBox>
-            <Separator prefWidth="200.0" />
             <Button mnemonicParsing="false" onAction="#startApp" prefHeight="27.0" prefWidth="128.0" text="Start Application">
                <VBox.margin>
                   <Insets bottom="5.0" />

@@ -28,6 +28,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Random;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -65,7 +66,6 @@ import javafx.stage.StageStyle;
  * @author BioHazard
  */
 public class ESUVisualizer extends Application {
-    MainGraph graphApp = new MainGraph();
     private final Desktop desktop = Desktop.getDesktop();
     final FileChooser fileChooser = new FileChooser();
     UndirectedGraph graph = null;
@@ -75,8 +75,9 @@ public class ESUVisualizer extends Application {
     Button resetButton = new Button("Reset");
     Button nextButton = new Button("Next");
     Button prevButton = new Button("Prev");
-    ToggleButton scaleButton = new ToggleButton("Scale");
-    Button graphButton = new Button("Graph");
+    Button fitButton = new Button("Fit");
+    Button graphButton = new Button("Random");
+    final Random random = new Random();
     Button openFileButton = new Button("open File");
     TextField textField = new TextField();
     TextField sampleField = new TextField();
@@ -85,6 +86,7 @@ public class ESUVisualizer extends Application {
     ListView<String> showProgress = new ListView<>();
     Button backButton = new Button("Back");
     ToggleButton playButton = new ToggleButton("Play");
+    Label statusLabel = new Label();
     Slider speedSlider = new Slider(1, 20, 5);
     Timeline player = null;
     Button showFinalTree = new Button("FinalTree");
@@ -135,14 +137,19 @@ public class ESUVisualizer extends Application {
      * ConfigureFileChooer 
      * @param fileChooser only open text files 
      */
-    private static void configureFileChooser(final FileChooser fileChooser){                           
-        fileChooser.setTitle("View Graph Files");
-        fileChooser.setInitialDirectory(
-            new File(System.getProperty("user.home"))
-        ); 
-        fileChooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("TXT files (*.txt)", "*.txt"));
-        
+    private static void configureFileChooser(final FileChooser fileChooser){
+        fileChooser.setTitle("Open a graph file");
+
+        // Start where the graphs actually are. Falls back to home when the
+        // app is run from somewhere else.
+        File samples = new File("samples");
+        fileChooser.setInitialDirectory(samples.isDirectory()
+                ? samples
+                : new File(System.getProperty("user.home")));
+
+        // set, not add: this runs on every open and filters used to stack up.
+        fileChooser.getExtensionFilters().setAll(
+                new FileChooser.ExtensionFilter("Graph files (*.txt)", "*.txt"));
     }
     /**
      * SetNodes
@@ -190,26 +197,14 @@ public class ESUVisualizer extends Application {
         scrollPane.setTranslateX(7);
         scrollPane.setTranslateY(7);
         
-        // zoom in canvas content 
-        zoomInButton.setOnAction((event) -> {
-            pane.setPrefSize(Math.max(pane.getBoundsInParent().
-                    getMaxX()*3.3, scrollPane.getViewportBounds().getWidth()),
-            Math.max(pane.getBoundsInParent().getMaxY()*3.3, scrollPane.
-                    getViewportBounds().getHeight())
-            );
-            scrollPane.setContent(pane);
-            
-        });
-        // zoomout canvas content 
-        zoomOutButton.setOnAction((event) -> {
-            pane.setPrefSize(Math.max(pane.getBoundsInParent().
-                    getMaxX()/10, scrollPane.getViewportBounds().getWidth()),
-            Math.max(pane.getBoundsInParent().getMaxY()/10, scrollPane.
-                    getViewportBounds().getHeight())
-            );
-            scrollPane.setContent(pane);
-            
-        });
+        // +/- step the same zoom the slider drives, so the three controls
+        // that used to disagree now all mean one thing.
+        zoomInButton.setTooltip(new Tooltip("Zoom in"));
+        zoomOutButton.setTooltip(new Tooltip("Zoom out"));
+        zoomInButton.setOnAction((event) -> nudgeZoom(0.15));
+        zoomOutButton.setOnAction((event) -> nudgeZoom(-0.15));
+        fitButton.setTooltip(new Tooltip("Zoom so the whole tree fits"));
+        fitButton.setOnAction((event) -> fitToWindow());
         //show final ESU Tree
         showFinalTree.setOnAction((event) ->{
             if(textField.getText().isEmpty()){
@@ -264,10 +259,9 @@ public class ESUVisualizer extends Application {
                 Alerts.displayFileNotFound();
             
         }));
-        graphButton.setOnAction((event) ->{
-            reset();
-            loadWindow("/esu/algorithm/UI/GraphApp.fxml","Undirected Graph");
-        });
+        graphButton.setTooltip(new Tooltip(
+                "Generate a random connected graph and run ESU on it"));
+        graphButton.setOnAction((event) -> generateRandomGraph());
         resetButton.setOnAction((event) ->{
             reset();
         });
@@ -301,28 +295,6 @@ public class ESUVisualizer extends Application {
             loadWindow("/esu/algorithm/UI/loadScreen.fxml", "Undirected Subgraph Enumeration Software");
             closeStage();
         }));
-        scaleButton.setOnAction(((event) -> {
-            if(scaleButton.isSelected()){
-                node.setScaleX(0.3);
-                node.setScaleY(0.3);
-            }else{
-                node.setScaleX(1);
-                node.setScaleY(1);
-            }
-            Platform.runLater(new Runnable(){
-                @Override
-                public void run() {
-                    nodeContainer.setPrefSize(Math.max(nodeContainer.
-                            getBoundsInParent().getMaxX(), scrollPane.
-                                    getViewportBounds().getWidth()),
-                            Math.max(nodeContainer.getBoundsInParent().
-                                    getMaxY(), scrollPane.getViewportBounds().
-                                            getHeight())
-                    );
-                }
-                
-            });
-        }));
         ZoomingPane zoomingPane = new ZoomingPane(scrollPane);
        
         zoomingPane.zoomFactorProperty().bind(slider.valueProperty());
@@ -335,20 +307,25 @@ public class ESUVisualizer extends Application {
             );
         });
         root.setCenter(zoomingPane);
-        root.setTop(new VBox(toolBar, buildLegend()));
+        statusLabel.getStyleClass().add("status-label");
+        HBox statusBar = new HBox(statusLabel);
+        statusBar.setPadding(new Insets(4, 10, 4, 10));
+        statusBar.getStyleClass().add("status-bar");
+        updateStatus();
+        root.setTop(new VBox(toolBar, buildLegend(), statusBar));
         toolBar.getItems().addAll(zoomInButton,zoomOutButton,
                                   new Separator(),textField,
                                   new Separator(),openFileButton,
                                   resetButton,prevButton,nextButton,
                                   playButton,speedSlider,
+                                  new Separator(),graphButton,
                                   new Separator(),new Label("k ="),sampleField,
                                   new Separator(),slider,new Separator()
                                   );
         
         toolBar.setPadding(new Insets(5, 25, 5, 150));
         toolBar2.setOrientation(Orientation.VERTICAL);
-        toolBar2.getItems().addAll(new Separator(),scaleButton,new Separator(),
-                                   graphButton);
+        toolBar2.getItems().addAll(new Separator(),fitButton);
         root.setLeft(toolBar2);
         scrollPane.setPadding(new Insets(5, 5, 5, 5));
         //root.setCenter(scrollPane);
@@ -400,6 +377,90 @@ public class ESUVisualizer extends Application {
       }
     });
     }
+    /**
+     * Generate a random connected graph, save it beside the other samples,
+     * and load it. It is written out as an ordinary graph file so it can be
+     * reopened, edited or kept, rather than existing only on screen.
+     */
+    private void generateRandomGraph(){
+        try {
+            File file = new File("samples/random-graph.txt");
+            file.getParentFile().mkdirs();
+            RandomGraph.writeToFile(RandomGraph.generate(random), file);
+            reset();
+            loadGraph(file);
+            showTree();
+            fitToWindow();
+        } catch (IOException e) {
+            Logger.getLogger(ESUVisualizer.class.getName())
+                    .log(Level.SEVERE, null, e);
+            Alerts.displayFileNotFound();
+        }
+    }
+
+    /**
+     * Move the zoom by a step, staying inside the slider's range.
+     *
+     * @param delta amount to add to the current zoom factor
+     */
+    private void nudgeZoom(double delta){
+        double next = slider.getValue() + delta;
+        slider.setValue(Math.max(slider.getMin(),
+                Math.min(slider.getMax(), next)));
+    }
+
+    /**
+     * Zoom so the whole tree is visible, and scroll back to the top left.
+     * The tree is laid out wider than the window for anything but a tiny
+     * graph, so without this it opens part way into empty canvas.
+     */
+    private void fitToWindow(){
+        if(treeList == null){
+            return;
+        }
+        Bounds tree = pane.getBoundsInLocal();
+        Bounds view = scrollPane.getViewportBounds();
+        if(tree.getWidth() <= 0 || tree.getHeight() <= 0){
+            return;
+        }
+        double factor = Math.min(view.getWidth() / tree.getWidth(),
+                view.getHeight() / tree.getHeight());
+        slider.setValue(Math.max(slider.getMin(),
+                Math.min(slider.getMax(), factor)));
+        scrollPane.setHvalue(0);
+        scrollPane.setVvalue(0);
+    }
+
+    /**
+     * Enable or disable everything that needs a loaded graph.
+     *
+     * @param loaded true once a graph is on screen
+     */
+    private void setControlsEnabled(boolean loaded){
+        for(Node control : new Node[]{ zoomInButton, zoomOutButton, resetButton,
+                nextButton, prevButton, playButton, speedSlider, fitButton,
+                graphButton, saveButton, showFinalTree, sampleField, slider }){
+            control.setDisable(!loaded);
+        }
+    }
+
+    /**
+     * Say where we are: which step, and how many subgraphs have turned up.
+     * With no graph loaded this is the only instruction on screen.
+     */
+    private void updateStatus(){
+        if(treeList == null){
+            statusLabel.setText("Open a graph file to begin  \u2192  "
+                    + "samples/sample-small.txt is a good start");
+            return;
+        }
+        int shown = currentIndex < 0 ? 0 : currentIndex + 1;
+        statusLabel.setText("Step " + shown + " of " + treeList.size()
+                + "   \u00b7   " + leaves + " subgraph"
+                + (leaves == 1 ? "" : "s") + " of size " + subgraphSize
+                + " found   \u00b7   Play or Next to step through");
+    }
+
     /**
      * One legend entry: a swatch in a node's colour and its meaning.
      *
@@ -523,6 +584,7 @@ public class ESUVisualizer extends Application {
         pane.getChildren().clear();
         nodeContainer.getChildren().clear();
         currentIndex = -1;
+        updateStatus();
     }
     /**
      * showTree 
@@ -541,6 +603,7 @@ public class ESUVisualizer extends Application {
         pane.getChildren().addAll(0,AuxilaryClass.getPrintables(rectangles, 
                 currentNodes, finalNodes));
         scrollPane.setContent(pane);
+        updateStatus();
         showProgress.getItems().clear();
         ArrayList<StepInfo> stepLog = currentLog;
         
@@ -680,6 +743,8 @@ public class ESUVisualizer extends Application {
         
         leaves = finalNodes[finalNodes.length-1].size();
         currentIndex = -1;
+        setControlsEnabled(true);
+        updateStatus();
         if(leaves == 0){
             Alerts.displayNoSubgraphs(subgraphSize);
         }
