@@ -40,6 +40,8 @@ public class TreeView extends StackPane {
     private Set<String> deadEnds = Set.of();
     private int foundAt;
     private boolean follow = true;
+    /** Nodes picked out by something other than the search: a chosen shape. */
+    private Set<String> picked = Set.of();
 
     public TreeView() {
         // A Group reports the scaled size of its content, which is what makes
@@ -83,7 +85,8 @@ public class TreeView extends StackPane {
         Set<String> path = traceId == null
                 ? Set.of() : Set.copyOf(layout.pathToRoot(traceId));
         canvas.getChildren().setAll(TreeRenderer.render(layout,
-                presentNodes(currentTree), deadEnds, foundAt, activeId, path));
+                presentNodes(currentTree), deadEnds, foundAt, activeId, path,
+                picked));
 
         // Keep up with the search rather than making the viewer chase it: the
         // tree grows down and to the right, off the edge of the window.
@@ -116,6 +119,15 @@ public class TreeView extends StackPane {
         // The tree hangs from the root, so the top is what to show.
         scroll.setHvalue(0.5);
         scroll.setVvalue(0);
+    }
+
+    /**
+     * Pick out a set of nodes, whatever step is on screen.
+     *
+     * @param picked their subgraph strings; empty to pick out nothing
+     */
+    public void setPicked(Set<String> picked) {
+        this.picked = Set.copyOf(picked);
     }
 
     /**

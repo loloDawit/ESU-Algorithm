@@ -75,3 +75,21 @@
  * on a dark background, which is the one thing a second stylesheet must not
  * do. */
 .log-line { -fx-text-fill: #cdd8e3; }
+
+.shapes-panel, .shapes-list {
+    -fx-background-color: #151c24;
+    -fx-border-color: #26313d;
+}
+.shapes-list .list-cell:filled:selected { -fx-background-color: #16233c; }
+.shape-name { -fx-text-fill: #cdd8e3; }
+.shape-count { -fx-text-fill: #8a97a6; }
+.shape-edge { -fx-stroke: #5b7fbf; }
+.shape-vertex { -fx-fill: #6f9dff; }
+.t-picked { -fx-stroke: #b087f5; }
+
+.instance:hover { -fx-background-color: #1e2732; }
+.instance.is-on { -fx-background-color: #16233c; -fx-border-color: #6f9dff; }
+.instance-edge { -fx-stroke: #46545f; }
+.instance-vertex { -fx-fill: #1b232d; -fx-stroke: #46545f; }
+.instance-number { -fx-fill: #e8edf3; }
+.instance-label { -fx-text-fill: #7c8b9b; }

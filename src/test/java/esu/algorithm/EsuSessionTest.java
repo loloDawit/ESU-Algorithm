@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -160,6 +161,74 @@ public class EsuSessionTest {
         EsuSession session = new EsuSession(new UndirectedGraph(3), 3);
 
         assertTrue(session.getHistory().isEmpty());
+    }
+
+    @Test
+    public void groupsWhatItFoundByShape() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+
+        List<Shape.Count> shapes = session.getShapes();
+
+        // Two triangles among six connected triples, so four paths.
+        assertEquals(2, shapes.size());
+        assertEquals(session.getSubgraphCount(),
+                shapes.stream().mapToInt(Shape.Count::count).sum());
+    }
+
+    @Test
+    public void namesTheTreeNodesHavingAGivenShape() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+        Shape triangle = Shape.of(session.getGraph(), List.of(0, 1, 2));
+
+        Set<String> nodes = session.subgraphsWithShape(triangle);
+
+        // The bowtie's two triangles, named as the tree names them.
+        assertEquals(Set.of("{0, 1, 2}", "{2, 3, 4}"), nodes);
+    }
+
+    @Test
+    public void handsBackTheVerticesOfEachSubgraphHavingAShape() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+        Shape triangle = Shape.of(session.getGraph(), List.of(0, 1, 2));
+
+        List<List<Integer>> instances = session.subgraphsOfShape(triangle);
+
+        // The bowtie's two triangles, as vertices rather than as names, so
+        // they can be drawn.
+        assertEquals(2, instances.size());
+        for (List<Integer> instance : instances) {
+            assertEquals(3, instance.size());
+            assertEquals(triangle, Shape.of(session.getGraph(), instance));
+        }
+    }
+
+    @Test
+    public void handsBackEveryInstanceEvenBeforeTheSearchReachesThem() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/cluster.txt")), 4);
+        Shape first = session.getShapes().get(0).shape();
+
+        session.goToStep(0);
+
+        // The shapes are a property of the finished search, not of where the
+        // stepping happens to be, and the panel reports final counts.
+        assertEquals(session.getShapes().get(0).count(),
+                session.subgraphsOfShape(first).size());
+    }
+
+    @Test
+    public void findsNoNodesForAShapeThatDidNotOccur() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+        UndirectedGraph other = UndirectedGraph.fromFile(
+                new File("samples/cluster.txt"));
+
+        // A four-vertex clique cannot be among size-three subgraphs.
+        assertTrue(session.subgraphsWithShape(
+                Shape.of(other, List.of(0, 1, 2, 3))).isEmpty());
     }
 
     @Test

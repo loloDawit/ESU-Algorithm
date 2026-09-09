@@ -8,7 +8,8 @@
 import { UndirectedGraph } from './graph.js';
 import { EsuSession } from './session.js';
 import { TreeLayout, deadEnds } from './layout.js';
-import { renderGraph, renderTree } from './render.js';
+import { renderGraph, renderTree, shapeDrawing, subgraphDrawing } from './render.js';
+import { Shape } from './shape.js';
 import { SAMPLES } from './samples.js';
 import './demo.css';
 
@@ -33,6 +34,11 @@ export class Demo {
   private readonly extensionEl: HTMLElement;
   private readonly playButton: HTMLButtonElement;
   private readonly scrubber: HTMLInputElement;
+  private readonly shapesEl: HTMLElement;
+  private readonly instancesEl: HTMLElement;
+  private readonly instancesTitle: HTMLElement;
+  private picked: ReadonlySet<string> = new Set();
+  private pickedShape: Shape | null = null;
   private readonly sampleButtons: HTMLButtonElement[] = [];
   private readonly sizeButtons: HTMLButtonElement[] = [];
 
@@ -49,6 +55,9 @@ export class Demo {
     this.statusEl = this.find('.demo-status');
     this.subgraphEl = this.find('.demo-subgraph');
     this.extensionEl = this.find('.demo-extension');
+    this.shapesEl = this.find('.demo-shapes');
+    this.instancesEl = this.find('.demo-instances');
+    this.instancesTitle = this.find('.demo-instances-title');
     this.playButton = this.find('.demo-play') as HTMLButtonElement;
     this.scrubber = this.find('.demo-scrubber') as HTMLInputElement;
 
@@ -128,6 +137,10 @@ export class Demo {
     this.layout = new TreeLayout(this.session.finalTree);
     this.dead = deadEnds(this.session.finalTree);
 
+    this.picked = new Set();
+    this.pickedShape = null;
+    this.drawShapes();
+    this.showInstances([]);
     this.scrubber.max = String(this.session.totalSteps);
     this.sampleButtons.forEach((b, i) =>
       b.classList.toggle('is-on', i === this.sampleIndex));
@@ -153,6 +166,7 @@ export class Demo {
       foundAt: this.size,
       activeId,
       path: new Set(activeId ? this.layout.pathToRoot(activeId) : []),
+      picked: this.picked,
     });
 
     const subgraph = this.session.activeSubgraph();
@@ -180,6 +194,79 @@ export class Demo {
     this.statusEl.textContent =
       `Step ${this.session.currentStep} of ${this.session.totalSteps}`
       + ` · ${found} subgraph${found === 1 ? '' : 's'} of size ${this.size}`;
+  }
+
+  /**
+   * The shapes found, each drawn with its count. Choosing one picks its
+   * subgraphs out in the tree, which is the question the row invites.
+   */
+  private drawShapes(): void {
+    const shapes = this.session.shapes();
+    this.shapesEl.replaceChildren();
+
+    for (const { shape, count } of shapes) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'demo-shape';
+      chip.title = `${shape.describe()} — ${count}`;
+      chip.append(shapeDrawing(shape), Object.assign(
+        document.createElement('span'), { className: 'demo-shape-n', textContent: String(count) },
+      ));
+      chip.addEventListener('click', () => this.pickShape(shape));
+      this.shapesEl.append(chip);
+    }
+  }
+
+  /** Pick out one shape's subgraphs, or clear the choice by repeating it. */
+  private pickShape(shape: Shape): void {
+    const again = this.pickedShape !== null && this.pickedShape.equals(shape);
+    this.pickedShape = again ? null : shape;
+    this.picked = again ? new Set() : this.session.subgraphsWithShape(shape);
+
+    for (const chip of Array.from(this.shapesEl.children)) {
+      chip.classList.remove('is-on');
+    }
+    if (!again) {
+      const at = this.session.shapes().findIndex((entry) => entry.shape.equals(shape));
+      this.shapesEl.children[at]?.classList.add('is-on');
+    }
+    this.showInstances(again ? [] : this.session.subgraphsOfShape(shape));
+    this.draw();
+  }
+
+  /**
+   * Draw each subgraph having the chosen shape, keeping its real vertex
+   * numbers: identical shape, different vertices, which is why they are
+   * grouped at all. Clicking one shows it in the input graph.
+   */
+  private showInstances(subgraphs: readonly (readonly number[])[]): void {
+    this.instancesEl.replaceChildren();
+    this.instancesTitle.hidden = subgraphs.length === 0;
+    this.instancesTitle.textContent = subgraphs.length === 1
+      ? 'Where it is'
+      : `Where they are, all ${subgraphs.length}`;
+
+    for (const subgraph of subgraphs) {
+      const tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = 'demo-instance';
+      tile.append(
+        subgraphDrawing(this.session.graph, subgraph),
+        Object.assign(document.createElement('span'), {
+          className: 'demo-instance-label',
+          textContent: subgraph.join(' '),
+        }),
+      );
+      tile.addEventListener('click', () => {
+        for (const other of Array.from(this.instancesEl.children)) {
+          other.classList.remove('is-on');
+        }
+        tile.classList.add('is-on');
+        renderGraph(this.graphSvg, this.session.graph,
+          { subgraph: new Set(subgraph), extension: new Set() }, GRAPH_BOX);
+      });
+      this.instancesEl.append(tile);
+    }
   }
 
   private play(): void {
@@ -218,6 +305,10 @@ const TEMPLATE = `
         <dt>Subgraph</dt><dd class="demo-subgraph">—</dd>
         <dt>Extension</dt><dd class="demo-extension">—</dd>
       </dl>
+      <span class="demo-title">Shapes found</span>
+      <div class="demo-shapes"></div>
+      <span class="demo-title demo-instances-title" hidden></span>
+      <div class="demo-instances"></div>
       <span class="demo-title">This step</span>
       <ul class="demo-log"></ul>
     </div>

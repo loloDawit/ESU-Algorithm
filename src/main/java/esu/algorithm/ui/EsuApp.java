@@ -6,6 +6,7 @@ package esu.algorithm.ui;
 
 import esu.algorithm.EsuNode;
 import esu.algorithm.EsuSession;
+import esu.algorithm.Shape;
 import esu.algorithm.StepInfo;
 import esu.algorithm.UndirectedGraph;
 import java.io.File;
@@ -82,6 +83,10 @@ public class EsuApp extends Application {
     private final HistoryPanel historyPanel = new HistoryPanel(this::goTo);
     private final CheckMenuItem showHistory =
             new CheckMenuItem("Show step history");
+    private final CheckMenuItem showShapes =
+            new CheckMenuItem("Show shapes found");
+    private final ShapesPanel shapesPanel =
+            new ShapesPanel(this::pickShape, this::showInstanceInGraph);
     private final CheckMenuItem followStep =
             new CheckMenuItem("Follow the current step");
     private final CheckMenuItem darkMode = new CheckMenuItem("Dark appearance");
@@ -160,8 +165,23 @@ public class EsuApp extends Application {
         Menu view = new Menu("View");
         showHistory.setAccelerator(new KeyCodeCombination(
                 KeyCode.H, KeyCombination.SHORTCUT_DOWN));
-        showHistory.selectedProperty().addListener(
-                (obs, was, now) -> setHistoryVisible(now));
+        showShapes.setAccelerator(new KeyCodeCombination(
+                KeyCode.G, KeyCombination.SHORTCUT_DOWN));
+        // Both live in the same slot, so choosing one puts the other away.
+        showHistory.selectedProperty().addListener((obs, was, now) -> {
+            if (now) {
+                showShapes.setSelected(false);
+            }
+            updateSidePanel();
+        });
+        showShapes.selectedProperty().addListener((obs, was, now) -> {
+            if (now) {
+                showHistory.setSelected(false);
+            } else {
+                pickShape(null);
+            }
+            updateSidePanel();
+        });
         darkMode.selectedProperty().addListener(
                 (obs, was, now) -> setDark(now));
 
@@ -171,6 +191,7 @@ public class EsuApp extends Application {
 
         view.getItems().addAll(
                 showHistory,
+                showShapes,
                 followStep,
                 darkMode,
                 new SeparatorMenuItem(),
@@ -262,11 +283,41 @@ public class EsuApp extends Application {
         }
     }
 
+    /** Put whichever of the two side panels is asked for beside the tree. */
+    private void updateSidePanel() {
+        if (showHistory.isSelected()) {
+            root.setRight(historyPanel);
+        } else if (showShapes.isSelected()) {
+            root.setRight(shapesPanel);
+        } else {
+            root.setRight(null);
+        }
+    }
+
     /**
-     * @param visible true to put the history beside the tree
+     * Pick out the subgraphs of one shape in the tree.
+     *
+     * @param shape the shape chosen, or null to pick out nothing
      */
-    private void setHistoryVisible(boolean visible) {
-        root.setRight(visible ? historyPanel : null);
+    private void pickShape(Shape shape) {
+        if (session == null) {
+            return;
+        }
+        treeView.setPicked(shape == null
+                ? Set.of() : session.subgraphsWithShape(shape));
+        shapesPanel.showInstances(shape == null
+                ? List.of() : session.subgraphsOfShape(shape));
+        refresh();
+    }
+
+    /**
+     * Show one found subgraph in the input graph, so it is clear where in the
+     * network that occurrence actually sits.
+     *
+     * @param vertices the subgraph's vertices
+     */
+    private void showInstanceInGraph(List<Integer> vertices) {
+        graphPanel.highlight(vertices, List.of());
     }
 
     private Node buildTopBar() {
@@ -578,6 +629,9 @@ public class EsuApp extends Application {
     private void adopt(EsuSession built, File file) {
         session = built;
         historyPanel.setHistory(session.getHistory());
+        shapesPanel.setGraph(session.getGraph());
+        shapesPanel.setShapes(session.getShapes());
+        treeView.setPicked(Set.of());
         treeView.setTree(session.getFinalTree(), subgraphSize);
         graphPanel.setGraph(session.getGraph());
         setControlsEnabled(true);

@@ -6,6 +6,7 @@
  */
 import type { UndirectedGraph } from './graph.js';
 import { circlePositions, centreX, type Box, type TreeLayout } from './layout.js';
+import type { Shape } from './shape.js';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
@@ -18,6 +19,100 @@ function el<K extends keyof SVGElementTagNameMap>(
     node.setAttribute(key, String(value));
   }
   return node;
+}
+
+/**
+ * A shape drawn small: vertices evenly on a circle, joined as the shape says.
+ *
+ * Dots rather than numbers, because which vertex is which is exactly what a
+ * shape ignores.
+ *
+ * @param shape the shape to draw
+ * @param size  the square to draw it in
+ */
+export function shapeDrawing(shape: Shape, size = 30): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
+  svg.classList.add('shape-drawing');
+
+  const centre = size / 2;
+  const radius = centre - 4;
+  const at = Array.from({ length: shape.size }, (_, vertex) => {
+    const angle = (2 * Math.PI * vertex) / shape.size - Math.PI / 2;
+    return [centre + radius * Math.cos(angle), centre + radius * Math.sin(angle)];
+  });
+
+  for (let from = 0; from < shape.size; from++) {
+    for (let to = from + 1; to < shape.size; to++) {
+      if (!shape.joins(from, to)) continue;
+      svg.append(el('line', {
+        x1: at[from]![0]!, y1: at[from]![1]!,
+        x2: at[to]![0]!, y2: at[to]![1]!,
+        class: 'shape-edge',
+      }));
+    }
+  }
+  for (const point of at) {
+    svg.append(el('circle', { cx: point[0]!, cy: point[1]!, r: 2.6, class: 'shape-vertex' }));
+  }
+  return svg;
+}
+
+/**
+ * One found subgraph drawn the way the input graph is: vertices on a circle,
+ * numbered, joined where the graph joins them.
+ *
+ * Numbered, unlike the shape thumbnails, because the point of these is that
+ * the shape is the same and the vertices are not.
+ *
+ * @param graph    the graph it came from, for the edges
+ * @param vertices the subgraph's vertices
+ * @param size     the square to draw it in
+ */
+export function subgraphDrawing(
+  graph: UndirectedGraph,
+  vertices: readonly number[],
+  size = 58,
+): SVGSVGElement {
+  const svg = document.createElementNS(SVG_NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+  svg.setAttribute('width', String(size));
+  svg.setAttribute('height', String(size));
+  svg.classList.add('instance-drawing');
+
+  const centre = size / 2;
+  const radius = centre - 9;
+  const at = vertices.map((_, index) => {
+    const angle = (2 * Math.PI * index) / vertices.length - Math.PI / 2;
+    return [centre + radius * Math.cos(angle), centre + radius * Math.sin(angle)];
+  });
+
+  for (let from = 0; from < vertices.length; from++) {
+    for (let to = from + 1; to < vertices.length; to++) {
+      if (!graph.areAdjacent(vertices[from]!, vertices[to]!)) continue;
+      svg.append(el('line', {
+        x1: at[from]![0]!, y1: at[from]![1]!,
+        x2: at[to]![0]!, y2: at[to]![1]!,
+        class: 'instance-edge',
+      }));
+    }
+  }
+  for (let index = 0; index < vertices.length; index++) {
+    svg.append(el('circle', {
+      cx: at[index]![0]!, cy: at[index]![1]!, r: 8, class: 'instance-vertex',
+    }));
+    const number = el('text', {
+      x: at[index]![0]!, y: at[index]![1]!,
+      class: 'instance-number',
+      'text-anchor': 'middle',
+      'dominant-baseline': 'central',
+    });
+    number.textContent = String(vertices[index]);
+    svg.append(number);
+  }
+  return svg;
 }
 
 /** What the algorithm is doing with a vertex right now. */
@@ -101,6 +196,8 @@ export interface TreeState {
   readonly activeId: string | null;
   /** Ids from the root to the node of interest. */
   readonly path: ReadonlySet<string>;
+  /** Ids to pick out, such as the subgraphs of one chosen shape. */
+  readonly picked: ReadonlySet<string>;
 }
 
 /**
@@ -153,6 +250,7 @@ function boxShapes(box: Box, state: TreeState): SVGElement[] {
   else if (state.deadEnds.has(box.id)) classes.push('t-dead');
   else classes.push('t-pending');
   if (state.path.has(box.id) && box.id !== state.activeId) classes.push('t-on-path');
+  if (state.picked.has(box.id)) classes.push('t-picked');
 
   const shapes: SVGElement[] = [
     el('rect', {

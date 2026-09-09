@@ -47,7 +47,7 @@ public class TreeRenderer {
      */
     public static List<Node> render(TreeLayout layout, Set<String> present,
             Set<String> deadEnds, int foundAt, String activeId,
-            Set<String> path) {
+            Set<String> path, Set<String> picked) {
 
         List<Node> shapes = new ArrayList<>();
 
@@ -69,7 +69,8 @@ public class TreeRenderer {
             if (!isVisible(box, present)) {
                 continue;
             }
-            shapes.addAll(boxShapes(box, deadEnds, foundAt, activeId, path));
+            shapes.addAll(boxShapes(box, deadEnds, foundAt, activeId, path,
+                    picked));
         }
         return shapes;
     }
@@ -115,7 +116,7 @@ public class TreeRenderer {
      */
     private static List<Node> boxShapes(TreeLayout.Box box,
             Set<String> deadEnds, int foundAt, String activeId,
-            Set<String> path) {
+            Set<String> path, Set<String> picked) {
 
         Rectangle rect = new Rectangle(box.getX(), box.getY(),
                 box.getWidth(), box.getHeight());
@@ -125,6 +126,9 @@ public class TreeRenderer {
         rect.getStyleClass().add(stateOf(box, deadEnds, foundAt, activeId));
         if (path.contains(box.getId()) && !box.getId().equals(activeId)) {
             rect.getStyleClass().add("t-on-path");
+        }
+        if (picked.contains(box.getId())) {
+            rect.getStyleClass().add("t-picked");
         }
 
         List<Node> shapes = new ArrayList<>();

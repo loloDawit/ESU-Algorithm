@@ -209,3 +209,69 @@
 .g-label { -fx-fill: #343a40; }
 .g-label-chosen { -fx-fill: #ffffff; }
 .g-label-candidate { -fx-fill: #20303f; }
+
+/* ---- shapes found ---- */
+
+.shapes-panel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent transparent transparent #e2e6ec;
+    -fx-border-width: 1;
+    -fx-padding: 12;
+    -fx-pref-width: 268;
+    -fx-min-width: 250;
+}
+
+.shapes-list {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e6ec;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.shapes-list .list-cell { -fx-padding: 5 9 5 9; }
+.shapes-list .list-cell:filled:selected { -fx-background-color: #eaf1fe; }
+
+.shape-name { -fx-text-fill: #2d3748; -fx-font-size: 12.5px; }
+.shape-count {
+    -fx-text-fill: #6b7683;
+    -fx-font-family: "SF Mono", "Menlo", monospace;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+}
+.shape-edge { -fx-stroke: #8fa2bd; -fx-stroke-width: 1.3; }
+.shape-vertex { -fx-fill: #2f6fed; }
+
+/* a subgraph of the shape currently chosen */
+.t-picked { -fx-stroke: #7b3fe4; -fx-stroke-width: 2.6; }
+
+/* ---- the subgraphs behind a shape ---- */
+
+.instances-scroll, .instances-scroll .viewport {
+    -fx-background-color: transparent;
+}
+
+.instances { -fx-padding: 2 0 2 0; }
+
+.instance {
+    -fx-padding: 4;
+    -fx-border-color: transparent;
+    -fx-border-radius: 7;
+    -fx-background-radius: 7;
+    -fx-cursor: hand;
+}
+.instance:hover { -fx-background-color: #f0f4f9; }
+.instance.is-on { -fx-background-color: #eaf1fe; -fx-border-color: #2f6fed; }
+
+.instance-edge { -fx-stroke: #aab4c0; -fx-stroke-width: 1.4; }
+.instance-vertex { -fx-fill: #eef1f5; -fx-stroke: #adb5bd; -fx-stroke-width: 1.2; }
+.instance-number {
+    -fx-fill: #343a40;
+    -fx-font-family: "SF Mono", "Menlo", monospace;
+    -fx-font-size: 10px;
+    -fx-font-weight: bold;
+}
+.instance-label {
+    -fx-text-fill: #8a97a6;
+    -fx-font-family: "SF Mono", "Menlo", monospace;
+    -fx-font-size: 9.5px;
+}

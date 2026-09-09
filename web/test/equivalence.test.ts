@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { UndirectedGraph } from '../src/graph.js';
 import { EsuTree } from '../src/esu.js';
+import { Shape } from '../src/shape.js';
 import { SAMPLES } from './samples.js';
 import golden from './java-golden.json';
 
@@ -23,6 +24,7 @@ interface Case {
   steps: number;
   count: number;
   trace: string[];
+  shapes: Array<{ name: string; edges: number; count: number; drawn: string }>;
   subgraphs: string[];
 }
 
@@ -58,5 +60,34 @@ describe('agreement with the Java implementation', () => {
         subgraphs: expected.subgraphs,
       });
     });
+
+    it(`groups ${file} at k=${k} into the same shapes as Java`, () => {
+      const graph = UndirectedGraph.parse(SAMPLES[file]!);
+      const tree = new EsuTree(graph, k);
+      while (tree.step()) tree.clearLog();
+
+      // Names, counts, ordering, and the edges each shape draws. The drawing
+      // is included because it was wrong in Java in a way nothing else saw:
+      // every pair read the same bit, so shapes drew identically.
+      const shapes = Shape.classify(graph, tree.subgraphs()).map((entry) => ({
+        name: entry.shape.name(),
+        edges: entry.shape.edges,
+        count: entry.count,
+        drawn: drawingOf(entry.shape),
+      }));
+
+      expect(shapes).toEqual(expected.shapes);
+    });
   }
 });
+
+/** The edges a shape draws, in the form the fixture records. */
+function drawingOf(shape: Shape): string {
+  const pairs: string[] = [];
+  for (let from = 0; from < shape.size; from++) {
+    for (let to = from + 1; to < shape.size; to++) {
+      if (shape.joins(from, to)) pairs.push(`${from}-${to}`);
+    }
+  }
+  return pairs.join(',');
+}
