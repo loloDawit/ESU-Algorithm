@@ -3,8 +3,8 @@
  */
 package esu.algorithm.ui;
 
-import esu.algorithm.ESUNode;
-import esu.algorithm.ESUTree;
+import esu.algorithm.EsuNode;
+import esu.algorithm.EsuTree;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -53,7 +53,7 @@ public class TreeView extends StackPane {
      * @param finalTree    the completed tree, which fixes the layout
      * @param subgraphSize the level whose nodes are complete subgraphs
      */
-    public void setTree(ESUTree finalTree, int subgraphSize) {
+    public void setTree(EsuTree finalTree, int subgraphSize) {
         this.layout = TreeLayout.of(finalTree);
         this.deadEnds = findDeadEnds(finalTree);
         this.foundAt = subgraphSize;
@@ -66,7 +66,7 @@ public class TreeView extends StackPane {
      * @param activeId    subgraph of the node being worked on, or null
      * @param traceId     subgraph of the node to trace back to the root
      */
-    public void show(ESUTree currentTree, String activeId, String traceId) {
+    public void show(EsuTree currentTree, String activeId, String traceId) {
         if (layout == null) {
             return;
         }
@@ -115,11 +115,11 @@ public class TreeView extends StackPane {
     }
 
     /** Ids of the nodes that exist at the step being shown. */
-    private Set<String> presentNodes(ESUTree tree) {
+    private Set<String> presentNodes(EsuTree tree) {
         Set<String> present = new HashSet<>();
-        ArrayList<ESUNode>[] levels = tree.getNodesByLevel();
+        ArrayList<EsuNode>[] levels = tree.getNodesByLevel();
         for (int level = 1; level < levels.length; level++) {
-            for (ESUNode node : levels[level]) {
+            for (EsuNode node : levels[level]) {
                 present.add(node.getSubgraphAsString());
             }
         }
@@ -131,11 +131,11 @@ public class TreeView extends StackPane {
      * Asking the current tree would be wrong: mid-run a node has no children
      * only because it has not expanded yet.
      */
-    private Set<String> findDeadEnds(ESUTree finalTree) {
+    private Set<String> findDeadEnds(EsuTree finalTree) {
         Set<String> dead = new HashSet<>();
-        ArrayList<ESUNode>[] levels = finalTree.getNodesByLevel();
+        ArrayList<EsuNode>[] levels = finalTree.getNodesByLevel();
         for (int level = 1; level < levels.length - 1; level++) {
-            for (ESUNode node : levels[level]) {
+            for (EsuNode node : levels[level]) {
                 if (node.getChildren().isEmpty()) {
                     dead.add(node.getSubgraphAsString());
                 }

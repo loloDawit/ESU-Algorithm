@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { UndirectedGraph } from '../src/graph.js';
-import { ESUTree } from '../src/esu.js';
+import { EsuTree } from '../src/esu.js';
 import { TreeLayout, centreX, circlePositions } from '../src/layout.js';
 import { SAMPLES } from './samples.js';
 
-function finished(graph: UndirectedGraph, k: number): ESUTree {
-  const tree = new ESUTree(graph, k);
+function finished(graph: UndirectedGraph, k: number): EsuTree {
+  const tree = new EsuTree(graph, k);
   while (tree.step()) tree.clearLog();
   return tree;
 }

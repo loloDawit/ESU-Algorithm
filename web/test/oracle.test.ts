@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { UndirectedGraph } from '../src/graph.js';
-import { ESUTree } from '../src/esu.js';
+import { EsuTree } from '../src/esu.js';
 import { SAMPLES } from './samples.js';
 
 /**
@@ -27,10 +27,10 @@ function isConnected(graph: UndirectedGraph, vertices: number[]): boolean {
   const queue = [vertices[0]!];
 
   while (queue.length > 0) {
-    for (const neighbour of graph.neighbours(queue.pop()!)) {
-      if (inside.has(neighbour) && !seen.has(neighbour)) {
-        seen.add(neighbour);
-        queue.push(neighbour);
+    for (const neighbor of graph.neighbors(queue.pop()!)) {
+      if (inside.has(neighbor) && !seen.has(neighbor)) {
+        seen.add(neighbor);
+        queue.push(neighbor);
       }
     }
   }
@@ -42,7 +42,7 @@ function key(vertices: number[]): string {
 }
 
 function runToCompletion(graph: UndirectedGraph, k: number): number[][] {
-  const tree = new ESUTree(graph, k);
+  const tree = new EsuTree(graph, k);
   while (tree.step()) tree.clearLog();
   return tree.subgraphs();
 }
@@ -82,13 +82,13 @@ describe('parsing', () => {
     const graph = UndirectedGraph.parse(SAMPLES['bowtie.txt']!);
 
     expect(graph.size).toBe(5);
-    expect(graph.neighbours(4)).toEqual([2, 3]);
+    expect(graph.neighbors(4)).toEqual([2, 3]);
   });
 
   it('ignores lines that are not a pair of numbers', () => {
     const graph = UndirectedGraph.parse('0 1\n\n# a comment\n1 2\nnonsense\n');
 
     expect(graph.size).toBe(3);
-    expect(graph.neighbours(1)).toEqual([0, 2]);
+    expect(graph.neighbors(1)).toEqual([0, 2]);
   });
 });

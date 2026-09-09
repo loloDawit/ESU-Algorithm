@@ -15,11 +15,11 @@ import static org.junit.jupiter.api.Assertions.*;
  * connected ones, and compare the set against what ESU produced. If ESU
  * misses one, invents one, or emits a duplicate, these fail.
  */
-public class ESUTreeTest {
+public class EsuTreeTest {
 
     /** Runs ESU to completion and returns its subgraphs as vertex sets. */
     private List<Set<Integer>> esuSubgraphs(UndirectedGraph graph, int k) {
-        ESUTree tree = new ESUTree(graph, k);
+        EsuTree tree = new EsuTree(graph, k);
         while (tree.step()) {
             tree.clearStepLog();
         }

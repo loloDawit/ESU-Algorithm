@@ -4,7 +4,7 @@
  */
 package esu.algorithm.ui;
 
-import esu.algorithm.ESUNode;
+import esu.algorithm.EsuNode;
 import esu.algorithm.EsuSession;
 import esu.algorithm.StepInfo;
 import esu.algorithm.UndirectedGraph;

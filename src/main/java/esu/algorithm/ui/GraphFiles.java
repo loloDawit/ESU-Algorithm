@@ -3,7 +3,7 @@
  */
 package esu.algorithm.ui;
 
-import esu.algorithm.ESUTree;
+import esu.algorithm.EsuTree;
 import esu.algorithm.RandomGraph;
 import java.io.File;
 import java.io.IOException;
@@ -68,7 +68,7 @@ public class GraphFiles {
      * @param source       name of the graph they came from, or null
      * @throws IOException if the file could not be written
      */
-    public static void saveResults(Window owner, ESUTree tree,
+    public static void saveResults(Window owner, EsuTree tree,
             int subgraphSize, String source) throws IOException {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Save the subgraphs found");

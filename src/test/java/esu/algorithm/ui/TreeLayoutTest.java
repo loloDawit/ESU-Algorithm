@@ -1,6 +1,6 @@
 package esu.algorithm.ui;
 
-import esu.algorithm.ESUTree;
+import esu.algorithm.EsuTree;
 import esu.algorithm.RandomGraph;
 import esu.algorithm.UndirectedGraph;
 import java.io.File;
@@ -17,8 +17,8 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 public class TreeLayoutTest {
 
-    private ESUTree finished(UndirectedGraph graph, int subgraphSize) {
-        ESUTree tree = new ESUTree(graph, subgraphSize);
+    private EsuTree finished(UndirectedGraph graph, int subgraphSize) {
+        EsuTree tree = new EsuTree(graph, subgraphSize);
         while (tree.step()) {
             tree.clearStepLog();
         }

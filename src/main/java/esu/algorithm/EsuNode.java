@@ -1,5 +1,5 @@
 /* ****************************************************************************
- * File:    ESUNode.java
+ * File:    EsuNode.java
  * Purpose: To model an individual node in an ESU tree
  * Description:
  * Each node represnts a possible subgraph,  keeps track of a queue of possible 
@@ -21,7 +21,7 @@ import java.util.LinkedList;
 import java.util.PriorityQueue;
 
 /** **************************************************************************
- * Class: ESUNode
+ * Class: EsuNode
  * 
  * @author BioHazard
  * @version 0.2
@@ -35,7 +35,7 @@ import java.util.PriorityQueue;
  *          getSubGrpah() implemented
  *          Main constructor tweeked
  *          Added support of "special root node" constructor
- *          Added dependency on ESUTree to update tree's leaf node list.
+ *          Added dependency on EsuTree to update tree's leaf node list.
  *      2/13/18 - 
  *          Changed the checkParents() method to support the
  *              correct "Node filtering" logic.
@@ -53,18 +53,18 @@ import java.util.PriorityQueue;
  *              - Tested: Passed
  *          updated to version 0.2
  ************************************************************************** */
-public class ESUNode {
+public class EsuNode {
 
     //lists
     private final PriorityQueue<Integer> possibleSteps; //next possible steps
-    private final LinkedList<ESUNode> children;         //children nodes
+    private final LinkedList<EsuNode> children;         //children nodes
     private final LinkedList<Integer> subgraphNeighbors;//Vald subgraph neighbors
 
     //Tree Reference
-    private final ESUTree tree;
+    private final EsuTree tree;
 
     //parent "pointer"
-    private final ESUNode parent;
+    private final EsuNode parent;
 
     //garph reference
     private final UndirectedGraph graph;
@@ -86,7 +86,7 @@ public class ESUNode {
      * Root Constructor:
      * SHOULD ONLY BE USED TO CREATE THE ROOT OF A NEW ESU TREE.
      * For a general purpose/internal constructor:
-     * @see ESUNode(ESUNode, Integer)
+     * @see EsuNode(EsuNode, Integer)
      * 
      * This constructor assigns a Graph to the Tree, and an ESU Tree to the
      * nodes.
@@ -98,7 +98,7 @@ public class ESUNode {
      * @param ug - An undirected graph to build this tree based on.
      * @param esu - The ESU Tree that owns this set of ESU Nodes.
      *********************************************************************** */
-    public ESUNode(UndirectedGraph ug, ESUTree esu){
+    public EsuNode(UndirectedGraph ug, EsuTree esu){
         myStep = null;
         firstStep = null;
         level = 0;
@@ -117,7 +117,7 @@ public class ESUNode {
      * General Purpose Private Constructor:
      * This constructor is to be used inside this class only. 
      * For creating a new set of Nodes:
-     * @see ESUNode(UndirectedGraph, ESUTree)
+     * @see EsuNode(UndirectedGraph, EsuTree)
      * 
      * Creates a new non-root node for this ESU Tree. This constructor requires 
      * a reference to this new Node's parent, and the step in the Graph this
@@ -126,7 +126,7 @@ public class ESUNode {
      * @param parent    - This Node's parent Node
      * @param nextStep  - This Node's "step" vertex from the Graph
      *********************************************************************** */
-    private ESUNode(ESUNode parent, Integer nextStep) {
+    private EsuNode(EsuNode parent, Integer nextStep) {
         
         //initialize lists
         possibleSteps = new PriorityQueue<>();
@@ -221,13 +221,13 @@ public class ESUNode {
      * Check Parents:
      * A function for checking all parents' subgraph neighbors
      * for validating a next step to take. This function is responsible for
-     * validating the Integer i as a valid insertion into the calling ESUNode's
+     * validating the Integer i as a valid insertion into the calling EsuNode's
      * subgraphNeighbors list and possibleSteps Queue.
      * 
      * @param i     - An integer to validate
      * @return      - True if the integer is invalid, false otherwise
      ********************************************************************** */
-    private boolean checkParents(Integer i, ESUNode caller) {
+    private boolean checkParents(Integer i, EsuNode caller) {
         
         //base case, tree root
         if (myStep == null) {
@@ -281,7 +281,7 @@ public class ESUNode {
         }
         
         //step into children
-        for (ESUNode child : children) {
+        for (EsuNode child : children) {
             if (child.step()) {
                 return true;
             }
@@ -293,7 +293,7 @@ public class ESUNode {
         }
         
         //make one child, return true
-        ESUNode newChild = new ESUNode(this, pop);
+        EsuNode newChild = new EsuNode(this, pop);
         String desc = "Creating new node.";
         tree.log.add(new StepInfo(this, desc, StepInfo.Code.Start, null, null));
         children.add(newChild);
@@ -306,10 +306,10 @@ public class ESUNode {
     
     /** **********************************************************************
      * Get Level:
-     * Accessor for this ESUNode's height (or level) in the ESUTree.
+     * Accessor for this EsuNode's height (or level) in the EsuTree.
      * 
-     * @return - An int representing this ESUNode's height (or level) in the 
-     *              owning ESUTree.
+     * @return - An int representing this EsuNode's height (or level) in the 
+     *              owning EsuTree.
      *********************************************************************** */
     public int getLevel(){
         return level;
@@ -317,13 +317,13 @@ public class ESUNode {
     
     /** ***********************************************************************
      * Get Children:
-     * A simple accessor for this ESUNode's children nodes.
-     * This accessor is designed to be used by the ESUTree's deep copy
+     * A simple accessor for this EsuNode's children nodes.
+     * This accessor is designed to be used by the EsuTree's deep copy
      * constructor to access the copyTree's root's children.
      * 
-     * @return  - A LinkedList of this ESUNode's children Nodes.
+     * @return  - A LinkedList of this EsuNode's children Nodes.
      ************************************************************************ */
-    public LinkedList<ESUNode> getChildren(){
+    public LinkedList<EsuNode> getChildren(){
         return children;
     }
     
@@ -334,7 +334,7 @@ public class ESUNode {
      * returned object at all as it's changes will be reflected in the building
      * of the ESU Tree.
      * 
-     * @return - This ESUNode's possible steps Priority Queue. [shallow copy]
+     * @return - This EsuNode's possible steps Priority Queue. [shallow copy]
      *********************************************************************** */
     public PriorityQueue getPossibleSteps(){
         return possibleSteps;
@@ -342,26 +342,26 @@ public class ESUNode {
     
     /** **********************************************************************
      * Get Subgraph Neighbors:
-     * Accessor for this ESUNode's subgraph neighbors. The list returned stores
+     * Accessor for this EsuNode's subgraph neighbors. The list returned stores
      * the vertices of all possible neighbors of the subgraph that this node
      * is to represent.
      * 
-     * @return - a deep copy of this ESUNode's subgraphNeighbors as a 
+     * @return - a deep copy of this EsuNode's subgraphNeighbors as a 
      *              linked list.
      ********************************************************************** */
     public LinkedList<Integer> getSubgraphNeighbors(){
         return (LinkedList<Integer>)subgraphNeighbors.clone();
     }
     
-    public ESUNode getParent(){
+    public EsuNode getParent(){
         return parent;
     }
     
     /** **********************************************************************
      * Get Subgraph As Sting:
-     * Returns a string representation of this ESUNode's subgraph.
+     * Returns a string representation of this EsuNode's subgraph.
      * 
-     * @return - A string representation of this ESUNode's subgraph.
+     * @return - A string representation of this EsuNode's subgraph.
      *********************************************************************** */
     public String getSubgraphAsString(){
         String out = "{";
@@ -380,9 +380,9 @@ public class ESUNode {
     
     /** **********************************************************************
      * Get Subgraph Neighbors As Sting:
-     * Returns a string representation of this ESUNode's subGraph neighbors.
+     * Returns a string representation of this EsuNode's subGraph neighbors.
      * 
-     * @return - A string representation of this ESUNode's subgraph neighbors.
+     * @return - A string representation of this EsuNode's subgraph neighbors.
      *********************************************************************** */
     public String getSubgraphNeighborsAsString(){
         String out = "[";
@@ -399,9 +399,9 @@ public class ESUNode {
     
     /** **********************************************************************
      * Get Possible Steps As Sting:
-     * Returns a string representation of this ESUNode's possibleSteps Queue.
+     * Returns a string representation of this EsuNode's possibleSteps Queue.
      * 
-     * @return - A string representation of this ESUNode's possibleSteps Queue.
+     * @return - A string representation of this EsuNode's possibleSteps Queue.
      *********************************************************************** */
     public String getPossibleStepsAsString(){
         String out = "(";
@@ -448,10 +448,10 @@ public class ESUNode {
      * @param lists - An array of linked lists where each index of the array 
      *                  has a list of nodes for that level.
      */
-    public void getLevels(ArrayList<ESUNode> lists[]) {
+    public void getLevels(ArrayList<EsuNode> lists[]) {
         if (lists != null && lists[level] != null) {
             lists[level].add(this);
-            for (ESUNode child : children) {
+            for (EsuNode child : children) {
                 child.getLevels(lists);
             }
         }

@@ -29,12 +29,12 @@ public class EsuSession {
     private final int subgraphSize;
 
     /** The finished tree: layout, dead ends and totals all come from here. */
-    private final ESUTree finalTree;
+    private final EsuTree finalTree;
     private final int totalSteps;
     private final int subgraphCount;
 
     /** The tree as it stood at currentStep, rebuilt by replay. */
-    private ESUTree currentTree;
+    private EsuTree currentTree;
     private int currentStep;
 
     /**
@@ -48,7 +48,7 @@ public class EsuSession {
         this.graph = graph;
         this.subgraphSize = subgraphSize;
 
-        ESUTree tree = new ESUTree(graph, subgraphSize);
+        EsuTree tree = new EsuTree(graph, subgraphSize);
         int steps = 0;
         while (tree.step()) {
             tree.clearStepLog();
@@ -69,7 +69,7 @@ public class EsuSession {
     public final void goToStep(int step) {
         int target = Math.max(0, Math.min(totalSteps, step));
 
-        ESUTree tree = new ESUTree(graph, subgraphSize);
+        EsuTree tree = new EsuTree(graph, subgraphSize);
         for (int taken = 0; taken < target; taken++) {
             tree.clearStepLog();     // keep only the last step's log
             tree.step();
@@ -113,7 +113,7 @@ public class EsuSession {
      * @return the active node's vertices, empty before the search starts
      */
     public List<Integer> getActiveSubgraph() {
-        ESUNode active = findActiveNode();
+        EsuNode active = findActiveNode();
         if (active == null) {
             return Collections.emptyList();
         }
@@ -129,7 +129,7 @@ public class EsuSession {
      * @return the active node's remaining candidates, empty if there is none
      */
     public List<Integer> getActiveExtension() {
-        ESUNode active = findActiveNode();
+        EsuNode active = findActiveNode();
         if (active == null) {
             return Collections.emptyList();
         }
@@ -145,15 +145,15 @@ public class EsuSession {
      *
      * @return the node being built, or null if the step names none
      */
-    private ESUNode findActiveNode() {
+    private EsuNode findActiveNode() {
         ArrayList<StepInfo> log = currentTree.getLog();
         if (log.isEmpty()) {
             return null;
         }
         String wanted = log.get(log.size() - 1).getCallerSubgraph();
-        ArrayList<ESUNode>[] levels = currentTree.getNodesByLevel();
+        ArrayList<EsuNode>[] levels = currentTree.getNodesByLevel();
         for (int depth = 1; depth < levels.length; depth++) {
-            for (ESUNode node : levels[depth]) {
+            for (EsuNode node : levels[depth]) {
                 if (node.getSubgraphAsString().equals(wanted)) {
                     return node;
                 }
@@ -165,14 +165,14 @@ public class EsuSession {
     /**
      * @return the tree as it stands at the current step
      */
-    public ESUTree getCurrentTree() {
+    public EsuTree getCurrentTree() {
         return currentTree;
     }
 
     /**
      * @return the finished tree, for layout and for telling dead ends apart
      */
-    public ESUTree getFinalTree() {
+    public EsuTree getFinalTree() {
         return finalTree;
     }
 

@@ -1,5 +1,5 @@
 /* ***************************************************************************
- * Class:   ESUTree.java
+ * Class:   EsuTree.java
  * Purpose: The ESU Tree is a model for the structure of the Fanmod ESU 
  * Algorithm. For more information on the ESU Algorithm, please refer to their
  * research paper.
@@ -7,7 +7,7 @@
  * This ESU Tree class is a "step-wise" implementation of the ESU algorithm.
  * The main feature includes the ability to take individual steps into the 
  * algorithm for understanding and visualization purposes.
- * This class utilizes the ESUNode class, and relies on the Nodes to do most 
+ * This class utilizes the EsuNode class, and relies on the Nodes to do most 
  * of the work, but offers a clean interface for user interaction.
  *************************************************************************** */
 
@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 
 /** **************************************************************************
- * Class: ESUTree
+ * Class: EsuTree
  * 
  * @author BioHazard
  * @version 0.2
@@ -39,17 +39,17 @@ import java.util.LinkedList;
  *          2/17/18 - 
  *              Step log support added in full.
  *              Driver updated to reflect new log functionality an tests.
- *                  Tested: Failed - minor bug fixes in ESUNode.
+ *                  Tested: Failed - minor bug fixes in EsuNode.
  *                  Tested: Passed!
  *              Updated to version 0.2
  *************************************************************************** */
-public class ESUTree {
+public class EsuTree {
     
     //leaf list
-    LinkedList<ESUNode> leaves;
+    LinkedList<EsuNode> leaves;
     
     //root
-    ESUNode root;
+    EsuNode root;
     
     //my graph to search for subgraphs
     UndirectedGraph graph;
@@ -71,12 +71,12 @@ public class ESUTree {
      * @param ug            - a base undirected graph to search for subgraphs
      * @param subGraphSize  - The size of the subgraphs to search for.
      *********************************************************************** */
-    public ESUTree(UndirectedGraph ug, int subGraphSize){
+    public EsuTree(UndirectedGraph ug, int subGraphSize){
         leaves = new LinkedList<>();
         log = new ArrayList<>();
         maxHeight = subGraphSize;
         graph = ug;
-        root = new ESUNode(graph, this);
+        root = new EsuNode(graph, this);
         //root.setLists();
         //add Root creation to step log
         String desc = "Create root Node";
@@ -122,7 +122,7 @@ public class ESUTree {
         LinkedList<LinkedList<Integer>> out = new LinkedList<>();
         
         //get a list of vertices for each leaf node discovered
-        for(ESUNode leaf : leaves){
+        for(EsuNode leaf : leaves){
             LinkedList<Integer> subGraph = new LinkedList<>();
             leaf.getSubGraph(subGraph);
             out.add(subGraph);
@@ -155,8 +155,8 @@ public class ESUTree {
      * @return An array of linked lists where each index of the array 
      *             has a list of nodes for that level.
      *********************************************************************** */
-    public ArrayList<ESUNode>[] getNodesByLevel(){
-        ArrayList<ESUNode> lists[];
+    public ArrayList<EsuNode>[] getNodesByLevel(){
+        ArrayList<EsuNode> lists[];
         lists = new ArrayList[maxHeight + 1];
         for(int i = 0; i < lists.length; i++){
             lists[i] = new ArrayList<>();
