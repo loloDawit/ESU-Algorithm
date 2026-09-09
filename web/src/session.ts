@@ -91,6 +91,19 @@ export class EsuSession {
   }
 
   /**
+   * The subgraphs having a given shape, as their vertices, so they can be
+   * drawn.
+   *
+   * Always every one of them, whatever step is being shown: the shapes are a
+   * property of the finished search, and the counts beside them are final.
+   */
+  subgraphsOfShape(shape: Shape): number[][] {
+    return this.finalTreeValue
+      .subgraphs()
+      .filter((subgraph) => Shape.of(this.graph, subgraph).equals(shape));
+  }
+
+  /**
    * The tree nodes whose subgraph has a given shape, named the way the tree
    * names them, so the view can pick them out.
    */

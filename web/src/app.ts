@@ -8,7 +8,7 @@
 import { UndirectedGraph } from './graph.js';
 import { EsuSession } from './session.js';
 import { TreeLayout, deadEnds } from './layout.js';
-import { renderGraph, renderTree, shapeDrawing } from './render.js';
+import { renderGraph, renderTree, shapeDrawing, subgraphDrawing } from './render.js';
 import { Shape } from './shape.js';
 import { SAMPLES } from './samples.js';
 import './demo.css';
@@ -35,6 +35,8 @@ export class Demo {
   private readonly playButton: HTMLButtonElement;
   private readonly scrubber: HTMLInputElement;
   private readonly shapesEl: HTMLElement;
+  private readonly instancesEl: HTMLElement;
+  private readonly instancesTitle: HTMLElement;
   private picked: ReadonlySet<string> = new Set();
   private pickedShape: Shape | null = null;
   private readonly sampleButtons: HTMLButtonElement[] = [];
@@ -54,6 +56,8 @@ export class Demo {
     this.subgraphEl = this.find('.demo-subgraph');
     this.extensionEl = this.find('.demo-extension');
     this.shapesEl = this.find('.demo-shapes');
+    this.instancesEl = this.find('.demo-instances');
+    this.instancesTitle = this.find('.demo-instances-title');
     this.playButton = this.find('.demo-play') as HTMLButtonElement;
     this.scrubber = this.find('.demo-scrubber') as HTMLInputElement;
 
@@ -136,6 +140,7 @@ export class Demo {
     this.picked = new Set();
     this.pickedShape = null;
     this.drawShapes();
+    this.showInstances([]);
     this.scrubber.max = String(this.session.totalSteps);
     this.sampleButtons.forEach((b, i) =>
       b.classList.toggle('is-on', i === this.sampleIndex));
@@ -225,7 +230,43 @@ export class Demo {
       const at = this.session.shapes().findIndex((entry) => entry.shape.equals(shape));
       this.shapesEl.children[at]?.classList.add('is-on');
     }
+    this.showInstances(again ? [] : this.session.subgraphsOfShape(shape));
     this.draw();
+  }
+
+  /**
+   * Draw each subgraph having the chosen shape, keeping its real vertex
+   * numbers: identical shape, different vertices, which is why they are
+   * grouped at all. Clicking one shows it in the input graph.
+   */
+  private showInstances(subgraphs: readonly (readonly number[])[]): void {
+    this.instancesEl.replaceChildren();
+    this.instancesTitle.hidden = subgraphs.length === 0;
+    this.instancesTitle.textContent = subgraphs.length === 1
+      ? 'Where it is'
+      : `Where they are, all ${subgraphs.length}`;
+
+    for (const subgraph of subgraphs) {
+      const tile = document.createElement('button');
+      tile.type = 'button';
+      tile.className = 'demo-instance';
+      tile.append(
+        subgraphDrawing(this.session.graph, subgraph),
+        Object.assign(document.createElement('span'), {
+          className: 'demo-instance-label',
+          textContent: subgraph.join(' '),
+        }),
+      );
+      tile.addEventListener('click', () => {
+        for (const other of Array.from(this.instancesEl.children)) {
+          other.classList.remove('is-on');
+        }
+        tile.classList.add('is-on');
+        renderGraph(this.graphSvg, this.session.graph,
+          { subgraph: new Set(subgraph), extension: new Set() }, GRAPH_BOX);
+      });
+      this.instancesEl.append(tile);
+    }
   }
 
   private play(): void {
@@ -266,6 +307,8 @@ const TEMPLATE = `
       </dl>
       <span class="demo-title">Shapes found</span>
       <div class="demo-shapes"></div>
+      <span class="demo-title demo-instances-title" hidden></span>
+      <div class="demo-instances"></div>
       <span class="demo-title">This step</span>
       <ul class="demo-log"></ul>
     </div>

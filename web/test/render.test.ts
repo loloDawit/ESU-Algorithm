@@ -140,6 +140,48 @@ describe('the demo', () => {
     expect(root.querySelectorAll('.t-picked')).toHaveLength(0);
   });
 
+  it('draws every subgraph behind a chosen shape', () => {
+    const root = mountWithSeveralShapes();
+    const chip = root.querySelector('.demo-shape') as HTMLButtonElement;
+    const wanted = Number(chip.querySelector('.demo-shape-n')!.textContent);
+
+    chip.click();
+
+    // One drawing per subgraph the chip counted, and the count must be worth
+    // checking: a single instance would make this pass against anything.
+    expect(wanted).toBeGreaterThan(1);
+    expect(root.querySelectorAll('.demo-instance')).toHaveLength(wanted);
+    expect(root.querySelector('.demo-instances-title')?.textContent)
+      .toContain(String(wanted));
+  });
+
+  it('labels each subgraph with the vertices it is made of', () => {
+    const root = mountWithSeveralShapes();
+    (root.querySelector('.demo-shape') as HTMLButtonElement).click();
+
+    const labels = Array.from(root.querySelectorAll('.demo-instance-label'))
+      .map((label) => label.textContent);
+
+    // Same shape, different vertices, which is the reason to draw them.
+    expect(new Set(labels).size).toBe(labels.length);
+    for (const label of labels) {
+      expect(label).toMatch(/^\d+( \d+)*$/);
+    }
+  });
+
+  it('shows a chosen subgraph in the input graph', () => {
+    const root = mountWithSeveralShapes();
+    (root.querySelector('.demo-shape') as HTMLButtonElement).click();
+
+    const tile = root.querySelector('.demo-instance') as HTMLButtonElement;
+    const vertices = tile.querySelector('.demo-instance-label')!
+      .textContent!.split(' ').length;
+    tile.click();
+
+    expect(tile.classList.contains('is-on')).toBe(true);
+    expect(root.querySelectorAll('.g-chosen')).toHaveLength(vertices);
+  });
+
   it('reaches the end and marks the results found', () => {
     const root = mount();
     const scrubber = root.querySelector('.demo-scrubber') as HTMLInputElement;

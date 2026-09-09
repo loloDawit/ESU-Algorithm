@@ -163,3 +163,33 @@
 
 /* a subgraph of the shape currently chosen */
 .t-picked { stroke: #7b3fe4; stroke-width: 2.6; }
+
+/* ---- the subgraphs behind a shape ---- */
+
+.demo-instances {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  max-height: 190px; overflow-y: auto;
+}
+
+.demo-instance {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+  padding: 3px;
+  border: 1px solid transparent; border-radius: 7px;
+  background: transparent; cursor: pointer;
+  font: inherit;
+}
+.demo-instance:hover { background: var(--bg-sunk); }
+.demo-instance.is-on { border-color: var(--blue); background: var(--blue-soft); }
+
+.demo-instance-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px; color: var(--text-faint);
+}
+
+.instance-edge { stroke: var(--text-faint); stroke-width: 1.4; }
+.instance-vertex { fill: var(--bg-sunk); stroke: var(--text-faint); stroke-width: 1.2; }
+.instance-number {
+  fill: var(--text);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 9px; font-weight: 700;
+}
