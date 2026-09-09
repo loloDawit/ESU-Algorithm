@@ -5,8 +5,10 @@ package esu.algorithm;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Class EsuSession
@@ -53,6 +55,9 @@ public class EsuSession {
      * nothing next to the tree copies this design exists to avoid.
      */
     private final List<Step> history = new ArrayList<>();
+
+    /** Worked out on first asking; the search does not change. */
+    private List<Shape.Count> shapes;
 
     /** The tree as it stood at currentStep, rebuilt by replay. */
     private EsuTree currentTree;
@@ -217,6 +222,41 @@ public class EsuSession {
             out.add(List.copyOf(subgraph));
         }
         return out;
+    }
+
+    /**
+     * The shapes among the subgraphs found, most frequent first.
+     *
+     * Classified once, on first asking, since it does not change.
+     *
+     * @return each distinct shape with how often it occurred
+     */
+    public List<Shape.Count> getShapes() {
+        if (shapes == null) {
+            shapes = Shape.classify(graph, getSubgraphs());
+        }
+        return shapes;
+    }
+
+    /**
+     * The tree nodes whose subgraph has a given shape, named the way the tree
+     * names them, so a view can pick them out.
+     *
+     * @param shape the shape to look for
+     * @return those nodes' subgraph strings, empty if none has that shape
+     */
+    public Set<String> subgraphsWithShape(Shape shape) {
+        Set<String> found = new LinkedHashSet<>();
+        for (List<Integer> subgraph : getSubgraphs()) {
+            if (Shape.of(graph, subgraph).equals(shape)) {
+                StringBuilder name = new StringBuilder("{");
+                for (Integer vertex : subgraph) {
+                    name.append(name.length() == 1 ? "" : ", ").append(vertex);
+                }
+                found.add(name.append("}").toString());
+            }
+        }
+        return found;
     }
 
     /**
