@@ -2,8 +2,7 @@
  * Drawing the graph and the search tree as SVG.
  *
  * Colours are left to CSS classes rather than set here, so the demo follows
- * the light or dark theme of the page it sits in — the desktop app baked its
- * colours into the shapes and has no such need.
+ * the light or dark theme of the page it sits in.
  */
 import type { UndirectedGraph } from './graph.js';
 import { circlePositions, centreX, type Box, type TreeLayout } from './layout.js';

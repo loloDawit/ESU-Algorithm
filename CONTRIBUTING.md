@@ -81,3 +81,17 @@ in the imperative, saying what changes and what it was before.
 This is a teaching tool. Its job is making one algorithm legible, not becoming
 a general graph library. Changes that make the search easier to follow are
 easier to argue for than changes that add controls.
+
+## Releasing
+
+Tag a commit on `main` and push the tag. Everything else is automatic:
+
+```bash
+git tag -a v2.1.0 -m "v2.1.0"
+git push origin v2.1.0
+```
+
+The release workflow runs both test suites, and publishes only if they pass.
+The notes are generated from the commits and pull requests since the previous
+tag, so they describe what actually changed rather than what someone remembered
+to write down.

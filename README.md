@@ -93,7 +93,7 @@ Four graphs ship in `samples/`:
 | `sample-small.txt` | 8 | Good starting point: two triangles, a bridge, a tail |
 | `cluster.txt` | 7 | A dense 4-clique plus a triangle — more branching |
 | `bowtie.txt` | 5 | Smallest interesting case: two triangles sharing a hub |
-| `ESU Algorithm/src/esu/algorithm/myGraph.txt` | 15 edges | The original 2018 test graph |
+| `ESU Algorithm/src/esu/algorithm/myGraph.txt` | 15 edges | Larger, sparser: vertex ids up to 100 |
 
 ## How the code is laid out
 
@@ -146,6 +146,12 @@ with no duplicates. That runs across several graphs and sizes.
 Two other things are worth testing and are: that a step reached by replay is
 identical to one reached by stepping, and that the tree layout puts parents over
 their children without overlapping anything.
+
+## Releasing
+
+Push a tag on `main` — `git tag -a v2.1.0 -m "v2.1.0" && git push origin v2.1.0`.
+The workflow runs both suites and publishes only if they pass, with notes
+generated from the commits since the previous tag.
 
 ## License
 

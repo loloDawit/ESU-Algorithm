@@ -9,8 +9,8 @@ benefit of the doubt before you give them your opinion.
 
 - Be respectful in disagreement. Technical arguments are welcome; making them
   about the person is not.
-- Accept that people have different levels of experience. This project began as
-  a university assignment, and questions that sound basic are welcome here.
+- Accept that people have different levels of experience. Questions that sound
+  basic are welcome here.
 - Take responsibility when you get something wrong, and move on without drama.
 
 ## What is not

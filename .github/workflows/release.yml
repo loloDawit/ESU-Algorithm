@@ -1,0 +1,53 @@
+# Publishes a release when a version tag is pushed.
+#
+# The notes are generated from the commits and pull requests since the last
+# tag, so a release describes what actually changed rather than what someone
+# remembered to write down.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # Nothing is released that does not pass, in either implementation.
+      - run: ./gradlew test --no-daemon
+      - run: npm ci
+        working-directory: web
+      - run: npm test
+        working-directory: web
+
+      # --generate-notes works out the previous tag on its own, and copes
+      # with there not being one.
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --title "$GITHUB_REF_NAME" \
+            --generate-notes \
+            --verify-tag

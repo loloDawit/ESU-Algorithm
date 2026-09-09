@@ -18,14 +18,13 @@ import java.util.Map;
  *
  * Positions the tree so that a node sits directly under its parent.
  *
- * The 2018 layout spread each level evenly across the full width of the tree,
- * placing nodes by their index within the level. A node therefore sat nowhere
- * near its parent, and the connecting lines had to sprawl diagonally across
- * everything, which is why the picture looked like a web rather than a tree.
+ * Walks the tree bottom-up: leaves take the next free slot along the row, and
+ * every parent is centred over its children. Subtrees occupy disjoint ranges
+ * of slots, so nothing can overlap.
  *
- * This walks the tree bottom-up: leaves take the next free slot along the
- * row, and every parent is centred over its children. Subtrees occupy
- * disjoint ranges of slots, so nothing can overlap.
+ * Placing nodes by their index within a level instead would spread each level
+ * across the full width, leaving a node nowhere near its parent and forcing
+ * the connectors to sprawl diagonally across everything.
  *
  * Free of JavaFX, so the geometry can be tested without a display.
  */

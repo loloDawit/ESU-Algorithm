@@ -15,9 +15,9 @@ import java.util.Random;
 /**
  * Class RandomGraph
  *
- * The 2018 generator drew lettered vertices and random edge weights, neither
- * of which ESU can use, and there was no path from what it drew into the
- * algorithm. This one produces a graph the visualizer can actually run.
+ * Produces the only shape the algorithm has an opinion about: unweighted,
+ * undirected, 0-based integer ids, and connected. Vertex labels and edge
+ * weights would be decoration, since ESU reads neither.
  */
 public class RandomGraph {
 

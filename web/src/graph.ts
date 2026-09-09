@@ -18,9 +18,9 @@ export class UndirectedGraph {
    * Parse the same edge-per-line format the desktop app reads: two
    * whitespace-separated whole numbers per line.
    *
-   * The matrix is sized to the largest vertex id **plus one**. Getting that
-   * wrong is what made the 2018 app silently drop every edge touching its
-   * highest-numbered vertex.
+   * The matrix is sized to the largest vertex id **plus one**. Off by one here
+   * and every edge touching the highest-numbered vertex is dropped in
+   * silence, which is a hard bug to notice from the outside.
    */
   static parse(text: string): UndirectedGraph {
     const edges: Array<[number, number]> = [];

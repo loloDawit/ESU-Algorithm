@@ -1,9 +1,9 @@
 /**
  * Where every node of the search tree goes.
  *
- * Ported from `TreeLayout.java`. Walks the tree bottom-up: leaves take the
- * next free slot along the row, and every parent is centred over its
- * children. Subtrees occupy disjoint ranges of slots, so nothing overlaps.
+ * Walks the tree bottom-up: leaves take the next free slot along the row, and
+ * every parent is centred over its children. Subtrees occupy disjoint ranges
+ * of slots, so nothing overlaps.
  *
  * Free of any rendering concern, so the geometry is testable on its own.
  */
