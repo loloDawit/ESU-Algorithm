@@ -147,15 +147,6 @@ Two other things are worth testing and are: that a step reached by replay is
 identical to one reached by stepping, and that the tree layout puts parents over
 their children without overlapping anything.
 
-## Releasing
-
-**Actions → Release → Run workflow**, and choose `patch`, `minor` or `major`.
-
-The workflow works out the next version from the last tag, runs both test
-suites, tags the commit and publishes — with notes generated from the commits
-since the previous tag. Nothing is tagged by hand, and nothing is released that
-does not pass.
-
 ## License
 
 MIT — see [LICENSE](LICENSE).
