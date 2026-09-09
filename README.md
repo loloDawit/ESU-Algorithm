@@ -149,9 +149,12 @@ their children without overlapping anything.
 
 ## Releasing
 
-Push a tag on `main` — `git tag -a v2.1.0 -m "v2.1.0" && git push origin v2.1.0`.
-The workflow runs both suites and publishes only if they pass, with notes
-generated from the commits since the previous tag.
+**Actions → Release → Run workflow**, and choose `patch`, `minor` or `major`.
+
+The workflow works out the next version from the last tag, runs both test
+suites, tags the commit and publishes — with notes generated from the commits
+since the previous tag. Nothing is tagged by hand, and nothing is released that
+does not pass.
 
 ## License
 
