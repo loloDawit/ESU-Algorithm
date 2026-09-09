@@ -1,0 +1,20 @@
+name: Idea
+description: Something the visualizer could do that it does not
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like it to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: why
+    attributes:
+      label: What would that let you understand, or do, that you cannot now?
+      description: >
+        This is a teaching tool first. An idea that makes the algorithm easier
+        to follow carries further than one that adds a control.
+    validations:
+      required: true
