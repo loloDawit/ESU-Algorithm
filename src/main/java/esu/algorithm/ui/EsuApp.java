@@ -6,24 +6,17 @@ package esu.algorithm.ui;
 
 import esu.algorithm.ESUNode;
 import esu.algorithm.EsuSession;
-import esu.algorithm.RandomGraph;
 import esu.algorithm.StepInfo;
 import esu.algorithm.UndirectedGraph;
 import java.io.File;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-import javafx.animation.Animation;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.concurrent.Task;
-import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
@@ -36,23 +29,20 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressIndicator;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Slider;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.paint.Color;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Rectangle;
-import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import javafx.util.Duration;
 
 /**
  * Class EsuApp
@@ -75,15 +65,11 @@ public class EsuApp extends Application {
 
     private final Random random = new Random();
 
-    /** Tree drawing state, all derived from the session's finished tree. */
-    private TreeLayout layout;
-    private Set<String> deadEnds = Set.of();
     /** Which node the picture is explaining: the active one, or a clicked one. */
     private String focusId;
 
     private final GraphPanel graphPanel = new GraphPanel();
-    private final Pane treePane = new Pane();
-    private final ScrollPane treeScroll = new ScrollPane();
+    private final TreeView treeView = new TreeView();
     private final ListView<String> stepLog = new ListView<>();
     private final Label statusLabel = new Label();
     private final Label subgraphLabel = new Label();
@@ -101,12 +87,13 @@ public class EsuApp extends Application {
     private final Button fitButton = new Button("Fit");
     private final Button zoomInButton = new Button("+");
     private final Button zoomOutButton = new Button("−");
-    private final Slider zoomSlider = new Slider(0.02, 2, 1);
+    private final Slider zoomSlider =
+            new Slider(TreeView.MIN_ZOOM, TreeView.MAX_ZOOM, 1);
     private final Slider speedSlider = new Slider(1, 20, 6);
     private final HBox sizePills = new HBox(4);
     private final ToggleGroup sizeGroup = new ToggleGroup();
 
-    private Timeline player;
+    private Playback playback;
 
     @Override
     public void start(Stage stage) {
@@ -202,18 +189,9 @@ public class EsuApp extends Application {
     }
 
     private Node buildTreeArea() {
-        // A Group reports the scaled size of its content, which is what makes
-        // the scroll pane's bars track the zoom.
-        treeScroll.setContent(new Group(treePane));
-        treeScroll.setPannable(true);
-        treeScroll.getStyleClass().add("tree-scroll");
-
         busy.setMaxSize(48, 48);
         busy.setVisible(false);
-
-        StackPane stack = new StackPane(treeScroll, busy);
-        stack.getStyleClass().add("tree-area");
-        return stack;
+        return new StackPane(treeView, busy);
     }
 
     private Node buildBottomBar() {
@@ -255,8 +233,8 @@ public class EsuApp extends Application {
         return legend;
     }
 
-    private Node swatch(javafx.scene.paint.Color fill,
-            javafx.scene.paint.Color stroke, String text, boolean dashed) {
+    private Node swatch(Color fill, Color stroke, String text,
+            boolean dashed) {
         Rectangle box = new Rectangle(15, 11, fill);
         box.setStroke(stroke);
         if (dashed) {
@@ -284,6 +262,19 @@ public class EsuApp extends Application {
     // ------------------------------------------------------------------
 
     private void wireControls() {
+        // Advancing is the tick. Whenever playback stops, for any reason, the
+        // button goes back to saying Play.
+        playback = new Playback(() -> {
+            if (session == null || !session.stepForward()) {
+                return false;
+            }
+            refresh();
+            return true;
+        }, () -> {
+            playButton.setSelected(false);
+            playButton.setText("Play");
+        });
+
         openButton.setOnAction(event -> chooseFile());
         randomButton.setOnAction(event -> generateRandomGraph());
         randomButton.setTooltip(new Tooltip(
@@ -314,16 +305,11 @@ public class EsuApp extends Application {
                 stopPlayback();
             }
         });
-        speedSlider.valueProperty().addListener((obs, was, now) -> {
-            if (player != null) {
-                startPlayback();
-            }
-        });
+        speedSlider.valueProperty().addListener(
+                (obs, was, now) -> playback.setRate(now.doubleValue()));
 
-        zoomSlider.valueProperty().addListener((obs, was, now) -> {
-            treePane.setScaleX(now.doubleValue());
-            treePane.setScaleY(now.doubleValue());
-        });
+        zoomSlider.valueProperty().addListener(
+                (obs, was, now) -> treeView.setZoom(now.doubleValue()));
         zoomInButton.setOnAction(event -> nudgeZoom(0.15));
         zoomOutButton.setOnAction(event -> nudgeZoom(-0.15));
         fitButton.setOnAction(event -> fitToWindow());
@@ -371,15 +357,7 @@ public class EsuApp extends Application {
     // ------------------------------------------------------------------
 
     private void chooseFile() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Open a graph file");
-        File samples = new File("samples");
-        chooser.setInitialDirectory(samples.isDirectory()
-                ? samples : new File(System.getProperty("user.home")));
-        chooser.getExtensionFilters().setAll(
-                new FileChooser.ExtensionFilter("Graph files (*.txt)", "*.txt"));
-
-        File file = chooser.showOpenDialog(openButton.getScene().getWindow());
+        File file = GraphFiles.chooseGraph(openButton.getScene().getWindow());
         if (file != null) {
             loadGraph(file);
         }
@@ -387,43 +365,17 @@ public class EsuApp extends Application {
 
     private void generateRandomGraph() {
         try {
-            File file = new File("samples/random-graph.txt");
-            file.getParentFile().mkdirs();
-            RandomGraph.writeToFile(RandomGraph.generate(random), file);
-            loadGraph(file);
+            loadGraph(GraphFiles.writeRandomGraph(random));
         } catch (IOException e) {
             Alerts.displayCouldNotWrite(e.getMessage());
         }
     }
 
-    /**
-     * Write the subgraphs found to a file the user picks.
-     */
     private void saveResults() {
-        FileChooser chooser = new FileChooser();
-        chooser.setTitle("Save the subgraphs found");
-        chooser.setInitialFileName("subgraphs.txt");
-        chooser.getExtensionFilters().setAll(
-                new FileChooser.ExtensionFilter("Text files (*.txt)", "*.txt"));
-
-        File file = chooser.showSaveDialog(saveButton.getScene().getWindow());
-        if (file == null) {
-            return;
-        }
-        try (PrintWriter out = new PrintWriter(file)) {
-            out.println(session.getSubgraphCount() + " connected subgraphs of "
-                    + "size " + session.getSubgraphSize()
-                    + " in " + (currentFile == null
-                            ? "the current graph" : currentFile.getName()));
-            out.println();
-            for (LinkedList<Integer> subgraph
-                    : session.getFinalTree().getSubGraphs()) {
-                StringBuilder line = new StringBuilder();
-                for (Integer vertex : subgraph) {
-                    line.append(line.length() == 0 ? "" : " ").append(vertex);
-                }
-                out.println(line);
-            }
+        try {
+            GraphFiles.saveResults(saveButton.getScene().getWindow(),
+                    session.getFinalTree(), subgraphSize,
+                    currentFile == null ? null : currentFile.getName());
         } catch (IOException e) {
             Alerts.displayCouldNotWrite(e.getMessage());
         }
@@ -477,9 +429,7 @@ public class EsuApp extends Application {
      */
     private void adopt(EsuSession built, File file) {
         session = built;
-        layout = TreeLayout.of(session.getFinalTree());
-        deadEnds = findDeadEnds(session.getFinalTree());
-
+        treeView.setTree(session.getFinalTree(), subgraphSize);
         graphPanel.setGraph(session.getGraph());
         setControlsEnabled(true);
         goTo(0);
@@ -563,51 +513,15 @@ public class EsuApp extends Application {
      * @param traceId  the node to trace back to the root, or null
      */
     private void drawTree(String activeId, String traceId) {
-        Set<String> present = presentNodes();
-        Set<String> path = traceId == null
-                ? Set.of() : new HashSet<>(layout.pathToRoot(traceId));
-        treePane.getChildren().setAll(TreeRenderer.render(layout, present,
-                deadEnds, session.getSubgraphSize(), activeId, path));
+        treeView.show(session.getCurrentTree(), activeId, traceId);
     }
 
-    /** Ids of the nodes that exist at the step being shown. */
-    private Set<String> presentNodes() {
-        Set<String> present = new HashSet<>();
-        ArrayList<ESUNode>[] levels =
-                session.getCurrentTree().getNodesByLevel();
-        for (int level = 1; level < levels.length; level++) {
-            for (ESUNode node : levels[level]) {
-                present.add(node.getSubgraphAsString());
-            }
-        }
-        return present;
-    }
 
-    /**
-     * Nodes that never gained a child in the finished tree, which is what
-     * makes them dead ends. Asking the current tree would be wrong: mid-run a
-     * node has no children only because it has not expanded yet.
-     *
-     * @param finalTree the finished tree
-     * @return ids of the branches that died
-     */
-    private Set<String> findDeadEnds(esu.algorithm.ESUTree finalTree) {
-        Set<String> dead = new HashSet<>();
-        ArrayList<ESUNode>[] levels = finalTree.getNodesByLevel();
-        for (int level = 1; level < levels.length - 1; level++) {
-            for (ESUNode node : levels[level]) {
-                if (node.getChildren().isEmpty()) {
-                    dead.add(node.getSubgraphAsString());
-                }
-            }
-        }
-        return dead;
-    }
 
     private void highlightFromLog(int index) {
         List<StepInfo> log = session == null
                 ? List.of() : session.getCurrentLog();
-        if (index < 0 || index >= log.size() || layout == null) {
+        if (session == null || index < 0 || index >= log.size()) {
             return;
         }
         drawTree(focusId, log.get(index).getCallerSubgraph());
@@ -640,58 +554,37 @@ public class EsuApp extends Application {
     // zoom and playback
     // ------------------------------------------------------------------
 
+    /**
+     * Move the zoom by a step, staying inside what the view supports.
+     *
+     * @param delta amount to add to the current zoom factor
+     */
     private void nudgeZoom(double delta) {
-        zoomSlider.setValue(clamp(zoomSlider.getValue() + delta,
-                zoomSlider.getMin(), zoomSlider.getMax()));
+        zoomSlider.setValue(Math.max(TreeView.MIN_ZOOM,
+                Math.min(TreeView.MAX_ZOOM, zoomSlider.getValue() + delta)));
     }
 
-    /** Zoom so the whole tree is visible, and scroll back to the top left. */
+    /** Fit the tree, then bring the slider back in step with it. */
     private void fitToWindow() {
-        if (layout == null) {
-            return;
-        }
-        Bounds view = treeScroll.getViewportBounds();
-        if (layout.getWidth() <= 0 || view.getWidth() <= 0) {
-            return;
-        }
-        double factor = Math.min(view.getWidth() / layout.getWidth(),
-                view.getHeight() / layout.getHeight()) * 0.92;
-        zoomSlider.setValue(clamp(factor,
-                zoomSlider.getMin(), zoomSlider.getMax()));
-        treeScroll.setHvalue(0);
-        treeScroll.setVvalue(0);
+        treeView.fit();
+        zoomSlider.setValue(treeView.getZoom());
     }
 
-    private double clamp(double value, double low, double high) {
-        return Math.max(low, Math.min(high, value));
-    }
 
     private void startPlayback() {
-        stopPlayback();
         if (session == null) {
             playButton.setSelected(false);
             return;
         }
-        Duration tick = Duration.seconds(1.0 / speedSlider.getValue());
-        player = new Timeline(new KeyFrame(tick, event -> {
-            if (!session.stepForward()) {
-                stopPlayback();
-                playButton.setSelected(false);
-                return;
-            }
-            refresh();
-        }));
-        player.setCycleCount(Animation.INDEFINITE);
-        player.play();
+        playback.setRate(speedSlider.getValue());
+        playback.start();
         playButton.setText("Pause");
     }
 
     private void stopPlayback() {
-        if (player != null) {
-            player.stop();
-            player = null;
+        if (playback != null) {
+            playback.stop();
         }
-        playButton.setText("Play");
     }
 
     public static void main(String[] args) {
