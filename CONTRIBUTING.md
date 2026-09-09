@@ -84,14 +84,19 @@ easier to argue for than changes that add controls.
 
 ## Releasing
 
-Tag a commit on `main` and push the tag. Everything else is automatic:
+Go to **Actions → Release → Run workflow** and pick which part of the version to
+increase. `patch` is the default.
 
-```bash
-git tag -a v2.1.0 -m "v2.1.0"
-git push origin v2.1.0
-```
+| Choice | v2.4.1 becomes |
+|---|---|
+| `patch` | v2.4.2 |
+| `minor` | v2.5.0 |
+| `major` | v3.0.0 |
 
-The release workflow runs both test suites, and publishes only if they pass.
+The workflow reads the last tag, works out the next version, runs both test
+suites, tags the commit and publishes. It refuses to run from anywhere but
+`main`, and refuses to reuse a version that already exists.
+
 The notes are generated from the commits and pull requests since the previous
 tag, so they describe what actually changed rather than what someone remembered
-to write down.
+to write down. There is no need to tag anything by hand.
