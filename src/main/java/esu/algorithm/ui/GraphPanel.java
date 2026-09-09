@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javafx.scene.layout.Pane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Line;
 import javafx.scene.text.Font;
@@ -35,15 +34,6 @@ public class GraphPanel extends Pane {
     /** Kept clear of the edge so labels and strokes are not clipped. */
     private static final double MARGIN = 26;
 
-    private static final Color EDGE = Color.web("#ced4da");
-    private static final Color EDGE_IN_SUBGRAPH = Color.web("#2f6fed");
-    private static final Color VERTEX_FILL = Color.web("#eef1f5");
-    private static final Color VERTEX_STROKE = Color.web("#adb5bd");
-    private static final Color VERTEX_LABEL = Color.web("#343a40");
-    /** In the subgraph being built. */
-    private static final Color CHOSEN_FILL = Color.web("#2f6fed");
-    /** Available to be added next. */
-    private static final Color CANDIDATE_FILL = Color.web("#f5b426");
 
     private UndirectedGraph graph;
     private Set<Integer> subgraph = new HashSet<>();
@@ -105,8 +95,10 @@ public class GraphPanel extends Pane {
                 boolean inside = subgraph.contains(vertices.get(i))
                         && subgraph.contains(vertices.get(j));
                 Line edge = new Line(at[i][0], at[i][1], at[j][0], at[j][1]);
-                edge.setStroke(inside ? EDGE_IN_SUBGRAPH : EDGE);
-                edge.setStrokeWidth(inside ? 3 : 1.5);
+                edge.getStyleClass().add("g-edge");
+                if (inside) {
+                    edge.getStyleClass().add("g-edge-in");
+                }
                 getChildren().add(edge);
             }
         }
@@ -127,14 +119,14 @@ public class GraphPanel extends Pane {
         boolean chosen = subgraph.contains(vertex);
         boolean candidate = !chosen && extension.contains(vertex);
 
+        String state = chosen ? "g-chosen" : candidate ? "g-candidate" : "g-plain";
+
         Circle circle = new Circle(at[0], at[1], VERTEX_RADIUS);
-        circle.setFill(chosen ? CHOSEN_FILL
-                : candidate ? CANDIDATE_FILL : VERTEX_FILL);
-        circle.setStroke(chosen || candidate ? Color.TRANSPARENT : VERTEX_STROKE);
+        circle.getStyleClass().addAll("g-vertex", state);
 
         Text label = new Text(Integer.toString(vertex));
         label.setFont(Font.font("SF Mono", FontWeight.BOLD, 13));
-        label.setFill(chosen ? Color.WHITE : VERTEX_LABEL);
+        label.getStyleClass().addAll("g-label", "g-label-" + state.substring(2));
         // Centre the label on the circle using its own measured size.
         label.setX(at[0] - label.getLayoutBounds().getWidth() / 2);
         label.setY(at[1] + label.getLayoutBounds().getHeight() / 4);

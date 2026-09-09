@@ -1,0 +1,77 @@
+/*
+ * The dark theme, layered over esu.css rather than replacing it: only the
+ * colours are restated, so anything structural stays in one place.
+ *
+ * Applied when the system asks for a dark appearance, or from the View menu.
+ */
+
+.root {
+    -fx-background-color: #10151b;
+    -fx-base: #10151b;
+    -fx-text-fill: #e8edf3;
+}
+
+.top-bar, .bottom-bar, .side-panel, .history-panel,
+.tree-area, .tree-scroll, .tree-scroll .viewport,
+.list-view, .history-list {
+    -fx-background-color: #151c24;
+    -fx-border-color: #26313d;
+}
+
+.legend-bar { -fx-background-color: #131a22; -fx-border-color: #26313d; }
+
+.panel-title, .caption { -fx-text-fill: #7c8b9b; }
+.status-label { -fx-text-fill: #a9b6c4; }
+.set-chosen { -fx-text-fill: #6f9dff; }
+.set-candidate { -fx-text-fill: #e0ac4a; }
+
+.button, .toggle-button, .text-field {
+    -fx-background-color: #1b232d;
+    -fx-border-color: #33404e;
+    -fx-text-fill: #e8edf3;
+}
+.button:hover, .toggle-button:hover { -fx-background-color: #222c38; }
+.button:pressed, .toggle-button:selected {
+    -fx-background-color: #2f6fed;
+    -fx-border-color: #2f6fed;
+    -fx-text-fill: #ffffff;
+}
+
+.list-cell { -fx-text-fill: #cdd8e3; }
+.list-cell:filled:hover { -fx-background-color: #1e2732; }
+.list-cell:filled:selected { -fx-background-color: #33260c; -fx-text-fill: #e0ac4a; }
+.history-list .list-cell:filled:selected {
+    -fx-background-color: #2f6fed;
+    -fx-text-fill: #ffffff;
+}
+.graph-panel { -fx-background-color: #131a22; -fx-border-color: #26313d; }
+
+/* ---- shapes ---- */
+
+.t-edge { -fx-stroke: #33404e; }
+.t-edge-path { -fx-stroke: #6f9dff; }
+
+.t-root { -fx-fill: #16233c; -fx-stroke: #5b7fbf; }
+.t-pending { -fx-fill: #151c24; -fx-stroke: #46545f; }
+.t-active { -fx-fill: #33260c; -fx-stroke: #e0ac4a; }
+.t-complete { -fx-fill: #16301f; -fx-stroke: #6cc493; }
+.t-dead { -fx-fill: #1b232d; -fx-stroke: #3a4653; }
+.t-on-path { -fx-stroke: #6f9dff; }
+
+.t-text { -fx-fill: #e8edf3; }
+.t-text-dead { -fx-fill: #6b7887; }
+.t-caption { -fx-fill: #7c8b9b; }
+
+.g-edge { -fx-stroke: #33404e; }
+.g-edge-in { -fx-stroke: #6f9dff; }
+.g-plain { -fx-fill: #1b232d; -fx-stroke: #46545f; }
+.g-chosen { -fx-fill: #2f6fed; -fx-stroke: #2f6fed; }
+.g-candidate { -fx-fill: #e0ac4a; -fx-stroke: #e0ac4a; }
+.g-label { -fx-fill: #e8edf3; }
+.g-label-chosen { -fx-fill: #ffffff; }
+.g-label-candidate { -fx-fill: #20303f; }
+
+/* The wrapping label inside each step-log row. Missing this left dark text
+ * on a dark background, which is the one thing a second stylesheet must not
+ * do. */
+.log-line { -fx-text-fill: #cdd8e3; }

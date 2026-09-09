@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import javafx.scene.Node;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Polyline;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -27,25 +26,6 @@ import javafx.scene.text.Text;
  */
 public class TreeRenderer {
 
-    /** A node that has not been reached yet, or is still expanding. */
-    public static final Color PENDING_FILL = Color.web("#ffffff");
-    public static final Color PENDING_STROKE = Color.web("#aab4c0");
-    /** The node the current step is working on. */
-    public static final Color ACTIVE_FILL = Color.web("#fff3cd");
-    public static final Color ACTIVE_STROKE = Color.web("#b06f00");
-    /** A subgraph of the requested size: an actual result. */
-    public static final Color COMPLETE_FILL = Color.web("#d7f0dc");
-    public static final Color COMPLETE_STROKE = Color.web("#2e7d4f");
-    /** A branch that ran out of valid vertices before reaching size k. */
-    public static final Color DEADEND_FILL = Color.web("#f4f6f8");
-    public static final Color DEADEND_STROKE = Color.web("#c7cdd4");
-    /** The root, which stands for having chosen nothing yet. */
-    public static final Color ROOT_FILL = Color.web("#eef2f9");
-    public static final Color ROOT_STROKE = Color.web("#8fa2bd");
-
-    private static final Color EDGE = Color.web("#cfd6de");
-    /** The chain of choices leading to the node being looked at. */
-    private static final Color PATH = Color.web("#2f6fed");
 
     private static final Font LABEL_FONT =
             Font.font("SF Mono", FontWeight.SEMI_BOLD, 12);
@@ -116,9 +96,10 @@ public class TreeRenderer {
                 parent.centreX(), midY,
                 child.centreX(), midY,
                 child.centreX(), child.getY());
-        line.setStroke(onPath ? PATH : EDGE);
-        line.setStrokeWidth(onPath ? 2.2 : 1.2);
-        line.setFill(null);
+        line.getStyleClass().add(onPath ? "t-edge t-edge-path" : "t-edge");
+        if (onPath) {
+            line.getStyleClass().add("t-edge-path");
+        }
         return line;
     }
 
@@ -140,49 +121,57 @@ public class TreeRenderer {
                 box.getWidth(), box.getHeight());
         rect.setArcWidth(8);
         rect.setArcHeight(8);
-        rect.setStrokeWidth(1.2);
-
-        Color labelFill = Color.web("#20303f");
-
-        if (box.isRoot()) {
-            rect.setFill(ROOT_FILL);
-            rect.setStroke(ROOT_STROKE);
-            labelFill = Color.web("#41566f");
-        } else if (box.getId().equals(activeId)) {
-            rect.setFill(ACTIVE_FILL);
-            rect.setStroke(ACTIVE_STROKE);
-            rect.setStrokeWidth(2.4);
-        } else if (box.getLevel() == foundAt) {
-            rect.setFill(COMPLETE_FILL);
-            rect.setStroke(COMPLETE_STROKE);
-            rect.setStrokeWidth(1.8);
-        } else if (deadEnds.contains(box.getId())) {
-            rect.setFill(DEADEND_FILL);
-            rect.setStroke(DEADEND_STROKE);
-            rect.getStrokeDashArray().addAll(4.0, 3.0);
-            labelFill = Color.web("#93a0ad");
-        } else {
-            rect.setFill(PENDING_FILL);
-            rect.setStroke(PENDING_STROKE);
-        }
-
+        rect.getStyleClass().add("t-box");
+        rect.getStyleClass().add(stateOf(box, deadEnds, foundAt, activeId));
         if (path.contains(box.getId()) && !box.getId().equals(activeId)) {
-            rect.setStroke(PATH);
-            rect.setStrokeWidth(2.0);
+            rect.getStyleClass().add("t-on-path");
         }
 
         List<Node> shapes = new ArrayList<>();
         shapes.add(rect);
-        shapes.add(centredText(box.getLabel(), LABEL_FONT, labelFill,
-                box.centreX(), box.centreY()));
+        Text label = centredText(box.getLabel(), LABEL_FONT,
+                box.centreX(), box.centreY());
+        label.getStyleClass().add("t-text");
+        if (deadEnds.contains(box.getId()) && !box.isRoot()) {
+            label.getStyleClass().add("t-text-dead");
+        }
+        shapes.add(label);
 
         if (box.isRoot()) {
             // The root is not a subgraph, and nothing on screen said so.
             // Above the box: below it runs the row of connectors.
-            shapes.add(centredText("no vertices chosen", CAPTION_FONT,
-                    Color.web("#8a97a6"), box.centreX(), box.getY() - 9));
+            Text caption = centredText("no vertices chosen", CAPTION_FONT,
+                    box.centreX(), box.getY() - 9);
+            caption.getStyleClass().add("t-caption");
+            shapes.add(caption);
         }
         return shapes;
+    }
+
+    /**
+     * Which style class describes what the algorithm did with a node.
+     *
+     * @param box      the node
+     * @param deadEnds ids that never gained a child
+     * @param foundAt  the level whose nodes are complete subgraphs
+     * @param activeId the node being worked on, or null
+     * @return the style class to add
+     */
+    private static String stateOf(TreeLayout.Box box, Set<String> deadEnds,
+            int foundAt, String activeId) {
+        if (box.isRoot()) {
+            return "t-root";
+        }
+        if (box.getId().equals(activeId)) {
+            return "t-active";
+        }
+        if (box.getLevel() == foundAt) {
+            return "t-complete";
+        }
+        if (deadEnds.contains(box.getId())) {
+            return "t-dead";
+        }
+        return "t-pending";
     }
 
     /**
@@ -190,16 +179,14 @@ public class TreeRenderer {
      *
      * @param content what to write
      * @param font    the face to write it in
-     * @param fill    the colour
      * @param centreX horizontal centre
      * @param centreY vertical centre of the text
      * @return the positioned text
      */
-    private static Text centredText(String content, Font font, Color fill,
+    private static Text centredText(String content, Font font,
             double centreX, double centreY) {
         Text text = new Text(content);
         text.setFont(font);
-        text.setFill(fill);
         text.setX(centreX - text.getLayoutBounds().getWidth() / 2);
         text.setY(centreY + text.getLayoutBounds().getHeight() / 4);
         return text;
