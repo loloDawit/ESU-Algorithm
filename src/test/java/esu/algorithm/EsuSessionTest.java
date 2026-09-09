@@ -20,11 +20,11 @@ public class EsuSessionTest {
      * Every node of the tree, level by level, as text. Starts at level 1:
      * the root carries no lists of its own and never changes.
      */
-    private String describe(ESUTree tree) {
+    private String describe(EsuTree tree) {
         StringBuilder out = new StringBuilder();
-        ArrayList<ESUNode>[] levels = tree.getNodesByLevel();
+        ArrayList<EsuNode>[] levels = tree.getNodesByLevel();
         for (int depth = 1; depth < levels.length; depth++) {
-            for (ESUNode node : levels[depth]) {
+            for (EsuNode node : levels[depth]) {
                 out.append(node.getSubgraphAsString())
                    .append(node.getPossibleStepsAsString())
                    .append(node.getSubgraphNeighborsAsString())
@@ -37,7 +37,7 @@ public class EsuSessionTest {
 
     /** The tree state after stepping forward n times, the slow honest way. */
     private String byStepping(UndirectedGraph graph, int subgraphSize, int n) {
-        ESUTree tree = new ESUTree(graph, subgraphSize);
+        EsuTree tree = new EsuTree(graph, subgraphSize);
         for (int i = 0; i < n; i++) {
             tree.step();
             tree.clearStepLog();
@@ -84,7 +84,7 @@ public class EsuSessionTest {
     public void reportsTheSameSubgraphCountTheAlgorithmFinds() {
         UndirectedGraph graph =
                 UndirectedGraph.fromFile(new File("samples/cluster.txt"));
-        ESUTree reference = new ESUTree(graph, 4);
+        EsuTree reference = new EsuTree(graph, 4);
         while (reference.step()) {
             reference.clearStepLog();
         }

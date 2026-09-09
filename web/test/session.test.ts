@@ -1,24 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { UndirectedGraph } from '../src/graph.js';
-import { ESUTree } from '../src/esu.js';
+import { EsuTree } from '../src/esu.js';
 import { EsuSession } from '../src/session.js';
 import { SAMPLES } from './samples.js';
 
 /** Everything about the tree that a viewer could notice. */
-function describeTree(tree: ESUTree): string {
+function describeTree(tree: EsuTree): string {
   return tree
     .nodesByLevel()
     .slice(1)
     .map((level) =>
       level
-        .map((n) => `${n.subgraphLabel()}${n.possibleStepsLabel()}${n.neighboursLabel()}`)
+        .map((n) => `${n.subgraphLabel()}${n.possibleStepsLabel()}${n.neighborsLabel()}`)
         .join(' '),
     )
     .join('|');
 }
 
 function byStepping(graph: UndirectedGraph, k: number, n: number): string {
-  const tree = new ESUTree(graph, k);
+  const tree = new EsuTree(graph, k);
   for (let i = 0; i < n; i++) {
     tree.step();
     tree.clearLog();

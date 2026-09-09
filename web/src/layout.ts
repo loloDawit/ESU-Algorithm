@@ -7,7 +7,7 @@
  *
  * Free of any rendering concern, so the geometry is testable on its own.
  */
-import type { ESUTree } from './esu.js';
+import type { EsuTree } from './esu.js';
 
 const BOX_WIDTH = 74;
 const BOX_HEIGHT = 30;
@@ -41,7 +41,7 @@ export class TreeLayout {
 
   private nextLeafX = 0;
 
-  constructor(tree: ESUTree) {
+  constructor(tree: EsuTree) {
     const root: Box = {
       id: ROOT_ID,
       label: ROOT_LABEL,
@@ -132,7 +132,7 @@ export class TreeLayout {
 }
 
 /** Node ids that never gained a child, so their branch died. */
-export function deadEnds(finalTree: ESUTree): Set<string> {
+export function deadEnds(finalTree: EsuTree): Set<string> {
   const dead = new Set<string>();
   const levels = finalTree.nodesByLevel();
   for (let level = 1; level < levels.length - 1; level++) {

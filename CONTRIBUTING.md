@@ -32,7 +32,7 @@ cd docs && python3 -m http.server 8765
 
 **There are two implementations, and they must agree.**
 
-`ESU Algorithm/src/` is the reference, in Java. `web/src/` is a TypeScript port
+`src/main/java/` is the reference, in Java. `web/src/` is a TypeScript port
 that runs on the project page. They are held together by
 `web/test/java-golden.json`, generated from the Java engine, which records for
 each sample graph and size *which node every single step builds*, how many

@@ -1,5 +1,5 @@
 /**
- * The ESU algorithm, ported from `ESUNode.java` and `ESUTree.java`.
+ * The ESU algorithm, ported from `EsuNode.java` and `EsuTree.java`.
  *
  * A faithful port, not a tidier reimplementation: the visualizer shows the
  * search one step at a time, so the *order* the tree is built in is part of
@@ -39,50 +39,50 @@ class MinQueue {
   }
 }
 
-export class ESUNode {
+export class EsuNode {
   readonly level: number;
   /** The vertex this node added. Null only for the root. */
-  readonly step: number | null;
+  readonly myStep: number | null;
   /** The vertex the branch began at, which the labelling rule compares to. */
   readonly firstStep: number | null;
-  readonly parent: ESUNode | null;
-  readonly children: ESUNode[] = [];
+  readonly parent: EsuNode | null;
+  readonly children: EsuNode[] = [];
 
   /** Vertices this node may still add. */
   readonly possibleSteps = new MinQueue();
   /** Vertices already seen from this node's subgraph. Null for the root. */
-  readonly subgraphNeighbours: number[] | null;
+  readonly subgraphNeighbors: number[] | null;
 
   private constructor(
-    private readonly tree: ESUTree,
+    private readonly tree: EsuTree,
     private readonly graph: UndirectedGraph,
-    parent: ESUNode | null,
-    step: number | null,
+    parent: EsuNode | null,
+    myStep: number | null,
   ) {
     this.parent = parent;
-    this.step = step;
+    this.myStep = myStep;
 
     if (parent === null) {
       this.level = 0;
       this.firstStep = null;
-      this.subgraphNeighbours = null;
+      this.subgraphNeighbors = null;
       for (const vertex of graph.connectedVertices()) this.possibleSteps.add(vertex);
     } else {
       this.level = parent.level + 1;
-      this.firstStep = this.level === 1 ? step : parent.firstStep;
-      this.subgraphNeighbours = [];
+      this.firstStep = this.level === 1 ? myStep : parent.firstStep;
+      this.subgraphNeighbors = [];
     }
   }
 
-  static root(tree: ESUTree, graph: UndirectedGraph): ESUNode {
-    return new ESUNode(tree, graph, null, null);
+  static root(tree: EsuTree, graph: UndirectedGraph): EsuNode {
+    return new EsuNode(tree, graph, null, null);
   }
 
   /** The vertices of this node's subgraph, in the order they were added. */
   subgraph(): number[] {
     const out: number[] = [];
-    for (let node: ESUNode | null = this; node?.step !== null && node !== null; node = node.parent) {
-      out.unshift(node.step);
+    for (let node: EsuNode | null = this; node?.myStep !== null && node !== null; node = node.parent) {
+      out.unshift(node.myStep);
     }
     return out;
   }
@@ -96,26 +96,30 @@ export class ESUNode {
     return `(${this.possibleSteps.values().join(', ')})`;
   }
 
-  neighboursLabel(): string {
-    return `[${(this.subgraphNeighbours ?? []).join(', ')}]`;
+  neighborsLabel(): string {
+    return `[${(this.subgraphNeighbors ?? []).join(', ')}]`;
   }
 
   /**
    * Take one step of the search, depth first.
    *
+   * Named to match EsuNode.step in the Java, which is the reference: the two
+   * implementations are checked against each other, and reading them side by
+   * side is easier when the same thing has the same name.
+   *
    * @returns true if this node or a descendant took a step
    */
-  advance(): boolean {
+  step(): boolean {
     if (this.level === this.tree.maxHeight) return false;
 
     for (const child of this.children) {
-      if (child.advance()) return true;
+      if (child.step()) return true;
     }
 
     const next = this.possibleSteps.poll();
     if (next === null) return false;
 
-    const child = new ESUNode(this.tree, this.graph, this, next);
+    const child = new EsuNode(this.tree, this.graph, this, next);
     this.tree.log.push({ caller: this.subgraphLabel(), text: 'Creating new node.' });
     this.children.push(child);
     child.setLists();
@@ -128,7 +132,7 @@ export class ESUNode {
 
   /**
    * Work out what this new node may go on to add: inherit the parent's
-   * candidates, then consider the neighbours of the vertex just added.
+   * candidates, then consider the neighbors of the vertex just added.
    */
   private setLists(): void {
     const label = this.subgraphLabel();
@@ -143,7 +147,7 @@ export class ESUNode {
     }
 
     const parent = this.parent!;
-    if (parent.step !== null) {
+    if (parent.myStep !== null) {
       this.tree.log.push({
         caller: label,
         text: `Create node ${label}, copy ${parent.subgraphLabel()}'s possible steps `
@@ -152,33 +156,33 @@ export class ESUNode {
       });
       for (const candidate of parent.possibleSteps.values()) {
         this.possibleSteps.add(candidate);
-        this.subgraphNeighbours!.push(candidate);
+        this.subgraphNeighbors!.push(candidate);
       }
     }
 
-    const neighbours = this.graph.neighbours(this.step!);
+    const neighbors = this.graph.neighbors(this.myStep!);
     this.tree.log.push({
       caller: label,
-      text: `Getting ${this.step}'s neighbors: { ${neighbours.join(', ')} }.`,
+      text: `Getting ${this.myStep}'s neighbors: { ${neighbors.join(', ')} }.`,
     });
 
-    for (const neighbour of neighbours) {
+    for (const neighbor of neighbors) {
       // The labelling rule: a branch may only grow into vertices numbered
       // above the one it started from. This is what makes every subgraph
       // turn up exactly once.
-      if (neighbour <= this.firstStep!) {
+      if (neighbor <= this.firstStep!) {
         this.tree.log.push({
           caller: label,
-          text: `${neighbour} is less than or equal to this branch's first step `
+          text: `${neighbor} is less than or equal to this branch's first step `
             + `(${this.firstStep}). Validation denied.`,
         });
-      } else if (this.checkAncestors(neighbour, label)) {
+      } else if (this.checkAncestors(neighbor, label)) {
         this.tree.log.push({
           caller: label,
-          text: `${neighbour} added to ${label}'s lists.`,
+          text: `${neighbor} added to ${label}'s lists.`,
         });
-        this.possibleSteps.add(neighbour);
-        this.subgraphNeighbours!.push(neighbour);
+        this.possibleSteps.add(neighbor);
+        this.subgraphNeighbors!.push(neighbor);
       }
     }
   }
@@ -191,11 +195,11 @@ export class ESUNode {
    * @param caller label of the node the log entries are about
    */
   private checkAncestors(vertex: number, caller: string): boolean {
-    if (this.step === null) {
+    if (this.myStep === null) {
       this.tree.log.push({ caller, text: `Validation approved for ${vertex}.` });
       return true;
     }
-    if (vertex === this.step || this.subgraphNeighbours!.includes(vertex)) {
+    if (vertex === this.myStep || this.subgraphNeighbors!.includes(vertex)) {
       this.tree.log.push({
         caller,
         text: `${vertex} was found in ${this.subgraphLabel()}'s data. Validation denied.`,
@@ -210,9 +214,9 @@ export class ESUNode {
   }
 }
 
-export class ESUTree {
-  readonly root: ESUNode;
-  readonly leaves: ESUNode[] = [];
+export class EsuTree {
+  readonly root: EsuNode;
+  readonly leaves: EsuNode[] = [];
   log: StepEntry[] = [];
 
   constructor(
@@ -220,12 +224,12 @@ export class ESUTree {
     /** The k in "connected subgraphs of size k". */
     readonly maxHeight: number,
   ) {
-    this.root = ESUNode.root(this, graph);
+    this.root = EsuNode.root(this, graph);
   }
 
   /** Take one step. Returns false once the search is exhausted. */
   step(): boolean {
-    return this.root.advance();
+    return this.root.step();
   }
 
   clearLog(): void {
@@ -238,9 +242,9 @@ export class ESUTree {
   }
 
   /** Nodes by depth, index 0 being the root alone. */
-  nodesByLevel(): ESUNode[][] {
-    const levels: ESUNode[][] = Array.from({ length: this.maxHeight + 1 }, () => []);
-    const visit = (node: ESUNode): void => {
+  nodesByLevel(): EsuNode[][] {
+    const levels: EsuNode[][] = Array.from({ length: this.maxHeight + 1 }, () => []);
+    const visit = (node: EsuNode): void => {
       levels[node.level]!.push(node);
       for (const child of node.children) visit(child);
     };

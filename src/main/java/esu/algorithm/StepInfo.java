@@ -25,7 +25,7 @@ package esu.algorithm;
  *          Revised Code enum.
  *          Filled in documentation
  *      2/20/18 - 
- *          Added a copy of the ESUTree to the StepInfo data
+ *          Added a copy of the EsuTree to the StepInfo data
  *      3/2/18 - 
  *          added a count public variable for leaf count.
  ************************************************************************** */
@@ -59,8 +59,8 @@ public class StepInfo {
      *                      step. Can be null if no Integer is being checked
      *                      during this step.
      *********************************************************************** */
-    public StepInfo(ESUNode caller, String desc,
-            Code code, ESUNode target, Integer check){
+    public StepInfo(EsuNode caller, String desc,
+            Code code, EsuNode target, Integer check){
 
         // Only the subgraph strings are ever read back, and a node's subgraph
         // is fixed once the node exists. Keeping them means this constructor
@@ -114,11 +114,8 @@ public class StepInfo {
         Start,                      //start the creating a node
         InheritLists,               //inherit lists from parent
         GetNeighbors,               //get the neighbors of the current vertex
-        SelectNeighbor,             //select a neighbor 
-        CheckSelectedNeighbor,      //check potential neighbor
         RegisterCheck,              //validation decision (approve or deny)
         UpdateLists,                //update the current node's lists
         SubgraphCreation,           //created a unique subgraph
-        Finish                      //finish creation of new node
     }
 }

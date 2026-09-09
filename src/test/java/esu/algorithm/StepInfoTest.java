@@ -18,7 +18,7 @@ public class StepInfoTest {
     private ArrayList<StepInfo> logForStep(int wanted, int subgraphSize) {
         UndirectedGraph graph =
                 UndirectedGraph.fromFile(new File("samples/bowtie.txt"));
-        ESUTree tree = new ESUTree(graph, subgraphSize);
+        EsuTree tree = new EsuTree(graph, subgraphSize);
         int step = 0;
         while (tree.step()) {
             if (++step == wanted) {

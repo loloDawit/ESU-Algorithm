@@ -54,8 +54,8 @@ export class UndirectedGraph {
     return this.inRange(from) && this.inRange(to) && this.matrix[from]![to]!;
   }
 
-  /** Neighbours of a vertex, ascending. Empty for a vertex out of range. */
-  neighbours(vertex: number): number[] {
+  /** Neighbors of a vertex, ascending. Empty for a vertex out of range. */
+  neighbors(vertex: number): number[] {
     if (!this.inRange(vertex)) return [];
     const row = this.matrix[vertex]!;
     const out: number[] = [];

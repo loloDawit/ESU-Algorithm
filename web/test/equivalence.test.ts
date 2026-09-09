@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { UndirectedGraph } from '../src/graph.js';
-import { ESUTree } from '../src/esu.js';
+import { EsuTree } from '../src/esu.js';
 import { SAMPLES } from './samples.js';
 import golden from './java-golden.json';
 
@@ -32,7 +32,7 @@ describe('agreement with the Java implementation', () => {
 
     it(`matches Java on ${file} at k=${k}`, () => {
       const graph = UndirectedGraph.parse(SAMPLES[file]!);
-      const tree = new ESUTree(graph, k);
+      const tree = new EsuTree(graph, k);
 
       const trace: string[] = [];
       while (tree.step()) {

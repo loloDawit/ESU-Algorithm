@@ -93,15 +93,15 @@ Four graphs ship in `samples/`:
 | `sample-small.txt` | 8 | Good starting point: two triangles, a bridge, a tail |
 | `cluster.txt` | 7 | A dense 4-clique plus a triangle — more branching |
 | `bowtie.txt` | 5 | Smallest interesting case: two triangles sharing a hub |
-| `ESU Algorithm/src/esu/algorithm/myGraph.txt` | 15 edges | Larger, sparser: vertex ids up to 100 |
+| `src/main/resources/esu/algorithm/myGraph.txt` | 15 edges | Larger, sparser: vertex ids up to 100 |
 
 ## How the code is laid out
 
 ```
-ESU Algorithm/src/esu/algorithm/
+src/main/java/esu/algorithm/
 ├── UndirectedGraph.java    adjacency matrix, reads graph files
-├── ESUNode.java            one node of the search tree; does the real work
-├── ESUTree.java            the tree; step() advances the algorithm once
+├── EsuNode.java            one node of the search tree; does the real work
+├── EsuTree.java            the tree; step() advances the algorithm once
 ├── StepInfo.java           a log entry describing one step
 ├── EsuSession.java         one run, positioned at a step
 ├── RandomGraph.java        random connected graph generation
@@ -114,7 +114,7 @@ ESU Algorithm/src/esu/algorithm/
 
 The split matters: everything outside `ui/` is plain Java with no JavaFX
 dependency, so the algorithm can be tested and reused on its own.
-`ESUTree.step()` advancing exactly one step is what makes pause-and-step
+`EsuTree.step()` advancing exactly one step is what makes pause-and-step
 possible.
 
 `EsuSession` holds a run and where you are in it. Rather than keeping a copy of

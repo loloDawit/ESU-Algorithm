@@ -6,22 +6,22 @@
  * reaches a step by replaying the search. Enumerating from scratch is cheap
  * enough that re-running beats remembering.
  */
-import { ESUNode, ESUTree, type StepEntry } from './esu.js';
+import { EsuNode, EsuTree, type StepEntry } from './esu.js';
 import { UndirectedGraph } from './graph.js';
 
 export class EsuSession {
-  private readonly finalTreeValue: ESUTree;
+  private readonly finalTreeValue: EsuTree;
   readonly totalSteps: number;
   readonly subgraphCount: number;
 
-  private currentTree!: ESUTree;
+  private currentTree!: EsuTree;
   private currentStepValue = 0;
 
   constructor(
     readonly graph: UndirectedGraph,
     readonly subgraphSize: number,
   ) {
-    const tree = new ESUTree(graph, subgraphSize);
+    const tree = new EsuTree(graph, subgraphSize);
     let steps = 0;
     while (tree.step()) {
       tree.clearLog();
@@ -34,11 +34,11 @@ export class EsuSession {
     this.goToStep(0);
   }
 
-  get finalTree(): ESUTree {
+  get finalTree(): EsuTree {
     return this.finalTreeValue;
   }
 
-  get tree(): ESUTree {
+  get tree(): EsuTree {
     return this.currentTree;
   }
 
@@ -53,7 +53,7 @@ export class EsuSession {
   /** Move to a step, replaying from the start to get there. */
   goToStep(step: number): void {
     const target = Math.max(0, Math.min(this.totalSteps, Math.trunc(step)));
-    const tree = new ESUTree(this.graph, this.subgraphSize);
+    const tree = new EsuTree(this.graph, this.subgraphSize);
     for (let taken = 0; taken < target; taken++) {
       tree.clearLog();
       tree.step();
@@ -78,7 +78,7 @@ export class EsuSession {
   }
 
   /** The node this step is building, found by the label its log entries carry. */
-  activeNode(): ESUNode | null {
+  activeNode(): EsuNode | null {
     const last = this.currentTree.log[this.currentTree.log.length - 1];
     if (!last) return null;
 

@@ -3,8 +3,8 @@
  */
 package esu.algorithm.ui;
 
-import esu.algorithm.ESUNode;
-import esu.algorithm.ESUTree;
+import esu.algorithm.EsuNode;
+import esu.algorithm.EsuTree;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -129,14 +129,14 @@ public class TreeLayout {
      * @param tree the tree to position, normally the final state
      * @return positions for every node in it
      */
-    public static TreeLayout of(ESUTree tree) {
+    public static TreeLayout of(EsuTree tree) {
         TreeLayout layout = new TreeLayout();
         layout.build(tree);
         return layout;
     }
 
-    private void build(ESUTree tree) {
-        ArrayList<ESUNode>[] levels = tree.getNodesByLevel();
+    private void build(EsuTree tree) {
+        ArrayList<EsuNode>[] levels = tree.getNodesByLevel();
 
         // The root is not in getNodesByLevel's usable form, so it is placed
         // explicitly and everything on level 1 is treated as its child.
@@ -145,7 +145,7 @@ public class TreeLayout {
         children.put(ROOT_ID, new ArrayList<>());
 
         for (int level = 1; level < levels.length; level++) {
-            for (ESUNode node : levels[level]) {
+            for (EsuNode node : levels[level]) {
                 String id = node.getSubgraphAsString();
                 String parentId = level == 1
                         ? ROOT_ID : node.getParent().getSubgraphAsString();
@@ -199,7 +199,7 @@ public class TreeLayout {
      * @param node the node to label
      * @return its vertices separated by spaces
      */
-    private String labelFor(ESUNode node) {
+    private String labelFor(EsuNode node) {
         LinkedList<Integer> vertices = new LinkedList<>();
         node.getSubGraph(vertices);
         StringBuilder out = new StringBuilder();
