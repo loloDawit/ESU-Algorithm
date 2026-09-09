@@ -85,35 +85,6 @@ public class ESUTree {
         log.add(step);
     }
     
-    /** *********************************************************************
-     * Copy Constructor:
-     * Performs a deep copy of the ESU Tree. The Graph referenced by the ESUTree
-     * is not deep copied, but all ESUNodes and data are.
-     * This function assumes that the ESUTree being copied is initialized and 
-     * has a valid root Node.
-     * 
-     * @param copy      - An ESUTree to perform a deep copy on.
-     ************************************************************************ */
-    public ESUTree(ESUTree copy){
-        graph = copy.graph;
-        maxHeight = copy.maxHeight;
-        leaves = new LinkedList<>();
-        log = new ArrayList<>();
-        root = new ESUNode(graph, this);
-        for(ESUNode child : copy.root.getChildren()){
-            root.getChildren().add(new ESUNode(root, child)); //copy ESUNodes
-        }
-        
-        //copy step log
-        for(StepInfo info : copy.log){
-            log.add(info);
-        }
-        
-        //clear copy's step log
-        //copy.log.clear();
-        //gets "copy"'s step log ready to record all events from this point on.
-    }
-    
     public int getMaxHeight(){
         return maxHeight;
     }
@@ -194,82 +165,4 @@ public class ESUTree {
         return lists;
     }
     
-    /** ***********************************************************************
-     * TESTING ENVIRONMENT.
-     * Do not include in final release.
-     * 
-     * A simple test framework for running the ESUTree logic in a controlled
-     * Alpha-testing environment.
-     * 
-     * @param args - [Not Used]
-     *********************************************************************** */
-    public static void main(String args[]){
-        
-        //set-up
-        //TestUndirectedGraph graph = new TestUndirectedGraph();
-        UndirectedGraph graph = new UndirectedGraph(101);
-        graph.fillGraph(args.length > 0 ? args[0] : "ESU Algorithm/src/esu/algorithm/myGraph.txt");
-        ESUTree tree = new ESUTree(graph, 4);
-        ArrayList<ESUTree> treeList= new ArrayList<>();
-        //step until done
-        while(tree.step()){
-            ESUTree tempTree = new ESUTree(tree);
-            tree.clearStepLog();
-            treeList.add(tempTree);
-        }
-        
-        for(int i = 0; i < treeList.size(); i++){
-            System.out.println("Tree[" + i + "] step log:");
-            ArrayList<StepInfo> log = treeList.get(i).log;
-            for(int entry = 0; entry < log.size(); entry++){
-                System.out.println(log.get(entry).render());
-            }
-            /*
-            //display leaves for current tree
-            System.out.println("Leaves for tree[" + i + "]:");
-            //print each detected subgraph
-            for(ESUNode subgraph : treeList.get(i).leaves){
-                LinkedList<Integer> vertices = new LinkedList<>();
-                subgraph.getSubGraph(vertices);
-                String output = "{";
-                for(Integer vertex : vertices){
-                    output += " " + vertex + ",";
-                }
-                System.out.print(output.substring(0, output.length()-1) + " } ");
-            }
-            */
-            
-            System.out.println();
-        }
-        System.out.println("" + treeList.get(treeList.size()-1).leaves.size() + " subgraphs detected: ");
-        for(ESUNode leaf : treeList.get(treeList.size()-1).leaves){
-            System.out.print(nodeToString(leaf) + " ");
-        }
-    }
-    
-    /** **********************************************************************
-     * Node To String:
-     * A simple function for converting a node into a String as its current
-     * subgraph vertices.
-     * 
-     * @param node - an ESUNode to convert into a String.
-     * @return - A String representation of the parameter ESUNode
-     ********************************************************************** */
-    public static String nodeToString(ESUNode node){
-        if (node == null)
-            return "";
-        String out = "{";
-        LinkedList<Integer> list = new LinkedList<>();
-        node.getSubGraph(list);
-        if(list.isEmpty()){
-            //root
-            return "{root}";
-        }
-        for(Integer i : list){
-            out += " " + i + ",";
-        }
-        out = out.substring(0, out.length() - 1);
-        out += " }";
-        return out;
-    }
 }

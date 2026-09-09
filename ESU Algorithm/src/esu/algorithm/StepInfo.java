@@ -114,11 +114,8 @@ public class StepInfo {
         Start,                      //start the creating a node
         InheritLists,               //inherit lists from parent
         GetNeighbors,               //get the neighbors of the current vertex
-        SelectNeighbor,             //select a neighbor 
-        CheckSelectedNeighbor,      //check potential neighbor
         RegisterCheck,              //validation decision (approve or deny)
         UpdateLists,                //update the current node's lists
         SubgraphCreation,           //created a unique subgraph
-        Finish                      //finish creation of new node
     }
 }

@@ -114,48 +114,6 @@ public class ESUNode {
     }
     
     /** ***********************************************************************
-     * Special Copy Constructor:
-     * Accepts the new Node's parent and a Node to perform a deep copy of.
-     * 
-     * This constructor SHOULD NOT BE USED TO CREATE THE ROOT OF A NEW ESU TREE.
-     * This constructor assumes the parent Node is initialized and is valid
-     * (not null).
-     * 
-     * @param parent    - This ESUNode's parent node
-     * @param copy      - An ESUNode to deep copy
-     *********************************************************************** */
-    public ESUNode(ESUNode parent, ESUNode copy){
-        
-        //shallow copy integers
-        level = copy.level;
-        myStep = copy.myStep;
-        firstStep = copy.firstStep;
-        
-        //inherit parent's traits
-        tree = parent.tree;
-        graph = parent.graph;
-        
-        this.parent = parent;
-        
-        //copy lists
-        subgraphNeighbors = (LinkedList<Integer>)copy.subgraphNeighbors.clone();
-        possibleSteps = new PriorityQueue<>();
-        for(Integer i : copy.possibleSteps){
-            possibleSteps.add(i);
-        }
-        
-        //copy over copy's children
-        children = new LinkedList<>();
-        for(ESUNode child : copy.children){
-            children.add(new ESUNode(this, child));
-        }
-        
-        if(level == tree.maxHeight){
-            tree.leaves.add(this);
-        }
-    }
-    
-    /** ***********************************************************************
      * General Purpose Private Constructor:
      * This constructor is to be used inside this class only. 
      * For creating a new set of Nodes:
@@ -189,14 +147,14 @@ public class ESUNode {
         //set level
         level = parent.level + 1;
         
-        //********** set first step... @depricated ? ***************
+        // The vertex this branch began at, which the labelling rule
+        // compares candidates against.
         if(level == 1){
             firstStep = myStep;
         }
         else{
             firstStep = parent.firstStep;
         }
-        //**********************************************************
         
         
     }
@@ -357,15 +315,6 @@ public class ESUNode {
         return level;
     }
     
-    /** ***********************************************************************
-     * Get Tree:
-     * Returns a deep copy of this ESUNode's tree reference.
-     * 
-     * @return - A deep copy of this ESUNode's ESUTree.
-     *********************************************************************** */
-    public ESUTree getTree(){
-        return new ESUTree(tree);
-    }
     /** ***********************************************************************
      * Get Children:
      * A simple accessor for this ESUNode's children nodes.

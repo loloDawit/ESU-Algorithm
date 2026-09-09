@@ -118,21 +118,6 @@ public class UndirectedGraph {
     }
 
     /**
-     * deleteNode
-     *
-     * removes a node from the matrix
-     *
-     * @param num node to be deleted
-     */
-    public void deleteNode(int num) {
-        if (num > size - 1 || num < 0) return;
-        for (int i = 0; i < size; i++) {
-            graph[num][i] = 0;
-            graph[i][num] = 0;
-        }
-    }
-    
-    /**
      * getSize
      * 
      * @return size of graph
@@ -176,18 +161,4 @@ public class UndirectedGraph {
         }
         return vertices;
     }
-    /**
-     * printGraph
-     *
-     * used for testing purposes
-     */
-    public void printGraph() {
-        for (int i = 0; i < size; i++) {
-            for (int j = 0; j < size; j++) {
-                System.out.print(graph[i][j]);
-            }
-            System.out.println("");
-        }
-    }
-
 }
