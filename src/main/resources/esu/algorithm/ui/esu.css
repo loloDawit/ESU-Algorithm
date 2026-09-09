@@ -149,3 +149,32 @@
     -fx-font-size: 11px;
     -fx-text-fill: #2d3748;
 }
+
+/* ---- step history ---- */
+
+.history-panel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: transparent transparent transparent #e2e6ec;
+    -fx-border-width: 1;
+    -fx-padding: 12;
+    -fx-pref-width: 220;
+    -fx-min-width: 200;
+}
+
+.history-list {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e6ec;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}
+
+.history-list .list-cell {
+    -fx-font-family: "SF Mono", "Menlo", monospace;
+    -fx-font-size: 11px;
+    -fx-padding: 3 8 3 8;
+}
+
+.history-list .list-cell:filled:selected {
+    -fx-background-color: #2f6fed;
+    -fx-text-fill: white;
+}

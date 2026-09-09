@@ -2,6 +2,7 @@ package esu.algorithm;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -123,6 +124,42 @@ public class EsuSessionTest {
 
         assertTrue(session.getActiveSubgraph().isEmpty());
         assertTrue(session.getActiveExtension().isEmpty());
+    }
+
+    @Test
+    public void summarisesEveryStepOfTheSearch() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+
+        List<EsuSession.Step> history = session.getHistory();
+
+        assertEquals(session.getTotalSteps(), history.size());
+        assertEquals(1, history.get(0).number());
+        assertEquals(session.getTotalSteps(),
+                history.get(history.size() - 1).number());
+    }
+
+    @Test
+    public void saysWhichSubgraphEachStepBuilt() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+
+        // Every entry names the node that step finished, which is what makes
+        // a history row worth clicking: going to that step must agree.
+        for (EsuSession.Step entry : session.getHistory()) {
+            session.goToStep(entry.number());
+            ArrayList<StepInfo> log = session.getCurrentLog();
+            assertEquals(entry.subgraph(),
+                    log.get(log.size() - 1).getCallerSubgraph(),
+                    "step " + entry.number() + " disagrees with its summary");
+        }
+    }
+
+    @Test
+    public void hasNoHistoryForASearchWithNothingToDo() {
+        EsuSession session = new EsuSession(new UndirectedGraph(3), 3);
+
+        assertTrue(session.getHistory().isEmpty());
     }
 
     @Test

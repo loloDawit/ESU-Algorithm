@@ -25,6 +25,20 @@ import java.util.List;
  */
 public class EsuSession {
 
+    /**
+     * One line of the search's history: which step it was, and what it built.
+     *
+     * @param number   the step, counting from 1
+     * @param subgraph the node that step finished, e.g. "{0, 2}"
+     */
+    public record Step(int number, String subgraph) {
+
+        @Override
+        public String toString() {
+            return number + "  \u00b7  " + subgraph;
+        }
+    }
+
     private final UndirectedGraph graph;
     private final int subgraphSize;
 
@@ -32,6 +46,13 @@ public class EsuSession {
     private final EsuTree finalTree;
     private final int totalSteps;
     private final int subgraphCount;
+
+    /**
+     * A line per step, kept because it is only a string each: the search is
+     * already run to completion on construction, so the whole history costs
+     * nothing next to the tree copies this design exists to avoid.
+     */
+    private final List<Step> history = new ArrayList<>();
 
     /** The tree as it stood at currentStep, rebuilt by replay. */
     private EsuTree currentTree;
@@ -51,8 +72,10 @@ public class EsuSession {
         EsuTree tree = new EsuTree(graph, subgraphSize);
         int steps = 0;
         while (tree.step()) {
+            ArrayList<StepInfo> log = tree.getLog();
+            history.add(new Step(++steps, log.isEmpty()
+                    ? "" : log.get(log.size() - 1).getCallerSubgraph()));
             tree.clearStepLog();
-            steps++;
         }
         this.finalTree = tree;
         this.totalSteps = steps;
@@ -181,6 +204,15 @@ public class EsuSession {
      */
     public ArrayList<StepInfo> getCurrentLog() {
         return currentTree.getLog();
+    }
+
+    /**
+     * Every step of the search, in order, each naming what it built.
+     *
+     * @return the history, empty when there is nothing to search
+     */
+    public List<Step> getHistory() {
+        return Collections.unmodifiableList(history);
     }
 
     /**
