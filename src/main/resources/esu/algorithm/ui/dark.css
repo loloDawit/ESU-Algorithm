@@ -70,3 +70,8 @@
 .g-label { -fx-fill: #e8edf3; }
 .g-label-chosen { -fx-fill: #ffffff; }
 .g-label-candidate { -fx-fill: #20303f; }
+
+/* The wrapping label inside each step-log row. Missing this left dark text
+ * on a dark background, which is the one thing a second stylesheet must not
+ * do. */
+.log-line { -fx-text-fill: #cdd8e3; }

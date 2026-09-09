@@ -39,8 +39,13 @@ public class TreeView extends StackPane {
 
     public TreeView() {
         // A Group reports the scaled size of its content, which is what makes
-        // the scroll bars track the zoom.
-        scroll.setContent(new Group(canvas));
+        // the scroll bars track the zoom. Holding it in a StackPane that
+        // fills the viewport centres a tree smaller than the window instead
+        // of pinning it to the top left.
+        StackPane holder = new StackPane(new Group(canvas));
+        scroll.setContent(holder);
+        scroll.setFitToWidth(true);
+        scroll.setFitToHeight(true);
         scroll.setPannable(true);
         scroll.getStyleClass().add("tree-scroll");
         getChildren().add(scroll);
