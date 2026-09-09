@@ -60,11 +60,6 @@ import javafx.util.Duration;
  * One window: the input graph and the step log down the left, the search tree
  * filling the rest, controls along the top and bottom.
  *
- * The 2018 app opened a five second splash, then a load screen that asked you
- * to tick a box promising your graph was undirected, then the visualizer in a
- * third window, with controls spread over toolbars on all four edges. None of
- * that survived.
- *
  * All state lives in the EsuSession. Every view reads from it, so they cannot
  * disagree about which step is on screen.
  */

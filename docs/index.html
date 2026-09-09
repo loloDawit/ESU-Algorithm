@@ -364,23 +364,17 @@ footer a { color: var(--text-soft); }
       over its children without overlaps.
     </p>
 
-    <h3>What changed since 2018</h3>
+    <h3>Replaying beats remembering</h3>
     <p>
-      This began as a 2018 university project on JavaFX&nbsp;8 and NetBeans. It
-      no longer built: JavaFX left the JDK in version&nbsp;11, and the APIs it
-      used were deleted in version&nbsp;9. The algorithm itself needed no
-      changes — it passes the oracle unaltered. Everything around it did.
-    </p>
-    <p>
-      The largest problem was invisible from the outside. Every log entry
-      deep-copied the entire search tree, and the app kept a full copy of the
-      tree after every step so it could go backwards. Replaying the algorithm
-      turns out to be far cheaper than remembering it:
-    </p>
+      Stepping backwards needs the tree as it stood at an earlier step. Keeping
+      a copy after every step is the obvious way to do that, and it costs
+      steps × tree in memory, which is what limits how large a graph you can
+      open. Re-running the search to reach a step is cheap enough to make the
+      copies unnecessary:</p>
     <div class="table-scroll">
       <table>
         <thead>
-          <tr><th>Graph</th><th>Memory before</th><th>After</th></tr>
+          <tr><th>Graph</th><th>Keeping every step</th><th>Replaying</th></tr>
         </thead>
         <tbody>
           <tr><td class="num">20 nodes, k=5</td><td class="num was">1,260&nbsp;MB</td><td class="num now">0&nbsp;MB</td></tr>
@@ -391,8 +385,8 @@ footer a { color: var(--text-soft); }
       </table>
     </div>
     <p style="margin-top:22px">
-      The full account is in the
-      <a href="https://github.com/loloDawit/ESU-Algorithm/commits/main">commit history</a>.
+      Two trees are held rather than hundreds, and the subgraph size is now
+      limited by what stays readable rather than by memory.
     </p>
   </section>
 
@@ -400,7 +394,7 @@ footer a { color: var(--text-soft); }
 
 <footer>
   <div class="wrap">
-    MIT licensed · Built in 2018 by the BioHazard team, rebuilt in 2026 ·
+    MIT licensed ·
     <a href="https://github.com/loloDawit/ESU-Algorithm">Source on GitHub</a>
   </div>
 </footer>

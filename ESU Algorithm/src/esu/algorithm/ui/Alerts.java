@@ -8,9 +8,7 @@ import javafx.scene.control.Alert;
 /**
  * Class Alerts
  *
- * Each message says what happened and what to do about it. The 2018 version
- * also had one that refused to start until you ticked a box promising your
- * graph was undirected, which is the only kind the app supports.
+ * Each message says what happened and what to do about it.
  */
 public class Alerts {
 

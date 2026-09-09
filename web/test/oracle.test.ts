@@ -77,8 +77,8 @@ describe('ESU', () => {
 
 describe('parsing', () => {
   it('keeps the highest-numbered vertex', () => {
-    // The 2018 reader sized the matrix to the largest id, putting that
-    // vertex out of bounds and silently dropping every edge touching it.
+    // Sizing the matrix to the largest id rather than one past it puts that
+    // vertex out of bounds, silently dropping every edge touching it.
     const graph = UndirectedGraph.parse(SAMPLES['bowtie.txt']!);
 
     expect(graph.size).toBe(5);
