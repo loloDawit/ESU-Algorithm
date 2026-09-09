@@ -191,6 +191,23 @@ public class ShapeTest {
         assertEquals(distinctShapes(graph, 4).size(), drawings.size());
     }
 
+    @Test
+    public void ordersEqualCountsTheSameWayEveryTime() {
+        UndirectedGraph graph = sample("sample-small.txt");
+        EsuSession session = new EsuSession(graph, 3);
+
+        // Classifying the same subgraphs in a different order must give the
+        // same listing: the browser version is checked against this one, and
+        // an order that depended on which subgraph arrived first would differ
+        // between them for no meaningful reason.
+        List<List<Integer>> subgraphs = new ArrayList<>(session.getSubgraphs());
+        List<Shape.Count> first = Shape.classify(graph, subgraphs);
+        Collections.reverse(subgraphs);
+        List<Shape.Count> second = Shape.classify(graph, subgraphs);
+
+        assertEquals(first, second);
+    }
+
     /** The distinct shapes among every size-k subgraph of a graph. */
     private Set<Shape> distinctShapes(UndirectedGraph graph, int size) {
         EsuSession session = new EsuSession(graph, size);

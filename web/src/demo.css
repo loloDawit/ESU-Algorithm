@@ -137,3 +137,29 @@
   .demo-side { width: auto; border-right: 0; border-bottom: 1px solid var(--line); }
   .demo-log { height: 84px; }
 }
+
+/* ---- shapes found ---- */
+
+.demo-shapes { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 2px; }
+
+.demo-shape {
+  display: inline-flex; align-items: center; gap: 3px;
+  padding: 2px 6px 2px 3px;
+  border: 1px solid var(--line); border-radius: 7px;
+  background: var(--bg); cursor: pointer;
+  font: inherit;
+}
+.demo-shape:hover { border-color: var(--text-faint); }
+.demo-shape.is-on { border-color: var(--blue); background: var(--blue-soft); }
+
+.demo-shape-n {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px; font-weight: 700; color: var(--text-soft);
+}
+.demo-shape.is-on .demo-shape-n { color: var(--blue); }
+
+.shape-edge { stroke: var(--text-faint); stroke-width: 1.2; }
+.shape-vertex { fill: var(--blue); }
+
+/* a subgraph of the shape currently chosen */
+.t-picked { stroke: #7b3fe4; stroke-width: 2.6; }

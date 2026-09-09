@@ -8,12 +8,14 @@
  */
 import { EsuNode, EsuTree, type StepEntry } from './esu.js';
 import { UndirectedGraph } from './graph.js';
+import { Shape, type ShapeCount } from './shape.js';
 
 export class EsuSession {
   private readonly finalTreeValue: EsuTree;
   readonly totalSteps: number;
   readonly subgraphCount: number;
 
+  private shapesFound: ShapeCount[] | null = null;
   private currentTree!: EsuTree;
   private currentStepValue = 0;
 
@@ -75,6 +77,31 @@ export class EsuSession {
     if (this.currentStepValue <= 0) return false;
     this.goToStep(this.currentStepValue - 1);
     return true;
+  }
+
+  /**
+   * The shapes among the subgraphs found, most frequent first. Worked out on
+   * first asking; the search does not change.
+   */
+  shapes(): ShapeCount[] {
+    if (!this.shapesFound) {
+      this.shapesFound = Shape.classify(this.graph, this.finalTreeValue.subgraphs());
+    }
+    return this.shapesFound;
+  }
+
+  /**
+   * The tree nodes whose subgraph has a given shape, named the way the tree
+   * names them, so the view can pick them out.
+   */
+  subgraphsWithShape(shape: Shape): Set<string> {
+    const found = new Set<string>();
+    for (const subgraph of this.finalTreeValue.subgraphs()) {
+      if (Shape.of(this.graph, subgraph).equals(shape)) {
+        found.add(`{${subgraph.join(', ')}}`);
+      }
+    }
+    return found;
   }
 
   /** The node this step is building, found by the label its log entries carry. */

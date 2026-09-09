@@ -27,7 +27,7 @@ import java.util.Map;
  * hundred relabellings cost microseconds and need no library. It is also the
  * one description of the method that fits in a sentence.
  */
-public final class Shape {
+public final class Shape implements Comparable<Shape> {
 
     /**
      * Beyond this the number of relabellings, which is size factorial, stops
@@ -104,7 +104,11 @@ public final class Shape {
         for (Map.Entry<Shape, Integer> entry : tally.entrySet()) {
             counts.add(new Count(entry.getKey(), entry.getValue()));
         }
-        counts.sort(Comparator.comparingInt(Count::count).reversed());
+        // Most frequent first, and a fixed order among equals: the shapes a
+        // search finds are compared against the other implementation, and
+        // insertion order would differ between them.
+        counts.sort(Comparator.comparingInt(Count::count).reversed()
+                .thenComparing(Count::shape));
         return counts;
     }
 
@@ -228,6 +232,20 @@ public final class Shape {
             }
         }
         return false;
+    }
+
+    /**
+     * Orders shapes by size, then by canonical form. Arbitrary but stable,
+     * which is what a listing needs when counts tie.
+     *
+     * @param other the shape to compare against
+     * @return negative, zero or positive as usual
+     */
+    @Override
+    public int compareTo(Shape other) {
+        return size != other.size
+                ? Integer.compare(size, other.size)
+                : Long.compare(canonical, other.canonical);
     }
 
     @Override
