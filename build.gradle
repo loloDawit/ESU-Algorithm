@@ -34,25 +34,3 @@ javafx {
 application {
     mainClass = 'esu.algorithm.ui.EsuApp'
 }
-
-// The 2018 NetBeans layout keeps sources and resources (.fxml, .jpg, .txt)
-// in the same tree, so both source sets point at it.
-sourceSets {
-    main {
-        java {
-            srcDirs = ['ESU Algorithm/src']
-        }
-        resources {
-            srcDirs = ['ESU Algorithm/src']
-            exclude '**/*.java'
-        }
-    }
-    test {
-        java {
-            srcDirs = ['ESU Algorithm/test']
-        }
-        resources {
-            srcDirs = ['samples']
-        }
-    }
-}

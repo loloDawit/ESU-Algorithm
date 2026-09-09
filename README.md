@@ -93,12 +93,12 @@ Four graphs ship in `samples/`:
 | `sample-small.txt` | 8 | Good starting point: two triangles, a bridge, a tail |
 | `cluster.txt` | 7 | A dense 4-clique plus a triangle — more branching |
 | `bowtie.txt` | 5 | Smallest interesting case: two triangles sharing a hub |
-| `ESU Algorithm/src/esu/algorithm/myGraph.txt` | 15 edges | Larger, sparser: vertex ids up to 100 |
+| `src/main/resources/esu/algorithm/myGraph.txt` | 15 edges | Larger, sparser: vertex ids up to 100 |
 
 ## How the code is laid out
 
 ```
-ESU Algorithm/src/esu/algorithm/
+src/main/java/esu/algorithm/
 ├── UndirectedGraph.java    adjacency matrix, reads graph files
 ├── ESUNode.java            one node of the search tree; does the real work
 ├── ESUTree.java            the tree; step() advances the algorithm once
