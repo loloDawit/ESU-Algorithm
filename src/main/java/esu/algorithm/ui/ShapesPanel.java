@@ -41,6 +41,13 @@ public class ShapesPanel extends VBox {
     /** Size of a drawn subgraph in the grid below, which carries numbers. */
     private static final double INSTANCE_TILE = 62;
     private static final double INSTANCE_VERTEX_RADIUS = 8.5;
+    /**
+     * Rows of shapes shown before the list starts scrolling. A search finds
+     * 2 shapes at size 3 and about 33 at size 6, so a fixed height is either
+     * wasteful or cramped; this fits the common cases and scrolls the rest.
+     */
+    private static final int ROWS_BEFORE_SCROLLING = 8;
+    private static final double ROW_HEIGHT = 30;
 
     private final ListView<Shape.Count> shapes = new ListView<>();
     private final Label summary = new Label();
@@ -78,7 +85,7 @@ public class ShapesPanel extends VBox {
         instancesScroll.getStyleClass().add("instances-scroll");
         VBox.setVgrow(instancesScroll, Priority.ALWAYS);
 
-        shapes.setPrefHeight(140);
+
         getChildren().addAll(title, summary, shapes,
                 instancesTitle, instancesScroll);
         setSpacing(6);
@@ -104,6 +111,8 @@ public class ShapesPanel extends VBox {
     public void showInstances(List<List<Integer>> subgraphs) {
         instances.getChildren().clear();
         instancesTitle.setVisible(!subgraphs.isEmpty());
+        instancesTitle.setText(subgraphs.size() == 1
+                ? "Where it is" : "Where they are, all " + subgraphs.size());
 
         for (List<Integer> subgraph : subgraphs) {
             VBox tile = new VBox(2, drawSubgraph(subgraph), caption(subgraph));
@@ -185,6 +194,11 @@ public class ShapesPanel extends VBox {
      */
     public void setShapes(List<Shape.Count> counts) {
         shapes.setItems(FXCollections.observableArrayList(counts));
+        // Fit the list to what it holds, so five shapes do not scroll inside
+        // a box sized for three.
+        shapes.setPrefHeight(
+                Math.min(counts.size(), ROWS_BEFORE_SCROLLING) * ROW_HEIGHT + 4);
+
         int total = counts.stream().mapToInt(Shape.Count::count).sum();
         summary.setText(counts.size() + " shape" + (counts.size() == 1 ? "" : "s")
                 + " among " + total + " subgraph" + (total == 1 ? "" : "s"));
