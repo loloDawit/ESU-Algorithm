@@ -82,6 +82,8 @@ public class EsuApp extends Application {
     private final HistoryPanel historyPanel = new HistoryPanel(this::goTo);
     private final CheckMenuItem showHistory =
             new CheckMenuItem("Show step history");
+    private final CheckMenuItem followStep =
+            new CheckMenuItem("Follow the current step");
     private final CheckMenuItem darkMode = new CheckMenuItem("Dark appearance");
     private Scene scene;
     private final TreeView treeView = new TreeView();
@@ -163,8 +165,13 @@ public class EsuApp extends Application {
         darkMode.selectedProperty().addListener(
                 (obs, was, now) -> setDark(now));
 
+        followStep.setSelected(true);
+        followStep.selectedProperty().addListener(
+                (obs, was, now) -> treeView.setFollow(now));
+
         view.getItems().addAll(
                 showHistory,
+                followStep,
                 darkMode,
                 new SeparatorMenuItem(),
                 item("Fit tree to window", KeyCode.DIGIT0, this::fitToWindow),
@@ -575,7 +582,7 @@ public class EsuApp extends Application {
         graphPanel.setGraph(session.getGraph());
         setControlsEnabled(true);
         goTo(0);
-        javafx.application.Platform.runLater(this::fitToWindow);
+        zoomSlider.setValue(treeView.getZoom());
 
         if (session.getSubgraphCount() == 0) {
             Alerts.displayNoSubgraphs(subgraphSize);

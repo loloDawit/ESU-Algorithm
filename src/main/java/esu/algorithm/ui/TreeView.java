@@ -12,6 +12,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.Group;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
+import javafx.application.Platform;
 import javafx.scene.layout.StackPane;
 
 /**
@@ -29,6 +30,8 @@ public class TreeView extends StackPane {
     /** Low enough that a large tree can be fitted; see fit(). */
     public static final double MIN_ZOOM = 0.02;
     public static final double MAX_ZOOM = 2;
+    /** What a search opens at: readable, whatever the finished tree's size. */
+    private static final double START_ZOOM = 1;
 
     private final Pane canvas = new Pane();
     private final ScrollPane scroll = new ScrollPane();
@@ -36,16 +39,12 @@ public class TreeView extends StackPane {
     private TreeLayout layout;
     private Set<String> deadEnds = Set.of();
     private int foundAt;
+    private boolean follow = true;
 
     public TreeView() {
         // A Group reports the scaled size of its content, which is what makes
-        // the scroll bars track the zoom. Holding it in a StackPane that
-        // fills the viewport centres a tree smaller than the window instead
-        // of pinning it to the top left.
-        StackPane holder = new StackPane(new Group(canvas));
-        scroll.setContent(holder);
-        scroll.setFitToWidth(true);
-        scroll.setFitToHeight(true);
+        // the scroll bars track the zoom.
+        scroll.setContent(new Group(canvas));
         scroll.setPannable(true);
         scroll.getStyleClass().add("tree-scroll");
         getChildren().add(scroll);
@@ -55,6 +54,10 @@ public class TreeView extends StackPane {
     /**
      * Show a finished search, positioned at its first step.
      *
+     * Opens at a readable size looking at the root, rather than zoomed out to
+     * hold a tree that has not been built yet: at step one there is a single
+     * box, and fitting the finished tree's width renders it too small to read.
+     *
      * @param finalTree    the completed tree, which fixes the layout
      * @param subgraphSize the level whose nodes are complete subgraphs
      */
@@ -62,6 +65,8 @@ public class TreeView extends StackPane {
         this.layout = TreeLayout.of(finalTree);
         this.deadEnds = findDeadEnds(finalTree);
         this.foundAt = subgraphSize;
+        setZoom(START_ZOOM);
+        Platform.runLater(() -> lookAt(layout.get(TreeLayout.ROOT_ID)));
     }
 
     /**
@@ -79,6 +84,12 @@ public class TreeView extends StackPane {
                 ? Set.of() : Set.copyOf(layout.pathToRoot(traceId));
         canvas.getChildren().setAll(TreeRenderer.render(layout,
                 presentNodes(currentTree), deadEnds, foundAt, activeId, path));
+
+        // Keep up with the search rather than making the viewer chase it: the
+        // tree grows down and to the right, off the edge of the window.
+        if (follow && activeId != null) {
+            lookAt(layout.get(activeId));
+        }
     }
 
     public void clear() {
@@ -102,8 +113,44 @@ public class TreeView extends StackPane {
         }
         setZoom(Math.min(view.getWidth() / layout.getWidth(),
                 view.getHeight() / layout.getHeight()) * 0.92);
-        scroll.setHvalue(0);
+        // The tree hangs from the root, so the top is what to show.
+        scroll.setHvalue(0.5);
         scroll.setVvalue(0);
+    }
+
+    /**
+     * Scroll so a box is in view, roughly centred.
+     *
+     * @param box the box to look at; ignored when null
+     */
+    public void lookAt(TreeLayout.Box box) {
+        if (box == null || layout == null) {
+            return;
+        }
+        Bounds view = scroll.getViewportBounds();
+        double zoom = getZoom();
+        double contentWidth = layout.getWidth() * zoom;
+        double contentHeight = layout.getHeight() * zoom;
+
+        if (contentWidth > view.getWidth()) {
+            scroll.setHvalue(clamp((box.centreX() * zoom - view.getWidth() / 2)
+                    / (contentWidth - view.getWidth())));
+        }
+        if (contentHeight > view.getHeight()) {
+            scroll.setVvalue(clamp((box.centreY() * zoom - view.getHeight() / 2)
+                    / (contentHeight - view.getHeight())));
+        }
+    }
+
+    /**
+     * @param follow true to keep the node being built in view as it steps
+     */
+    public void setFollow(boolean follow) {
+        this.follow = follow;
+    }
+
+    private double clamp(double value) {
+        return Math.max(0, Math.min(1, value));
     }
 
     public double getZoom() {
