@@ -214,14 +214,17 @@ public final class Shape {
         }
         int low = Math.min(from, to);
         int high = Math.max(from, to);
-        // Bits run row by row across the upper triangle, most significant
-        // first, so count how many pairs follow this one.
-        int after = 0;
+
+        // bits() shifts left as it goes, so the first pair it writes ends up
+        // in the highest bit: a pair's position is counted from the end.
+        int pairs = size * (size - 1) / 2;
+        int index = 0;
         for (int row = 0; row < size; row++) {
             for (int column = row + 1; column < size; column++) {
                 if (row == low && column == high) {
-                    return ((canonical >> after) & 1) == 1;
+                    return ((canonical >> (pairs - 1 - index)) & 1) == 1;
                 }
+                index++;
             }
         }
         return false;

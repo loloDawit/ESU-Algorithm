@@ -134,6 +134,63 @@ public class ShapeTest {
         }
     }
 
+    @Test
+    public void reportsTheEdgesOfTheShapeItself() {
+        UndirectedGraph graph = sample("bowtie.txt");
+
+        Shape triangle = Shape.of(graph, List.of(0, 1, 2));
+
+        // A triangle joins all three of its pairs.
+        assertTrue(triangle.joins(0, 1));
+        assertTrue(triangle.joins(1, 2));
+        assertTrue(triangle.joins(0, 2));
+        assertFalse(triangle.joins(0, 0), "nothing joins itself");
+    }
+
+    @Test
+    public void reportsEdgesConsistentlyWithItsEdgeCount() {
+        UndirectedGraph graph = sample("cluster.txt");
+
+        // Whatever the shape, walking its pairs must find exactly as many
+        // edges as it says it has. This is what the drawing depends on, and
+        // it was wrong in a way no other test could see: every pair read the
+        // same bit, so shapes with different edges drew identically.
+        for (int size = 3; size <= 4; size++) {
+            for (Shape shape : distinctShapes(graph, size)) {
+                int joined = 0;
+                for (int from = 0; from < shape.size(); from++) {
+                    for (int to = from + 1; to < shape.size(); to++) {
+                        if (shape.joins(from, to)) {
+                            joined++;
+                        }
+                    }
+                }
+                assertEquals(shape.edges(), joined,
+                        shape + " reports " + shape.edges() + " edges but "
+                        + "joins " + joined + " pairs");
+            }
+        }
+    }
+
+    @Test
+    public void drawsDifferentShapesDifferently() {
+        UndirectedGraph graph = sample("cluster.txt");
+        Set<String> drawings = new LinkedHashSet<>();
+
+        for (Shape shape : distinctShapes(graph, 4)) {
+            StringBuilder drawing = new StringBuilder();
+            for (int from = 0; from < shape.size(); from++) {
+                for (int to = from + 1; to < shape.size(); to++) {
+                    drawing.append(shape.joins(from, to) ? '1' : '0');
+                }
+            }
+            drawings.add(drawing.toString());
+        }
+
+        // Three shapes must produce three pictures, or the panel lies.
+        assertEquals(distinctShapes(graph, 4).size(), drawings.size());
+    }
+
     /** The distinct shapes among every size-k subgraph of a graph. */
     private Set<Shape> distinctShapes(UndirectedGraph graph, int size) {
         EsuSession session = new EsuSession(graph, size);
