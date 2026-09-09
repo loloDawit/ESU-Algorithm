@@ -207,6 +207,19 @@ public class EsuSession {
     }
 
     /**
+     * The subgraphs the search found, each as its vertices.
+     *
+     * @return one list of vertices per subgraph
+     */
+    public List<List<Integer>> getSubgraphs() {
+        List<List<Integer>> out = new ArrayList<>();
+        for (LinkedList<Integer> subgraph : finalTree.getSubGraphs()) {
+            out.add(List.copyOf(subgraph));
+        }
+        return out;
+    }
+
+    /**
      * Every step of the search, in order, each naming what it built.
      *
      * @return the history, empty when there is nothing to search
