@@ -178,3 +178,34 @@
     -fx-background-color: #2f6fed;
     -fx-text-fill: white;
 }
+
+/* ---- the tree and graph shapes ----
+ *
+ * These carry style classes rather than colours set in code, which is what
+ * lets dark.css restate them without touching the renderer.
+ */
+
+.t-edge { -fx-stroke: #cfd6de; -fx-stroke-width: 1.2; -fx-fill: null; }
+.t-edge-path { -fx-stroke: #2f6fed; -fx-stroke-width: 2.2; }
+
+.t-box { -fx-stroke-width: 1.2; }
+.t-root { -fx-fill: #eef2f9; -fx-stroke: #8fa2bd; }
+.t-pending { -fx-fill: #ffffff; -fx-stroke: #aab4c0; }
+.t-active { -fx-fill: #fff3cd; -fx-stroke: #b06f00; -fx-stroke-width: 2.4; }
+.t-complete { -fx-fill: #d7f0dc; -fx-stroke: #2e7d4f; -fx-stroke-width: 1.8; }
+.t-dead { -fx-fill: #f4f6f8; -fx-stroke: #c7cdd4; -fx-stroke-dash-array: 4 3; }
+.t-on-path { -fx-stroke: #2f6fed; -fx-stroke-width: 2; }
+
+.t-text { -fx-fill: #20303f; }
+.t-text-dead { -fx-fill: #93a0ad; }
+.t-caption { -fx-fill: #8a97a6; }
+
+.g-edge { -fx-stroke: #ced4da; -fx-stroke-width: 1.5; }
+.g-edge-in { -fx-stroke: #2f6fed; -fx-stroke-width: 3; }
+.g-vertex { -fx-stroke-width: 1.5; }
+.g-plain { -fx-fill: #eef1f5; -fx-stroke: #adb5bd; }
+.g-chosen { -fx-fill: #2f6fed; -fx-stroke: #2f6fed; }
+.g-candidate { -fx-fill: #f5b426; -fx-stroke: #f5b426; }
+.g-label { -fx-fill: #343a40; }
+.g-label-chosen { -fx-fill: #ffffff; }
+.g-label-candidate { -fx-fill: #20303f; }
