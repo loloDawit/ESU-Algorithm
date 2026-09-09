@@ -189,6 +189,37 @@ public class EsuSessionTest {
     }
 
     @Test
+    public void handsBackTheVerticesOfEachSubgraphHavingAShape() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);
+        Shape triangle = Shape.of(session.getGraph(), List.of(0, 1, 2));
+
+        List<List<Integer>> instances = session.subgraphsOfShape(triangle);
+
+        // The bowtie's two triangles, as vertices rather than as names, so
+        // they can be drawn.
+        assertEquals(2, instances.size());
+        for (List<Integer> instance : instances) {
+            assertEquals(3, instance.size());
+            assertEquals(triangle, Shape.of(session.getGraph(), instance));
+        }
+    }
+
+    @Test
+    public void handsBackEveryInstanceEvenBeforeTheSearchReachesThem() {
+        EsuSession session = new EsuSession(
+                UndirectedGraph.fromFile(new File("samples/cluster.txt")), 4);
+        Shape first = session.getShapes().get(0).shape();
+
+        session.goToStep(0);
+
+        // The shapes are a property of the finished search, not of where the
+        // stepping happens to be, and the panel reports final counts.
+        assertEquals(session.getShapes().get(0).count(),
+                session.subgraphsOfShape(first).size());
+    }
+
+    @Test
     public void findsNoNodesForAShapeThatDidNotOccur() {
         EsuSession session = new EsuSession(
                 UndirectedGraph.fromFile(new File("samples/bowtie.txt")), 3);

@@ -85,7 +85,8 @@ public class EsuApp extends Application {
             new CheckMenuItem("Show step history");
     private final CheckMenuItem showShapes =
             new CheckMenuItem("Show shapes found");
-    private final ShapesPanel shapesPanel = new ShapesPanel(this::pickShape);
+    private final ShapesPanel shapesPanel =
+            new ShapesPanel(this::pickShape, this::showInstanceInGraph);
     private final CheckMenuItem followStep =
             new CheckMenuItem("Follow the current step");
     private final CheckMenuItem darkMode = new CheckMenuItem("Dark appearance");
@@ -304,7 +305,19 @@ public class EsuApp extends Application {
         }
         treeView.setPicked(shape == null
                 ? Set.of() : session.subgraphsWithShape(shape));
+        shapesPanel.showInstances(shape == null
+                ? List.of() : session.subgraphsOfShape(shape));
         refresh();
+    }
+
+    /**
+     * Show one found subgraph in the input graph, so it is clear where in the
+     * network that occurrence actually sits.
+     *
+     * @param vertices the subgraph's vertices
+     */
+    private void showInstanceInGraph(List<Integer> vertices) {
+        graphPanel.highlight(vertices, List.of());
     }
 
     private Node buildTopBar() {
@@ -616,6 +629,7 @@ public class EsuApp extends Application {
     private void adopt(EsuSession built, File file) {
         session = built;
         historyPanel.setHistory(session.getHistory());
+        shapesPanel.setGraph(session.getGraph());
         shapesPanel.setShapes(session.getShapes());
         treeView.setPicked(Set.of());
         treeView.setTree(session.getFinalTree(), subgraphSize);

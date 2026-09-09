@@ -239,6 +239,27 @@ public class EsuSession {
     }
 
     /**
+     * The subgraphs having a given shape, as their vertices, so they can be
+     * drawn.
+     *
+     * Always every one of them, whatever step is being shown: the shapes are
+     * a property of the finished search, and the counts beside them are
+     * final counts.
+     *
+     * @param shape the shape to look for
+     * @return the vertices of each subgraph having it
+     */
+    public List<List<Integer>> subgraphsOfShape(Shape shape) {
+        List<List<Integer>> found = new ArrayList<>();
+        for (List<Integer> subgraph : getSubgraphs()) {
+            if (Shape.of(graph, subgraph).equals(shape)) {
+                found.add(subgraph);
+            }
+        }
+        return found;
+    }
+
+    /**
      * The tree nodes whose subgraph has a given shape, named the way the tree
      * names them, so a view can pick them out.
      *
