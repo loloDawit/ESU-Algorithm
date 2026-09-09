@@ -16,6 +16,8 @@ import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
 import javafx.application.Application;
+import javafx.application.ColorScheme;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -80,6 +82,8 @@ public class EsuApp extends Application {
     private final HistoryPanel historyPanel = new HistoryPanel(this::goTo);
     private final CheckMenuItem showHistory =
             new CheckMenuItem("Show step history");
+    private final CheckMenuItem darkMode = new CheckMenuItem("Dark appearance");
+    private Scene scene;
     private final TreeView treeView = new TreeView();
     private final ListView<String> stepLog = new ListView<>();
     private final Label statusLabel = new Label();
@@ -109,9 +113,10 @@ public class EsuApp extends Application {
 
     @Override
     public void start(Stage stage) {
-        Scene scene = new Scene(buildLayout(), 1180, 780);
+        scene = new Scene(buildLayout(), 1180, 780);
         scene.getStylesheets().add(
                 getClass().getResource("esu.css").toExternalForm());
+        followSystemAppearance();
 
         wireControls();
         showEmptyState();
@@ -155,8 +160,12 @@ public class EsuApp extends Application {
                 KeyCode.H, KeyCombination.SHORTCUT_DOWN));
         showHistory.selectedProperty().addListener(
                 (obs, was, now) -> setHistoryVisible(now));
+        darkMode.selectedProperty().addListener(
+                (obs, was, now) -> setDark(now));
+
         view.getItems().addAll(
                 showHistory,
+                darkMode,
                 new SeparatorMenuItem(),
                 item("Fit tree to window", KeyCode.DIGIT0, this::fitToWindow),
                 item("Zoom in", KeyCode.EQUALS, () -> nudgeZoom(0.15)),
@@ -218,6 +227,32 @@ public class EsuApp extends Application {
             session.stepBack();
         }
         refresh();
+    }
+
+    /**
+     * Take the system's light or dark appearance, and keep taking it if the
+     * user changes it while the app is open.
+     *
+     * The web version does this through a media query. This is the same idea:
+     * the shapes carry style classes rather than colours set in code, so a
+     * second stylesheet is all a theme takes.
+     */
+    private void followSystemAppearance() {
+        Platform.getPreferences().colorSchemeProperty().addListener(
+                (obs, was, now) -> darkMode.setSelected(now == ColorScheme.DARK));
+        darkMode.setSelected(
+                Platform.getPreferences().getColorScheme() == ColorScheme.DARK);
+    }
+
+    /**
+     * @param dark true to layer the dark stylesheet over the base one
+     */
+    private void setDark(boolean dark) {
+        String sheet = getClass().getResource("dark.css").toExternalForm();
+        scene.getStylesheets().remove(sheet);
+        if (dark) {
+            scene.getStylesheets().add(sheet);
+        }
     }
 
     /**
@@ -322,29 +357,30 @@ public class EsuApp extends Application {
 
     private Node buildLegend() {
         HBox legend = new HBox(16,
-                swatch(TreeRenderer.ACTIVE_FILL, TreeRenderer.ACTIVE_STROKE,
-                        "working on", false),
-                swatch(TreeRenderer.COMPLETE_FILL, TreeRenderer.COMPLETE_STROKE,
-                        "subgraph found", false),
-                swatch(TreeRenderer.DEADEND_FILL, TreeRenderer.DEADEND_STROKE,
-                        "dead end", true),
-                swatch(TreeRenderer.PENDING_FILL, TreeRenderer.PENDING_STROKE,
-                        "still expanding", false),
+                swatch("t-active", "working on"),
+                swatch("t-complete", "subgraph found"),
+                swatch("t-dead", "dead end"),
+                swatch("t-pending", "still expanding"),
                 separator(),
-                caption("each box is a subgraph being built  \u00b7  the line down to it is how it got there"));
+                caption("each box is a subgraph being built  \u00b7  "
+                        + "the line down to it is how it got there"));
         legend.setAlignment(Pos.CENTER_LEFT);
         legend.setPadding(new Insets(6, 12, 6, 12));
         legend.getStyleClass().add("legend-bar");
         return legend;
     }
 
-    private Node swatch(Color fill, Color stroke, String text,
-            boolean dashed) {
-        Rectangle box = new Rectangle(15, 11, fill);
-        box.setStroke(stroke);
-        if (dashed) {
-            box.getStrokeDashArray().addAll(3.0, 2.0);
-        }
+    /**
+     * A legend swatch, carrying the same style class as the boxes it stands
+     * for, so the two cannot drift apart.
+     *
+     * @param styleClass the node state this describes
+     * @param text       what that state means
+     * @return the swatch and its caption
+     */
+    private Node swatch(String styleClass, String text) {
+        Rectangle box = new Rectangle(15, 11);
+        box.getStyleClass().addAll("t-box", styleClass);
         HBox entry = new HBox(6, box, caption(text));
         entry.setAlignment(Pos.CENTER_LEFT);
         return entry;
