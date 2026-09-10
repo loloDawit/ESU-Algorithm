@@ -50,7 +50,8 @@ jobs:
           cache-dependency-path: web/package-lock.json
 
       # Nothing is released that does not pass, in either implementation.
-      - run: ./gradlew test --no-daemon
+      # The view tests build real controls, which needs a display.
+      - run: xvfb-run -a ./gradlew test --no-daemon
       - run: npm ci
         working-directory: web
       - run: npm test

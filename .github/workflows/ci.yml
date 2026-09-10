@@ -25,9 +25,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
-      # No display is needed: the engine and the tree layout hold no JavaFX
-      # reference, and nothing here starts the toolkit.
-      - run: ./gradlew test --no-daemon
+      # The view tests build real controls, and JavaFX needs a display for
+      # that even when no window is shown.
+      - run: xvfb-run -a ./gradlew test --no-daemon
 
       - if: failure()
         uses: actions/upload-artifact@v7
