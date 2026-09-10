@@ -49,6 +49,14 @@ background, or clip the shape list so its contents scroll out of sight, and all
 94 unit tests still pass while the browser tests fail. Both of those are bugs
 that actually shipped.
 
+## The moving pictures
+
+`npm run demo:record` drives the published page in Chromium and turns the
+recording into `docs/demo.mp4`, `docs/demo.gif` and a poster frame. The assets
+it replaces were a hand-made screen recording of the desktop app, which went
+out of date the moment the tree layout changed and stayed wrong for weeks.
+Re-running the script is all that keeping them honest now takes.
+
 Visual regression by screenshot comparison is deliberately not used: fonts
 render differently on macOS and on the Linux runner, so pixel diffs would fail
 for reasons that have nothing to do with the change.

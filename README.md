@@ -17,7 +17,7 @@ log says why the algorithm accepted or rejected each candidate.
 **[Try it in your browser →](https://lolodawit.github.io/ESU-Algorithm/)** — no install,
 the algorithm runs client-side.
 
-![The visualizer running: the search tree grows step by step while the matching vertices light up in the graph](docs/demo.gif)
+![The visualizer running in a browser: the search tree grows step by step, results turn green, and choosing a shape draws every subgraph that has it](docs/demo.gif)
 
 ## Running it
 
