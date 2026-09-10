@@ -6,9 +6,10 @@ tree. The desktop app remains the reference implementation.
 
 ```bash
 npm install
-npm test          # 68 tests
+npm test              # 94 unit tests
+npm run test:browser  # 8 browser tests, real Chromium
 npm run typecheck
-npm run build     # -> dist/demo.js, dist/demo.css
+npm run build         # -> ../docs/demo/
 ```
 
 The built bundle is about 21 KB, 7 KB gzipped, with no runtime dependencies.
@@ -33,10 +34,24 @@ implementation detail.
 suite: enumerate every subset of the right size, keep the connected ones, and
 require ESU to return exactly that set with no duplicates.
 
-`render.test.ts` drives the demo in a real DOM and checks it draws the graph,
-grows the tree, highlights the current subgraph, and builds every control. The
-desktop app has no equivalent, which is how a button went missing during a
-rebuild and stayed missing until someone read the README.
+`render.test.ts` drives the demo in a simulated DOM and checks it draws the
+graph, grows the tree, highlights the current subgraph, and builds every
+control.
+
+`browser/` runs the published page in real Chromium, and exists for what the
+simulated DOM cannot see: it has no layout engine and no stylesheets, so it can
+say a node exists but never that it is visible, the right size, or a readable
+colour against what is behind it. Every visual bug this project has shipped was
+of that kind.
+
+The difference is measurable. Make the step log's text the same colour as its
+background, or clip the shape list so its contents scroll out of sight, and all
+94 unit tests still pass while the browser tests fail. Both of those are bugs
+that actually shipped.
+
+Visual regression by screenshot comparison is deliberately not used: fonts
+render differently on macOS and on the Linux runner, so pixel diffs would fail
+for reasons that have nothing to do with the change.
 
 ## Regenerating the fixtures
 
