@@ -25,9 +25,9 @@ jobs:
 
       - uses: gradle/actions/setup-gradle@v6
 
-      # No display is needed: the engine and the tree layout hold no JavaFX
-      # reference, and nothing here starts the toolkit.
-      - run: ./gradlew test --no-daemon
+      # The view tests build real controls, and JavaFX needs a display for
+      # that even when no window is shown.
+      - run: xvfb-run -a ./gradlew test --no-daemon
 
       - if: failure()
         uses: actions/upload-artifact@v7
@@ -54,3 +54,31 @@ jobs:
       # one implementation and not the other fails here.
       - run: npm test
         working-directory: web
+
+  browser:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+        working-directory: web
+      - run: npx playwright install --with-deps chromium
+        working-directory: web
+
+      # The demo in a real browser, against the page as it is published. This
+      # is the only thing here that can see layout and colour: the unit tests
+      # run against a simulated DOM, which has neither.
+      - run: npm run test:browser
+        working-directory: web
+
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: web/playwright-report

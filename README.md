@@ -147,6 +147,11 @@ Two other things are worth testing and are: that a step reached by replay is
 identical to one reached by stepping, and that the tree layout puts parents over
 their children without overlapping anything.
 
+Both front ends are covered too. The JavaFX views are built for real, styled,
+and inspected without showing a window. The demo is run in Chromium against the
+published page, which is the only thing here that can see size, position and
+colour.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

@@ -63,12 +63,28 @@ When you add a test, check it can fail. Break the thing it covers on purpose
 and watch it go red. A test that passes the moment you write it has told you
 nothing — that is how the fixture problem above went unnoticed.
 
-## What has no automated coverage
+## Testing what is drawn
 
-The JavaFX views. Nothing checks them, and a button once went missing in a
-rebuild and stayed missing until someone read the README. If you change the
-desktop UI, run it and attach a screenshot. The browser version does have view
-tests, in `web/test/render.test.ts`.
+Both front ends are covered, in the only ways each can be.
+
+The JavaFX views are built for real in `src/test/java/esu/algorithm/ui/`, on
+the JavaFX thread and with the stylesheets applied, but without showing a
+window. Those tests check what gets built and how it is styled: that every
+control exists, that a tree box carries exactly one state, that every word can
+be read against what is behind it. `FxTest` has the harness.
+
+The demo is checked twice. `web/test/` runs it against a simulated DOM, which
+is fast but has no layout engine and no stylesheets. `web/browser/` runs the
+published page in real Chromium, which is the only thing here that can see
+size, position and colour.
+
+What none of this can tell you is whether the result looks *good*. A screenshot
+still answers that, and it is worth attaching one to a pull request that
+changes anything visual.
+
+Every visual bug this project has shipped was a code path whose only consumer
+was a picture, so when you add one, break it on purpose and watch the test go
+red before you trust it.
 
 ## Style
 
